@@ -1,7 +1,7 @@
 import unittest
 import sasi.sqlalchemy.session as sa_session
 
-class EngineTest(unittest.TestCase):
+class SessionTest(unittest.TestCase):
 
 	def test(self):
 		session = sa_session.get_session()
