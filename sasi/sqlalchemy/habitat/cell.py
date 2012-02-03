@@ -9,7 +9,7 @@ metadata = MetaData()
 cell_table = Table('cell', metadata,
 		Column('id_100km', Integer, primary_key=True),
 		Column('id_1000km', Integer),
-		GeometryExtensionColumn('geom', Polygon(2))
+		GeometryExtensionColumn('geom', MultiPolygon(2))
 		)
 		
 GeometryDDL(cell_table)
