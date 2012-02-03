@@ -3,6 +3,7 @@ from collections import defaultdict
 from sasi.habitat.habitat import Habitat
 from sasi.habitat.tests import test_feature
 from sasi.habitat.tests import test_substrate
+import sasi.tests.geo_util as geo_util
 
 class HabitatTest(unittest.TestCase):
 
@@ -22,7 +23,7 @@ def generate_habitats(n):
 		energy = n % 2
 		features = test_feature.generate_features(2)
 		area = n
-		geom = None
+		geom = geo_util.generate_multipolygon()
 		h = Habitat(id_km100, id_km1000, id_vor, z, substrate, energy, features, area, geom)
 		habitats.append(h)
 	return habitats
