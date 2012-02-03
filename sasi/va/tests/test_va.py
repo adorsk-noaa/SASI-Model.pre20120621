@@ -1,5 +1,4 @@
 import unittest
-from collections import defaultdict
 import sasi.conf
 from sasi.va.va import VulnerabilityAssessment
 import sasi.util.va

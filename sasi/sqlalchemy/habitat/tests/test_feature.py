@@ -12,7 +12,6 @@ class FeatureTest(BaseTest):
 		sa_feature.metadata.create_all(s.bind)
 		s.add_all(features)
 		s.commit()
-		print "features is: %s" % features
 		self.failUnless(True)
 
 if __name__ == '__main__':
