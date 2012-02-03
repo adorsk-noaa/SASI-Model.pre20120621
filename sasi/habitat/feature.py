@@ -1,7 +1,8 @@
-class Feature:
+class Feature(object):
 
-	def __init__(self):
-		self.type = ''
-		self.id = ''
+	def __init__(self, name, id, category):
+		self.name = name
+		self.id = id
+		self.category = category
 
 
