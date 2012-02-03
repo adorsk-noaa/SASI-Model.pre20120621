@@ -7,7 +7,6 @@ class BaseTest(unittest.TestCase):
 	@classmethod
 	def setUpClass(cls):
 		cls.engine = sa_engine.get_engine()
-		print cls.engine
 		cls.Session = sessionmaker()
 
 	def setUp(self):

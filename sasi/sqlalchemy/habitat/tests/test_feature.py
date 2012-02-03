@@ -7,7 +7,7 @@ import sasi.habitat.tests.test_feature as test_feature
 class FeatureTest(BaseTest):
 
 	def test(self):
-		features = test_feature.generateFeatures(1)
+		features = test_feature.generate_features(1)
 		s = self.session
 		sa_feature.metadata.create_all(s.bind)
 		s.add_all(features)
