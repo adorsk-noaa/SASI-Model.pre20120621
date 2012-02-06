@@ -1,9 +1,9 @@
-from sasi.dao.habitat.habitat_dao import HabitatDAO
+from sasi.dao.habitat.habitat_dao import Habitat_DAO
 from sasi.habitat.habitat import Habitat
 from sasi.util.habitat.habitat import generate_habitats
 
 
-class Test_HabitatDAO(HabitatDAO):
+class Test_Habitat_DAO(Habitat_DAO):
 
 	def __init__(self, num_habitats=10): 
 		self.habitats = {}

@@ -1,4 +1,4 @@
-class HabitatDAO(object):
+class Habitat_DAO(object):
 
 	def __init__(self): pass
 

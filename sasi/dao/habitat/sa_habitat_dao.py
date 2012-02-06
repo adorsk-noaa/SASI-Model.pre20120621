@@ -1,10 +1,10 @@
 import sasi.sa.session as sa_session
 import sasi.sa.habitat.habitat as sa_habitat
-from sasi.dao.habitat.habitat_dao import HabitatDAO
+from sasi.dao.habitat.habitat_dao import Habitat_DAO
 from sasi.habitat.habitat import Habitat
 
 
-class SA_HabitatDAO(HabitatDAO):
+class SA_Habitat_DAO(Habitat_DAO):
 
 	def __init__(self): pass
 
