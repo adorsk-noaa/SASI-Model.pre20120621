@@ -1,9 +1,14 @@
-# Populates table of grid cell info from shapefile.
-
+# Populates table of habitats from shapefile
+# Assumes that substrates and features have already been populated.
 import sasi.conf.conf as conf
-from sasi.habitat.cell import Cell
+
+from sasi.habitat.habitat import Habitat
+from sasi.habitat.substrate import Substrate
+from sasi.habitat.feature import Feature
+
 import sasi.sa.session as sa_session
 import sasi.sa.habitat.cell as sa_cell
+
 import ogr
 from shapely import wkb
 from shapely.geometry import Polygon, MultiPolygon
@@ -11,7 +16,7 @@ from shapely.geometry import Polygon, MultiPolygon
 def main():
 
 	# Load shapefile
-	sf = ogr.Open(conf.conf['grid_file'])
+	sf = ogr.Open(conf.conf['sasi_habitat_file'])
 	
 	# Get cell feature layer.
 	layer = sf.GetLayer(0)
@@ -21,10 +26,11 @@ def main():
 	field_count = layer_def.GetFieldCount()
 	fields = [layer_def.GetFieldDefn(i).GetName() for i in range(field_count)]
 
-	# Initialize a list to hold cell objects.
-	cells = []
+	# Initialize a list to hold habitat objects.
+	habitats = []
 
 	print fields
+
 	# For each cell feature... 
 	for f in layer:
 		# Get feature geometry. We convert each feature into a multipolygon, since
@@ -38,12 +44,21 @@ def main():
 		for i in range(field_count): 
 			f_attributes[fields[i]] = f.GetField(i)
 
-		# Make cell object from feature data.
-		c = Cell(
+		# Make habitat object from feature data.
+		c = Habitat(
 				id_100km = f_attributes['100km_Id'],
 				id_1000km = f_attributes['1000Km_Id'],
+				id_vor = f_attributes['Vor_id'],
+				z = f_attributes['z'],
+				energy = f_attributes['Energy'],
+				area = f_attributes['Area_Km'],	
 				geom = geom.wkt
 				)
+
+		# Create habitat's substrate object.
+
+		# Create habitat's feature objects.
+
 		cells.append(c)
 
 	# Clear db of cells.
