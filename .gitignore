@@ -1,3 +1,4 @@
 *.pyc
+*.pck
 .virtualenv
 sasi/conf.py
