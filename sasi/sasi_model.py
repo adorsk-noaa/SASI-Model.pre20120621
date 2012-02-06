@@ -1,6 +1,6 @@
 class SASIModel:
 
-	def __init__(self):
+	def __init__(self, t0=0, tf=10, dt=1, habitats=[], taus={}, omegas={}):
 		
 		# Start time.
 		self.t0 = 0
@@ -27,10 +27,10 @@ class SASIModel:
 		self.habitats = []
 
 		# tau (stochastic modifier for recovery)
-		self.tau = {}
+		self.taus = {}
 
 		# omega (stochastic modifier for damage)
-		self.omega = {}
+		self.omegas = {}
 
 	def setup(self): pass
 	
@@ -69,11 +69,11 @@ class SASIModel:
 				# recovery time (tau), then the habitat is still
 				# recovering, and we should add
 				# to the habitat's recovery value.
-				if (x_t - t) <= self.tau.get(h):
+				if (x_t - t) <= self.taus.get(h):
 
 					# We recover a proportion of the previous damagei
 					# based on the habitat's recovery time.
-					self.X[t][h] = self.A[x_t][h]/h.tau
+					self.X[t][h] = self.A[x_t][h]/self.taus.get(h)
 
 			# Set modified swept area for the timestep.
 			self.Z[t][h] = self.X[t][h] - self.Y[t][h]
