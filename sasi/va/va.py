@@ -30,6 +30,16 @@ class VulnerabilityAssessment(object):
 					'FEATURE': assessment['FEATURE']
 					}
 		return features
+	
+	def get_substrates(self):
+		substrates = {} 
+		for key, assessment in self.assessments.items():
+			substrates[assessment['SUBSTRATE_CODE']] = {
+					'SUBSTRATE_CODE': assessment['SUBSTRATE_CODE'],
+					'SUBSTRATE': assessment['SUBSTRATE']
+					}
+		return substrates
+
 
 	def get_features_by_habitats_energy(self):
 		f_by_h_e = {}

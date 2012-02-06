@@ -12,21 +12,30 @@ class HabitatTest(BaseTest):
 	def test(self):
 		s = self.session
 
-		# Initialize tables
-		for m in [sa_feature, sa_substrate, sa_habitat]:
-			m.metadata.drop_all(s.bind)
-			m.metadata.create_all(s.bind)
+		# Initialize tables (order matters for dependencies).
+		tables = [
+				sa_habitat.habitats_features_table,
+				sa_habitat.table,
+				sa_feature.table,
+				sa_substrate.table,
+				]
+
+		for t in tables:
+			if t.exists(s.bind): t.drop(s.bind)
+
+		for t in reversed(tables):
+			t.create(s.bind)
 
 		# Generate test habitats
 		substrate = test_substrate.generate_substrates(1).pop()
 		s.add(substrate)
 		
-		feature = test_feature.generate_features(1).pop()
-		s.add(feature)
+		features = test_feature.generate_features(1)
+		s.add_all(features)
 
 		h = test_habitat.generate_habitats(1).pop()
 		h.substrate = substrate
-		h.features = feature
+		h.features = features
 
 		# Add to the session and commit.
 		s.add(h)

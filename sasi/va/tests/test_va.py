@@ -10,6 +10,6 @@ class VulnerabilityAssessmentTest(unittest.TestCase):
 		va = VulnerabilityAssessment(rows = va_rows)	
 		f_by_h = va.get_features_by_habitats()
 		features = va.get_features()
-		print features
+		substrates = va.get_substrates()
 if __name__ == '__main__':
 	unittest.main()

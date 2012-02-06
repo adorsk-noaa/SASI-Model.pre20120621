@@ -12,6 +12,11 @@ import sasi.sa.habitat.feature as sa_feature
 
 metadata = MetaData()
 
+habitats_features_table = Table('habitats_features', metadata,
+		Column('habitat_id', Integer, ForeignKey('habitat.id')),
+		Column('feature_id', String, ForeignKey(sa_feature.table.c.id))
+		)
+
 table = Table('habitat', metadata,
 		Column('id', Integer, primary_key=True),
 		Column('id_km100', String),
@@ -25,10 +30,11 @@ table = Table('habitat', metadata,
 		GeometryExtensionColumn('geom', MultiPolygon(2))
 		)
 
+
 GeometryDDL(table)
 		
 mapper(Habitat, table, properties = {
 	'geom': GeometryColumn(table.c.geom, comparator=PGComparator),
 	'substrate': relationship(Substrate, cascade=''),
-	'features': relationship(Feature, cascade='')
+	'features': relationship(Feature, cascade='', secondary=habitats_features_table)
 	})
