@@ -1,5 +1,5 @@
 import unittest
-from sasi.dao.habitat.test_habitatdao import Test_HabitatDAO
+from sasi.dao.habitat.test_habitat_dao import Test_HabitatDAO
 
 class Test_HabitatDAOTest(unittest.TestCase):
 

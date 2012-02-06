@@ -1,4 +1,4 @@
-from sasi.dao.habitat.habitatdao import HabitatDAO
+from sasi.dao.habitat.habitat_dao import HabitatDAO
 from sasi.habitat.habitat import Habitat
 from sasi.util.habitat.habitat import generate_habitats
 

@@ -1,6 +1,6 @@
 import unittest
 from sasi.sa.tests.basetest import BaseTest
-from sasi.dao.habitat.sa_habitatdao import SA_HabitatDAO
+from sasi.dao.habitat.sa_habitat_dao import SA_HabitatDAO
 
 class SA_HabitatDAOTest(BaseTest):
 

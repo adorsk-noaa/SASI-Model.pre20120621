@@ -1,6 +1,6 @@
 import sasi.sa.session as sa_session
 import sasi.sa.habitat.habitat as sa_habitat
-from sasi.dao.habitat.habitatdao import HabitatDAO
+from sasi.dao.habitat.habitat_dao import HabitatDAO
 from sasi.habitat.habitat import Habitat
 
 
