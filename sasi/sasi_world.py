@@ -1,4 +1,5 @@
-from sasi.dao.habitat.sa_habitatdao import SA_HabitatDAO
+from sasi.dao.habitat.test_habitatdao import Test_HabitatDAO
+from sasi.sasi_model import SASIModel
 
 class SASIWorld(object):
 
@@ -13,8 +14,30 @@ class SASIWorld(object):
 
 if __name__ == '__main__':
 
-	habitats_dao = SA_HabitatDAO()
+	habitats_dao = Test_HabitatDAO()
 
 	sasi_world = SASIWorld(habitats_dao=habitats_dao)
+
+	t0 = 0
+	tf = 10
+	dt = 1
+	habitats = sasi_world.habitats
+	taus = {}
+	omegas = {}
+	
+	model = SASIModel(
+			t0=t0,
+			tf=tf,
+			dt=dt,
+			habitats=habitats,
+			taus=taus,
+			omegas=omegas
+			)
+
+	for n in range(t0, tf):
+		print "iteration: %s" % n
+
+		model.iterate(n)
+
 
 
