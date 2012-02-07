@@ -27,7 +27,9 @@ table = Table('habitat', metadata,
 		Column('feature_id', String, ForeignKey(sa_feature.table.c.id)),
 		Column('energy', String),
 		Column('area', Float),
-		GeometryExtensionColumn('geom', MultiPolygon(2))
+		GeometryExtensionColumn('geom', MultiPolygon(2)),
+		Column('km100_percent', Float),
+		Column('km1000_percent', Float),
 		)
 
 

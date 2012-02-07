@@ -16,6 +16,9 @@ import ogr
 from shapely import wkb
 from shapely.geometry import Polygon, MultiPolygon
 
+from sqlalchemy import func
+from geoalchemy.functions import functions as geo_func
+
 def main():
 
 
@@ -37,13 +40,12 @@ def main():
 	habitats = []
 
 	# For each cell feature... 
-	i = 0
-	for f in layer:
+	counter = 0
+	features = [f for f in layer]
+	for f in features:
 
-		#if i > 1: break
-		print "Assembling %d" % i
-		i += 1
-		
+		if (counter % 1000) == 0: print "%s" % (counter),
+		counter += 1
 		
 		# Get feature geometry. We convert each feature into a multipolygon, since
 		# we may have a mix of normal polygons and multipolygons.
@@ -93,11 +95,26 @@ def main():
 	sa_habitat.metadata.create_all(bind = session.connection())
 	session.commit()
 	
-	print "Saving to db"
+	print "Writing habitats to db"
 	# Write habitats to db
 	session.add_all(habitats)
 	session.commit()
 
+	print "Calculating area percentages for habitats."
+	for cell_size in ['km100', 'km1000']:
+
+		print cell_size
+
+		# Calculate areas for each cell by summing habitat areas.
+		cell_area = func.sum(geo_func.area(Habitat.geom)).label('cell_area')
+		cell_id_attr = Habitat.__dict__["id_%s" % cell_size]
+		cell_infos = session.query(cell_id_attr, cell_area).group_by(cell_id_attr).all()
+		for cell_id, cell_area in cell_infos:
+			habitat_area = geo_func.area(Habitat.geom).label('habitat_area')
+			cell_percent = getattr(Habitat, "%s_percent" % cell_size)
+			for habitat, habitat_area in session.query(Habitat, habitat_area).filter(cell_id_attr == cell_id).all():
+				setattr(habitat, "%s_percent" % cell_size, habitat_area/cell_area)	
+	session.commit()
 
 	print "done"
 
