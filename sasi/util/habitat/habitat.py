@@ -5,6 +5,7 @@ import sasi.conf.conf as conf
 import sasi.conf.feature_assignments as feature_assignments
 import sasi.conf.substrate_mappings as substrate_mappings
 import sasi.conf.energy_mappings as energy_mappings
+import sasi.tests.geo_util as geo_util
 
 def generate_habitats(n):
 	energy_codes = list(set(energy_mappings.shp_to_va.values()))
@@ -31,8 +32,9 @@ def generate_habitats(n):
 				substrate = substrate,
 				features = features,
 				area = i,
-				geom = None
+				geom = geo_util.generate_multipolygon(),
 				)
+
 		habitats.append(h)
 
 	return habitats
