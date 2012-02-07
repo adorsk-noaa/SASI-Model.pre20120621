@@ -3,42 +3,18 @@ from sasi.dao.va.csv_va_dao import CSV_VA_DAO
 
 from sasi.sasi_model import SASIModel
 
-class SASIWorld(object):
-
-	def __init__(self, habitats_dao=None, va_dao=None):
-		self.habitats_dao = habitats_dao
-		self.va_dao = va_dao
-
-		self.habitats = self.setup_habitats()
-		
-		self.va = self.setup_va()
-	
-	# Get habitats from persistence layer.
-	def setup_habitats(self):
-		habitats = self.habitats_dao.load_habitats()
-		return habitats
-
-	def setup_va(self)
-		va = self.va_dao.load_va()
-		return va
+from sasi.habitat.static_grid_habitat_model import StaticGridHabitatModel
 
 if __name__ == '__main__':
 
-	habitats_dao = Test_HabitatDAO()
+	habitat_model = StaticGridHabitatModel(habitat_dao=Test_Habitat_DAO()) 
 
 	va_dao = CSV_VA_DAO()
-
-	sasi_world = SASIWorld(
-			habitats_dao=habitats_dao
-			va_da=va_dao
-			)
-
+	va = va_dao.load_va()
 
 	t0 = 0
 	tf = 10
 	dt = 1
-	habitats = sasi_world.habitats
-	va = sasi_world.va
 	taus = {}
 	omegas = {}
 	
@@ -46,7 +22,7 @@ if __name__ == '__main__':
 			t0=t0,
 			tf=tf,
 			dt=dt,
-			habitats=habitats,
+			habitat_model=habitat_model,
 			va=va,
 			taus=taus,
 			omegas=omegas

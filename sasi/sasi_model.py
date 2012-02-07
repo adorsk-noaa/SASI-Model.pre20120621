@@ -1,6 +1,6 @@
 class SASIModel:
 
-	def __init__(self, t0=0, tf=10, dt=1, habitats=[], va=None, taus={}, omegas={}):
+	def __init__(self, t0=0, tf=10, dt=1, habitat_model=None, effort_model=None, va=None, taus={}, omegas={}):
 		
 		# Start time.
 		self.t0 = t0
@@ -12,8 +12,11 @@ class SASIModel:
 		self.dt = dt
 
 		# Habitats
-		self.habitats = []
+		self.habitat_model = habitat_model 
 		
+		# Fishing effort model.
+		self.effort_model = effort_model
+
 		# Vulnerability Assessment
 		self.va = va
 
@@ -49,10 +52,10 @@ class SASIModel:
 
 		# Initialize arrays for the timestep.
 		for array in [self.Z, self.A, self.X, self.Y]:
-			array.append([0] * len(self.habitats))
+			array.append([0] * len(self.habitat_model.get_habitats()))
 			
 
-		for h in self.habitats:
+		for h in self.habitat_model.get_habitats():
 			
 			# Set fishing effort area.
 			# @todo: ADD LOGIC TO GET EFFORT FROM MODEL OR EXTERNAL DATA
