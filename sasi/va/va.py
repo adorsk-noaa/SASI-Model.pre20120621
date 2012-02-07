@@ -41,13 +41,11 @@ class VulnerabilityAssessment(object):
 		return substrates
 
 
-	def get_features_by_habitats_energy(self):
-		f_by_h_e = {}
+	def get_gears_by_habitats(self):
+		g_by_h = {}
 		for key, assessment in self.assessments.items():
 			hab_key = (assessment['SUBSTRATE_CODE'], assessment['ENERGY'])
-			features_for_hab = f_by_h.setdefault(hab_key,{})
-			features_for_category = features_for_hab.setdefault(assessment['FEATURE_CLASS_CODE'],set())
-			features_for_category.add(assessment['FEATURE_CODE'])
-		return f_by_h
-
+			gears_for_hab = g_by_h.setdefault(hab_key,set())
+			gears_for_hab.add(assessment['GEAR_CODE'])
+		return g_by_h
 

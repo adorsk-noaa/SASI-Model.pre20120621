@@ -11,5 +11,6 @@ class VulnerabilityAssessmentTest(unittest.TestCase):
 		f_by_h = va.get_features_by_habitats()
 		features = va.get_features()
 		substrates = va.get_substrates()
+		g_by_h = va.get_gears_by_habitats()
 if __name__ == '__main__':
 	unittest.main()
