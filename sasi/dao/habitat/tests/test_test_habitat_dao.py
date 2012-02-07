@@ -5,8 +5,7 @@ class Test_Habitat_DAOTest(unittest.TestCase):
 
 	def test(self):
 		habitat_dao = Test_Habitat_DAO()
-		habitats = habitat_dao.load_habitats()
-		
+		habitats = habitat_dao.get_habitats()
 
 	def get_session(self):
 		return self.session

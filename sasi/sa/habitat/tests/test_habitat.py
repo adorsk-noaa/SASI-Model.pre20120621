@@ -6,6 +6,7 @@ import sasi.sa.habitat.substrate as sa_substrate
 import sasi.habitat.tests.test_habitat as test_habitat
 import sasi.habitat.tests.test_substrate as test_substrate
 import sasi.habitat.tests.test_feature as test_feature
+import sasi.util.habitat.habitat as habitat_util
 
 class HabitatTest(BaseTest):
 
@@ -33,7 +34,7 @@ class HabitatTest(BaseTest):
 		features = test_feature.generate_features(1)
 		s.add_all(features)
 
-		h = test_habitat.generate_habitats(1).pop()
+		h = habitat_util.generate_habitats(1).pop()
 		h.substrate = substrate
 		h.features = features
 

@@ -5,22 +5,26 @@ from sasi.util.habitat.habitat import generate_habitats
 
 class Test_Habitat_DAO(Habitat_DAO):
 
-	def __init__(self, num_habitats=10): 
+	def __init__(self, num_habitats=10):
 		self.habitats = {}
 
+		num_cells = num_habitats/2
+
+		n = 0
 		for h in generate_habitats(num_habitats):
+			h.id_km100 = (n % num_cells)
+			h.km100_percent = .5
 			self.habitats[h.id] = h
+			n += 1		
 
+	def get_habitats(self, filters=None):
 
-	def load_habitats(self, ids=None):
-		habitats = []
+		# By default, get all habitats.
+		habitats = self.habitats.values()
 
-		# If ids were given, filter by ids.
-		if ids:
-			habitats = [self.habitats[id] for id in ids if id in self.habitats.keys()]
-
-		# Otherwise load all habitats
-		else:
-			habitats = self.habitats.values()
+		# Apply filters.
+		if filters:
+			for filter_name, filter_values in filters.items():
+				habitats = [h for h in habitats if getattr(h,filter_name) in filter_values]
 
 		return habitats

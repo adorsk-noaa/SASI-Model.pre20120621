@@ -59,7 +59,7 @@ class SASIModel:
 			self.A[t][h] = 1
 
 			# Set damage.
-			self.Y[t][h] = A[t][h] * self.omegas.get(h)
+			self.Y[t][h] = self.A[t][h] * self.omegas.get(h,1)
 
 			# Set recovery by summing recoveries from
 			# previous damage.
@@ -72,11 +72,11 @@ class SASIModel:
 				# recovery time (tau), then the habitat is still
 				# recovering, and we should add
 				# to the habitat's recovery value.
-				if (x_t - t) <= self.taus.get(h):
+				if (x_t - t) <= self.taus.get(h,1):
 
 					# We recover a proportion of the previous damagei
 					# based on the habitat's recovery time.
-					self.X[t][h] = self.A[x_t][h]/self.taus.get(h)
+					self.X[t][h] = self.A[x_t][h]/self.taus.get(h,1)
 
 			# Set modified swept area for the timestep.
 			self.Z[t][h] = self.X[t][h] - self.Y[t][h]
