@@ -52,17 +52,17 @@ class SASIModel:
 
 		# Initialize arrays for the timestep.
 		for array in [self.Z, self.A, self.X, self.Y]:
-			array.append([0] * len(self.habitat_model.get_habitats()))
+			array.append({h.id: 0 for h in self.habitat_model.get_habitats()})
 			
 
 		for h in self.habitat_model.get_habitats():
 			
 			# Set fishing effort area.
 			# @todo: ADD LOGIC TO GET EFFORT FROM MODEL OR EXTERNAL DATA
-			self.A[t][h] = 1
+			self.A[t][h.id] = 1
 
 			# Set damage.
-			self.Y[t][h] = self.A[t][h] * self.omegas.get(h,1)
+			self.Y[t][h.id] = self.A[t][h.id] * self.omegas.get(h,1)
 
 			# Set recovery by summing recoveries from
 			# previous damage.
@@ -75,13 +75,13 @@ class SASIModel:
 				# recovery time (tau), then the habitat is still
 				# recovering, and we should add
 				# to the habitat's recovery value.
-				if (x_t - t) <= self.taus.get(h,1):
+				if (x_t - t) <= self.taus.get(h.id,1):
 
 					# We recover a proportion of the previous damagei
 					# based on the habitat's recovery time.
-					self.X[t][h] = self.A[x_t][h]/self.taus.get(h,1)
+					self.X[t][h.id] = self.A[x_t][h.id]/self.taus.get(h,1)
 
 			# Set modified swept area for the timestep.
-			self.Z[t][h] = self.X[t][h] - self.Y[t][h]
+			self.Z[t][h.id] = self.X[t][h.id] - self.Y[t][h.id]
 
 

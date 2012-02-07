@@ -1,5 +1,6 @@
 from sasi.dao.habitat.test_habitat_dao import Test_Habitat_DAO
 from sasi.dao.va.csv_va_dao import CSV_VA_DAO
+from sasi.fishing.nominal_effort_model import NominalEffortModel
 
 from sasi.sasi_model import SASIModel
 
@@ -12,6 +13,8 @@ if __name__ == '__main__':
 	va_dao = CSV_VA_DAO()
 	va = va_dao.load_va()
 
+	effort_model = NominalEffortModel(habitat_model=habitat_model, va=va)
+
 	t0 = 0
 	tf = 10
 	dt = 1
@@ -23,6 +26,7 @@ if __name__ == '__main__':
 			tf=tf,
 			dt=dt,
 			habitat_model=habitat_model,
+			effort_model=effort_model,
 			va=va,
 			taus=taus,
 			omegas=omegas
