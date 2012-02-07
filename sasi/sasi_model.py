@@ -1,18 +1,30 @@
 class SASIModel:
 
-	def __init__(self, t0=0, tf=10, dt=1, habitats=[], taus={}, omegas={}):
+	def __init__(self, t0=0, tf=10, dt=1, habitats=[], va=None, taus={}, omegas={}):
 		
 		# Start time.
-		self.t0 = 0
+		self.t0 = t0
 
 		# End time.
-		self.tf = 0
+		self.tf = tf
 
 		# Timestep.
-		self.dt = 1
+		self.dt = dt
+
+		# Habitats
+		self.habitats = []
+		
+		# Vulnerability Assessment
+		self.va = va
+
+		# tau (stochastic modifier for recovery)
+		self.taus = taus
+
+		# omega (stochastic modifier for damage)
+		self.omegas = omegas
 
 		# Modified Swept Area.
-		self.Z = [] 
+		self.Z = []
 
 		# Fishing effort.
 		self.A = [] 
@@ -22,15 +34,6 @@ class SASIModel:
 
 		# Damage.
 		self.Y = [] 
-
-		# Habitats
-		self.habitats = []
-
-		# tau (stochastic modifier for recovery)
-		self.taus = {}
-
-		# omega (stochastic modifier for damage)
-		self.omegas = {}
 
 	def setup(self): pass
 	
@@ -56,10 +59,10 @@ class SASIModel:
 			self.A[t][h] = 1
 
 			# Set damage.
-			self.Y[t][h] = 1
+			self.Y[t][h] = A[t][h] * self.omegas.get(h)
 
 			# Set recovery by summing recoveries from
-			# previous damage for the current timestep.
+			# previous damage.
 			# For each previous timestep...
 			for x_t in range(self.t0, t, self.dt):
 
