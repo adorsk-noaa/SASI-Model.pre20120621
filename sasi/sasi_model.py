@@ -1,6 +1,6 @@
 class SASIModel:
 
-	def __init__(self, t0=0, tf=10, dt=1, habitat_model=None, effort_model=None, va=None, taus={}, omegas={}):
+	def __init__(self, t0=0, tf=10, dt=1, grid_model=None, effort_model=None, va=None, taus={}, omegas={}):
 		
 		# Start time.
 		self.t0 = t0
@@ -12,7 +12,7 @@ class SASIModel:
 		self.dt = dt
 
 		# Habitats
-		self.habitat_model = habitat_model 
+		self.grid_model = grid_model 
 		
 		# Fishing effort model.
 		self.effort_model = effort_model
@@ -57,17 +57,17 @@ class SASIModel:
 
 		# Initialize arrays for the timestep.
 		for array in [self.Z, self.A, self.X, self.Y]:
-			array.append({h.id: 0 for h in self.habitat_model.get_habitats()})
+			array.append({c.id: 0 for c in self.grid_model.get_cells()})
 			
 
 		# For each habitat...
-		for h in self.habitat_model.get_habitats():
+		for c in self.grid_model.get_cells():
 		
 			# Initialize list of efforts for the current timestep.
-			self.A[t][h.id] = []
+			self.A[t][c.id] = []
 
 			# Get fishing efforts for the habitat's cell.
-			cell_efforts = self.effort_model.get_effort(h.id_km100, t)
+			cell_efforts = self.effort_model.get_effort(c.id_km100, t)
 
 			# Keep fishing efforts which apply to the habitat,
 			# and distribute efforts evenly over features.
@@ -75,14 +75,14 @@ class SASIModel:
 			habitat_gears = self.g_by_h.get((h.substrate.id, h.energy),[])
 			for e in cell_efforts:
 				if e.gear in habitat_gears:
-					self.A[t][h.id].append(e)
+					self.A[t][c.id].append(e)
 			
 			
 			# Initialize list of damages.
-			self.Y[t][h.id] = []
+			self.Y[t][c.id] = []
 
 			# For each effort...
-			for e in self.A[t][h.id]:
+			for e in self.A[t][c.id]:
 
 				# For each of the habitat's features...
 
@@ -92,7 +92,7 @@ class SASIModel:
 				# Set damage for each effort.
 				# Damage is stored as (effort, damage) pairs.
 				damage = 
-				self.Y[t][h.id] = self.A[t][h.id] * self.omegas.get(h,1)
+				self.Y[t][c.id] = self.A[t][c.id] * self.omegas.get(h,1)
 
 			# Set recovery by summing recoveries from
 			# previous damage.
@@ -105,13 +105,13 @@ class SASIModel:
 				# recovery time (tau), then the habitat is still
 				# recovering, and we should add
 				# to the habitat's recovery value.
-				if (x_t - t) <= self.taus.get(h.id,1):
+				if (x_t - t) <= self.taus.get(c.id,1):
 
 					# We recover a proportion of the previous damagei
 					# based on the habitat's recovery time.
-					self.X[t][h.id] = self.A[x_t][h.id]/self.taus.get(h,1)
+					self.X[t][c.id] = self.A[x_t][c.id]/self.taus.get(h,1)
 
 			# Set modified swept area for the timestep.
-			self.Z[t][h.id] = self.X[t][h.id] - self.Y[t][h.id]
+			self.Z[t][c.id] = self.X[t][c.id] - self.Y[t][c.id]
 
 
