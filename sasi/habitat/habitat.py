@@ -11,6 +11,4 @@ class Habitat(object):
 		self.features = features
 		self.area = area
 		self.geom = geom
-		self.km100_percent = None
-		self.km1000_percent = None
 
