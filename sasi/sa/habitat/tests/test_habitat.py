@@ -3,6 +3,7 @@ from sasi.sa.tests.basetest import BaseTest
 import sasi.sa.habitat.habitat as sa_habitat
 import sasi.sa.habitat.feature as sa_feature
 import sasi.sa.habitat.substrate as sa_substrate
+import sasi.sa.habitat.cell as sa_cell
 import sasi.habitat.tests.test_habitat as test_habitat
 import sasi.habitat.tests.test_substrate as test_substrate
 import sasi.habitat.tests.test_feature as test_feature
@@ -20,7 +21,7 @@ class HabitatTest(BaseTest):
 		# Combine tables into one metadata
 		# in order to resolve dependencies.
 		combined_metadata = MetaData()
-		for m in [sa_habitat, sa_feature, sa_substrate]:
+		for m in [sa_habitat, sa_feature, sa_substrate, sa_cell]:
 			for t in m.metadata.tables.values():
 				new_t = t.tometadata(combined_metadata)
 
