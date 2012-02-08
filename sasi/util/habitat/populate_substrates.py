@@ -15,9 +15,9 @@ def main():
 	# Get DB session.
 	session = sa_session.get_session()
 	
-	# Drop/Create Tables
-	sa_substrate.metadata.drop_all(session.bind)
-	sa_substrate.metadata.create_all(session.bind)
+	# Clear substrate table.
+	session.execute(sa_substrate.table.delete())
+	session.commit()
 
 	# Create Substrate objects
 	# note: might move this into the VA object itself later.

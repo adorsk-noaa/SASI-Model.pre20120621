@@ -11,19 +11,28 @@ from sasi.habitat.feature import Feature
 
 import sasi.sa.session as sa_session
 import sasi.sa.habitat.habitat as sa_habitat
+import sasi.sa.habitat.cell as sa_cell
+import sasi.sa.habitat.feature as sa_feature
+import sasi.sa.habitat.substrate as sa_substrate
 
 import ogr
 from shapely import wkb
 from shapely.geometry import Polygon, MultiPolygon
 
-from sqlalchemy import func
+from sqlalchemy import func, MetaData
 from geoalchemy.functions import functions as geo_func
+from geoalchemy.geometry import Geometry
 
 def main():
 
 
 	# Get db session.
 	session = sa_session.get_session()
+
+	# Clear habitat tables
+	for t in [sa_habitat.habitats_features_table, sa_habitat.habitat_table]: 
+		session.execute(t.delete())
+	session.commit()
 
 	# Load shapefile
 	sf = ogr.Open(conf.conf['sasi_habitat_file'])
@@ -46,12 +55,6 @@ def main():
 
 		if (counter % 1000) == 0: print "%s" % (counter),
 		counter += 1
-		
-		# Get feature geometry. We convert each feature into a multipolygon, since
-		# we may have a mix of normal polygons and multipolygons.
-		geom = wkb.loads(f.GetGeometryRef().ExportToWkb())
-		if geom.geom_type =='Polygon':
-			geom = MultiPolygon([(geom.exterior.coords, geom.interiors )])
 
 		# Get feature attributes.
 		f_attributes = {}
@@ -60,6 +63,12 @@ def main():
 
 		# Skip blank rows.
 		if (not f_attributes['SOURCE']): continue
+
+		# Get feature geometry. We convert each feature into a multipolygon, since
+		# we may have a mix of normal polygons and multipolygons.
+		geom = wkb.loads(f.GetGeometryRef().ExportToWkb())
+		if geom.geom_type =='Polygon':
+			geom = MultiPolygon([(geom.exterior.coords, geom.interiors )])
 
 		# Get habitat's energy code.
 		energy = energy_mappings.shp_to_va[f_attributes['Energy']] 
@@ -89,31 +98,17 @@ def main():
 
 		habitats.append(h)	
 
-	print "Clearing db"
-	# Clear db of cells.
-	sa_habitat.metadata.drop_all(bind = session.connection())
-	sa_habitat.metadata.create_all(bind = session.connection())
-	session.commit()
 	
 	print "Writing habitats to db"
 	# Write habitats to db
 	session.add_all(habitats)
 	session.commit()
 
-	print "Calculating area percentages for habitats."
-	for cell_size in ['km100', 'km1000']:
-
-		print cell_size
-
-		# Calculate areas for each cell by summing habitat areas.
-		cell_area = func.sum(geo_func.area(Habitat.geom)).label('cell_area')
-		cell_id_attr = Habitat.__dict__["id_%s" % cell_size]
-		cell_infos = session.query(cell_id_attr, cell_area).group_by(cell_id_attr).all()
-		for cell_id, cell_area in cell_infos:
-			habitat_area = geo_func.area(Habitat.geom).label('habitat_area')
-			cell_percent = getattr(Habitat, "%s_percent" % cell_size)
-			for habitat, habitat_area in session.query(Habitat, habitat_area).filter(cell_id_attr == cell_id).all():
-				setattr(habitat, "%s_percent" % cell_size, habitat_area/cell_area)	
+	print "Calculating areas for habitats."
+	habitat_area = geo_func.area(Habitat.geom).label('habitat_area')
+	habitat_infos = session.query(Habitat, habitat_area).all()
+	for (habitat, habitat_area) in habitat_infos:
+		habitat.area = habitat_area
 	session.commit()
 
 	print "done"

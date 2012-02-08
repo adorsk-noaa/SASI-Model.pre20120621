@@ -38,7 +38,7 @@ mapper(
 		habitat_table,
 		properties = {
 		'geom': GeometryColumn(habitat_table.c.geom, comparator=PGComparator),
-		'substrate': relationship(Substrate, cascade='merge'),
-		'features': relationship(Feature, cascade='merge', secondary=habitats_features_table)
+		'substrate': relationship(Substrate, cascade='all'),
+		'features': relationship(Feature, cascade='all', secondary=habitats_features_table)
 		})
 

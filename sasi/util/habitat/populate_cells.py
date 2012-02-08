@@ -18,9 +18,9 @@ def main():
 	# Get db session.
 	session = sa_session.get_session()
 
-	# Drop/Create Cell Tables.	
-	sa_cell.metadata.drop_all(session.bind)
-	sa_cell.metadata.create_all(session.bind)
+	# Clear cell tables
+	for t in sa_cell.metadata.tables.values():
+		session.execute(t.delete())
 	session.commit()
 
 	# For each type of cell...

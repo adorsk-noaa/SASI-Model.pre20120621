@@ -1,4 +1,4 @@
-import sasi.conf.conf
+import sasi.conf.conf as conf
 from sasi.va.va import VulnerabilityAssessment
 from sasi.habitat.feature import Feature
 import sasi.util.va
@@ -9,15 +9,14 @@ def main():
 	# Read features from vulernability assessment.
 	va_rows = sasi.util.va.read_va_from_csv(conf.conf['va_file'])
 	va = VulnerabilityAssessment(rows = va_rows)	
-	f_by_h = va.getFeaturesByHabitats()
-	features = va.getFeatures()
+	features = va.get_features()
 
 	# Get DB session.
 	session = sa_session.get_session()
 	
-	# Drop/Create Feature Tables
-	sa_feature.metadata.drop_all(session.bind)
-	sa_feature.metadata.create_all(session.bind)
+	# Clear features table.
+	session.execute(sa_feature.table.delete())
+	session.commit()
 
 	# Create Feature objects
 	# note: might move this into the VA object itself later.
