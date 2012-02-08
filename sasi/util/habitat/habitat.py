@@ -1,6 +1,7 @@
 from sasi.habitat.habitat import Habitat
 from sasi.habitat.feature import Feature
 from sasi.habitat.substrate import Substrate
+from sasi.habitat.cell import Cell
 import sasi.conf.conf as conf
 import sasi.conf.feature_assignments as feature_assignments
 import sasi.conf.substrate_mappings as substrate_mappings
@@ -39,3 +40,22 @@ def generate_habitats(n):
 
 	return habitats
 
+
+def generate_cells(n):
+
+	cells = []
+
+	for i in range(n):
+
+		habitats = generate_habitats(2)
+
+		c = Cell(
+				id = i,
+				area = i,
+				geom = geo_util.generate_multipolygon(),
+				habitats = habitats
+				)
+
+		cells.append(c)
+
+	return cells

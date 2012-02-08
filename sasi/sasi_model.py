@@ -38,7 +38,12 @@ class SASIModel:
 		# Damage.
 		self.Y = [] 
 
-	def setup(self): pass
+		self.setup()
+
+	def setup(self):
+
+		# Shortcut to gears by habitat lookup.
+		self.g_by_h = self.va.get_gears_by_habitats()
 	
 	def run(self):
 
@@ -55,14 +60,39 @@ class SASIModel:
 			array.append({h.id: 0 for h in self.habitat_model.get_habitats()})
 			
 
+		# For each habitat...
 		for h in self.habitat_model.get_habitats():
-			
-			# Set fishing effort area.
-			# @todo: ADD LOGIC TO GET EFFORT FROM MODEL OR EXTERNAL DATA
-			self.A[t][h.id] = 1
+		
+			# Initialize list of efforts for the current timestep.
+			self.A[t][h.id] = []
 
-			# Set damage.
-			self.Y[t][h.id] = self.A[t][h.id] * self.omegas.get(h,1)
+			# Get fishing efforts for the habitat's cell.
+			cell_efforts = self.effort_model.get_effort(h.id_km100, t)
+
+			# Keep fishing efforts which apply to the habitat,
+			# and distribute efforts evenly over features.
+			habitat_efforts = []
+			habitat_gears = self.g_by_h.get((h.substrate.id, h.energy),[])
+			for e in cell_efforts:
+				if e.gear in habitat_gears:
+					self.A[t][h.id].append(e)
+			
+			
+			# Initialize list of damages.
+			self.Y[t][h.id] = []
+
+			# For each effort...
+			for e in self.A[t][h.id]:
+
+				# For each of the habitat's features...
+
+				# Get VA for effort.
+				effort_va = self.va.assessments((e.gear, h.substrate.id, h
+
+				# Set damage for each effort.
+				# Damage is stored as (effort, damage) pairs.
+				damage = 
+				self.Y[t][h.id] = self.A[t][h.id] * self.omegas.get(h,1)
 
 			# Set recovery by summing recoveries from
 			# previous damage.

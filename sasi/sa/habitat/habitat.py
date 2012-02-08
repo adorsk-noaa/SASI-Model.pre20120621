@@ -12,19 +12,13 @@ import sasi.sa.habitat.feature as sa_feature
 
 metadata = MetaData()
 
-habitats_features_table = Table('habitats_features', metadata,
-		Column('habitat_id', Integer, ForeignKey('habitat.id')),
-		Column('feature_id', String, ForeignKey(sa_feature.table.c.id))
-		)
-
-table = Table('habitat', metadata,
+habitat_table = Table('habitat', metadata,
 		Column('id', Integer, primary_key=True),
 		Column('id_km100', String),
 		Column('id_km1000', String),
 		Column('id_vor', String),
 		Column('z', Integer),
 		Column('substrate_id', String, ForeignKey(sa_substrate.table.c.id)),
-		Column('feature_id', String, ForeignKey(sa_feature.table.c.id)),
 		Column('energy', String),
 		Column('area', Float),
 		GeometryExtensionColumn('geom', MultiPolygon(2)),
@@ -32,11 +26,19 @@ table = Table('habitat', metadata,
 		Column('km1000_percent', Float),
 		)
 
+GeometryDDL(habitat_table)
 
-GeometryDDL(table)
+habitats_features_table = Table('habitats_features', metadata,
+		Column('habitat_id', Integer, ForeignKey('habitat.id')),
+		Column('feature_id', String, ForeignKey(sa_feature.table.c.id))
+		)
 		
-mapper(Habitat, table, properties = {
-	'geom': GeometryColumn(table.c.geom, comparator=PGComparator),
-	'substrate': relationship(Substrate, cascade=''),
-	'features': relationship(Feature, cascade='', secondary=habitats_features_table)
-	})
+mapper(
+		Habitat,
+		habitat_table,
+		properties = {
+		'geom': GeometryColumn(habitat_table.c.geom, comparator=PGComparator),
+		'substrate': relationship(Substrate, cascade='merge'),
+		'features': relationship(Feature, cascade='merge', secondary=habitats_features_table)
+		})
+
