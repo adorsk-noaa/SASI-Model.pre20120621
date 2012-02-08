@@ -12,7 +12,7 @@ metadata = MetaData()
 
 cell_table = Table('cell', metadata,
 		Column('id', Integer, primary_key=True),
-		Column('type', String),
+		Column('type', String, primary_key=True),
 		Column('area', Float),
 		GeometryExtensionColumn('geom', MultiPolygon(2)),
 		)
