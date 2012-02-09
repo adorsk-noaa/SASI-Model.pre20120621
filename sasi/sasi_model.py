@@ -1,3 +1,6 @@
+# @TODO: consider making something like a 'SweptAreaEffect' class to represent the objects
+# we store as contact adjusted areas.  Seems to get used in several places...
+
 class SASIModel:
 
 	def __init__(self, t0=0, tf=10, dt=1, grid_model=None, effort_model=None, va=None, taus=None, omegas=None):
@@ -22,24 +25,34 @@ class SASIModel:
 
 		# tau (stochastic modifier for recovery)
 		if not taus:
-			taus = {}
+			taus = {
+					'0' : 1,
+					'1' : 2,
+					'2' : 5,
+					'3' : 10
+					}
 		self.taus = taus
 
 		# omega (stochastic modifier for damage)
 		if not omegas:
-			omegas = {}
+			omegas = {
+					'0' : 10,
+					'1' : 25,
+					'2' : 50,
+					'3' : 100
+					}
 		self.omegas = omegas
 
 		# Modified Swept Area.
 		self.Z = []
 
-		# Fishing effort.
+		# Contact-Adjusted Swept Area
 		self.A = [] 
 
 		# Recovery.
 		self.X = [] 
 
-		# Damage.
+		# Adverse Effects.
 		self.Y = [] 
 
 		self.setup()
@@ -73,12 +86,14 @@ class SASIModel:
 		for c in self.grid_model.get_cells():
 
 			#
-			# Effort
+			# Contact-Adjusted Swept Areas
 			# 
 
-			# Initialize list of efforts for the current timestep.
-			# Efforts will be stored as tuples in this form:
-			# (habitat.id, gear.id, feature.id, swept_area)
+			# Initialize list of Contact-Adjusted Swept Areas
+			# for the current timestep.
+			# Swept Areas will be calculated at the level of individual
+			# features, and will be stored as dictionaries with these keys:
+			# (swept_area, habitat, gear, feature)
 			self.A[t][c.id] = []
 
 			# Get fishing efforts for the cell.
@@ -121,51 +136,103 @@ class SASIModel:
 							# For each feature...
 							for feature in relevant_features:
 
-								# Add the effort to the cell's efforts for the timestep.
+								# Add the resulting contact-adjusted
+								# swept area to the cell.
 								self.A[t][c.id].append(
-										(
-											swept_area_per_feature,
-											habitat.id,
-											effort.gear,
-											feature.id,
-											)
+										{
+											'swept_area': swept_area_per_feature,
+											'habitat': habitat,
+											'gear': effort.gear,
+											'feature': feature,
+											}	
 										)
 
-			
-			# Initialize list of damages.
+		
+			##
+			## Adverse effects.
+			##
+
+			# Initialize list of adverse effects.
+			# Adverse effects will be dictionaries with these keys:
+			# (swept_area, habitat, gear, feature)
 			self.Y[t][c.id] = []
 
-			# For each effort...
-			for e in self.A[t][c.id]:
+			# For each contact-adjusted effort...
+			for effort in self.A[t][c.id]:
 
-				# For each of the habitat's features...
+				# Get susceptibility for the effort.
+				susceptibility = self.va.get_susceptibility(
+						gear_code = effort.get('gear'),
+						substrate_code = effort.get('habitat').substrate.id,
+						feature_code = effort.get('feature').id,
+						energy = effort.get('habitat').energy
+						)
 
-				# Get VA for effort.
-				#effort_va = self.va.assessments((e.gear, h.substrate.id, h
+				# Get stochastic modifier for the susceptibility
+				omega = self.omegas.get(susceptibility)
 
-				# Set damage for each effort.
-				# Damage is stored as (effort, damage) pairs.
-				damage = 1
-				#self.Y[t][c.id] = self.A[t][c.id] * self.omegas.get(h,1)
-				#self.Y[t][c.id] = self.A[t][c.id] * self.omegas.get(h,1)
+				# Calculate adverse effect.
+				adverse_effect_swept_area = effort.get('swept_area') * omega
+
+				# Add resulting adverse effect to the cell.
+				self.Y[t][c.id].append(
+						{
+							'swept_area': adverse_effect_swept_area,
+							'habitat': effort.get('habitat'),
+							'gear': effort.get('gear'),
+							'feature': effort.get('feature')
+							}
+						)
+
+
+			##
+			## Recovery
+			## 
 
 			# Set recovery by summing recoveries from
 			# previous damage.
+			# Recoveries are stored as dictionaries.
+
+			# Initialize list of recoveries.
+			self.X[t][c.id] = []
+
 			# For each previous timestep...
 			for x_t in range(self.t0, t, self.dt):
 
-				# If the time difference between 
-				# when the damage occured (x_t) and the current timestep
-				# time step is less than the habitat's
-				# recovery time (tau), then the habitat is still
-				# recovering, and we should add
-				# to the habitat's recovery value.
-				if (x_t - t) <= self.taus.get(c.id,1):
+				# For each adverse effect in the timestep...
+				for effort in self.Y[x_t][c.id]:
 
-					# We recover a proportion of the previous damagei
-					# based on the habitat's recovery time.
-					#self.X[t][c.id] = self.A[x_t][c.id]/self.taus.get(h,1)
-					pass 
+					# Get recover for the effort.
+					recovery = self.va.get_recovery(
+							gear_code = effort.get('gear'),
+							substrate_code = effort.get('habitat').substrate.id,
+							feature_code = effort.get('feature').id,
+							energy = effort.get('habitat').energy
+							)
+
+					# Get stochastic modifier for the susceptibility
+					tau = self.taus.get(recovery)
+
+					# If the time difference between 
+					# when the damage occured (x_t) and the current timestep
+					# time step is less than the habitat's
+					# recovery time (tau), then the habitat is still
+					# recovering, and we should add
+					# to the habitat's recovery value.
+					if (x_t - t) <= tau:
+
+						# Calculate recovered area.
+						# Recovered area per timestep is the effort's swept area
+						# distribute equally over the reocvery period.
+						recovered_area = effort.get('swept_area')/tau
+
+						# Add resulting recovered area to the cell.
+						self.X[t][c.id].append(
+							{
+								'recovered_area': recovered_area,
+								'effort': effort
+								}
+							)
 
 			# Set modified swept area for the timestep.
 			#self.Z[t][c.id] = self.X[t][c.id] - self.Y[t][c.id]

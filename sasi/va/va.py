@@ -12,6 +12,21 @@ class VulnerabilityAssessment(object):
 			assessments[key] = r
 		return assessments
 
+	def get_assessment(self, gear_code='', substrate_code='', feature_code='', energy=''):
+		key = (gear_code, substrate_code, feature_code, energy)
+		return self.assessments.get(key, None)
+
+	def get_susceptibility(self, **kwopts):
+		assessment = self.get_assessment(**kwopts)
+		if assessment:
+			return assessment['S']
+
+
+	def get_recovery(self, **kwopts):
+		assessment = self.get_assessment(**kwopts)
+		if assessment:
+			return assessment['R']
+
 	def get_features_by_habitats(self):
 		f_by_h = {}
 		for key, assessment in self.assessments.items():

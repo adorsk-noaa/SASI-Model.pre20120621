@@ -36,5 +36,6 @@ if __name__ == '__main__':
 		print "iteration: %s" % n
 
 		model.iterate(n)
+		#print ["cell %s: %s" % (c, sum([r['recovered_area'] for r in model.X[n][c]]) ) for c in model.X[n]]
 
 
