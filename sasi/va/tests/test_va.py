@@ -13,6 +13,8 @@ class VulnerabilityAssessmentTest(unittest.TestCase):
 		substrates = va.get_substrates()
 		g_by_h = va.get_gears_by_habitats()
 		gears = va.get_gears()
+		h_by_g = va.get_habitats_by_gears()
+		habitats_for_gear = va.get_habitats_for_gear(gears.keys().pop())
 
 if __name__ == '__main__':
 	unittest.main()

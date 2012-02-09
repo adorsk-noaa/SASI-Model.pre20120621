@@ -48,6 +48,24 @@ class VulnerabilityAssessment(object):
 			gears_for_hab = g_by_h.setdefault(hab_key,set())
 			gears_for_hab.add(assessment['GEAR_CODE'])
 		return g_by_h
+	
+	def get_habitats_by_gears(self):
+		h_by_g = {}
+		for key, assessment in self.assessments.items():
+			hab_key = (assessment['SUBSTRATE_CODE'], assessment['ENERGY'])
+			habs_for_gears= h_by_g.setdefault(assessment['GEAR_CODE'], set())
+			habs_for_gears.add(hab_key)
+		return h_by_g
+
+	def get_habitats_for_gear(self, gear_code):
+		print gear_code
+		habitats = set()
+		for key, assessment in self.assessments.items():
+			if assessment['GEAR_CODE'] == gear_code:
+				hab_key = (assessment['SUBSTRATE_CODE'], assessment['ENERGY'])
+				habitats.add(hab_key)
+		return habitats
+
 
 	def get_gears(self):
 		gears = {} 
