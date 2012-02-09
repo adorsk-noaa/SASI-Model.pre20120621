@@ -8,7 +8,7 @@ from sasi.habitat.static_grid_model import StaticGridModel
 
 if __name__ == '__main__':
 
-	grid_model = StaticGridModel(cell_dao=Test_Habitat_DAO()) 
+	grid_model = StaticGridModel(cell_dao=Test_Cell_DAO()) 
 
 	va_dao = CSV_VA_DAO()
 	va = va_dao.load_va()
@@ -36,6 +36,5 @@ if __name__ == '__main__':
 		print "iteration: %s" % n
 
 		model.iterate(n)
-
 
 
