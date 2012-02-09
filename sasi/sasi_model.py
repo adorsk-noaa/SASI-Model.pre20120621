@@ -44,16 +44,19 @@ class SASIModel:
 		self.omegas = omegas
 
 		# Modified Swept Area.
-		self.Z = []
+		self.Z = {} 
 
 		# Contact-Adjusted Swept Area
-		self.A = [] 
+		self.A = {} 
 
 		# Recovery.
-		self.X = [] 
+		self.X = {} 
 
 		# Adverse Effects.
-		self.Y = [] 
+		self.Y = {} 
+
+		# List of index keys to be used when creating index results.
+		self.index_keys = self.get_index_keys()
 
 		self.setup()
 
@@ -77,24 +80,12 @@ class SASIModel:
 
 	def iterate(self, t):
 
-		# Initialize arrays for the timestep.
-		for array in [self.Z, self.A, self.X, self.Y]:
-			array.append({c.id: 0 for c in self.grid_model.get_cells()})
-			
+		# Initialize tables for the timestep if not already initialized.
+		for table in [self.Z, self.A, self.X, self.Y]:
+			table.setdefault(t, self.get_indexed_table())
 
 		# For each cell...
 		for c in self.grid_model.get_cells():
-
-			#
-			# Contact-Adjusted Swept Areas
-			# 
-
-			# Initialize list of Contact-Adjusted Swept Areas
-			# for the current timestep.
-			# Swept Areas will be calculated at the level of individual
-			# features, and will be stored as dictionaries with these keys:
-			# (swept_area, habitat, gear, feature)
-			self.A[t][c.id] = []
 
 			# Get fishing efforts for the cell.
 			cell_efforts = self.effort_model.get_effort(c, t)
@@ -125,116 +116,98 @@ class SASIModel:
 						# If there were relevant features...
 						if relevant_features:
 
-							# Get or initialize the list of feature efforts for this cell
-							# for this timestep.
-							feature_efforts = self.A[t][c.id]
-
-
 							# Distribute the habitat's effort equally over the features.
 							swept_area_per_feature= swept_area_per_habitat/len(relevant_features)
-							
+
 							# For each feature...
 							for feature in relevant_features:
 
-								# Add the resulting contact-adjusted
-								# swept area to the cell.
-								self.A[t][c.id].append(
-										{
-											'swept_area': swept_area_per_feature,
-											'habitat': habitat,
-											'gear': effort.gear,
-											'feature': feature,
-											}	
+								# Generate an index key for the results.
+								index_key = self.get_index_key(
+										cell_id = c.id,
+										substrate_code = habitat.substrate.id,
+										energy = habitat.energy,
+										gear_code = effort.gear,
+										feature_code = feature.id
 										)
 
+								# Calculate contact-adjusted swept area.
+								contact_adjusted_swept_area = swept_area_per_feature
+
+								# Add the resulting contact-adjusted
+								# swept area to the A table.
+								self.A[t][index_key] += contact_adjusted_swept_area
+
+								# Get vulnerability assessment for the effort.
+								vulnerability_assessment = self.va.get_assessment(
+									gear_code = effort.gear,
+									substrate_code = habitat.substrate.id,
+									feature_code = feature.id,
+									energy = habitat.energy
+									)
+
+								# Get stochastic modifiers 
+								omega = self.omegas.get(vulnerability_assessment['S'])
+								tau = self.taus.get(vulnerability_assessment['R'])
+
+								# Calculate adverse effect swept area.
+								adverse_effect_swept_area = contact_adjusted_swept_area * omega
+
+								# Add to adverse effect table.
+								self.Y[t][index_key] += adverse_effect_swept_area
+
+								# Calculate recovery per timestep.
+								recovery_per_dt = adverse_effect_swept_area/tau
+
+								# Add recover to future recovery table entries.
+								for future_t in (t + 1, t + tau, self.dt):
+									self.X.setdefault(future_t, self.get_indexed_table())
+									self.X[future_t][index_key] += recovery_per_dt
+
+								# Add to modified swept area for the timestep.
+								self.Z[t][index_key] += self.X[t][index_key] - self.Y[t][index_key]
+
+
+	# Get index keys for storing model effects. 
+	# The keys consist of valid (cell, substrate, energy, gear, feature) combinations,
+	# as defined by the grid model and the vulnerability assessment.
+	def get_index_keys(self):
+		index_keys = [] 
+		for c in self.grid_model.get_cells():
+			for a in self.va.assessments.values():
+				index_key = self.get_index_key(cell_id = c.id,
+						substrate_code = a['SUBSTRATE_CODE'],
+						energy = a['ENERGY'],
+						gear_code = a['GEAR_CODE'],
+						feature_code = a['FEATURE_CODE']
+					)	
+				index_keys.append(index_key)
+		return index_keys
+
+	# Format index key from key components.
+	def get_index_key(self, cell_id='', substrate_code='', energy='', gear_code='', feature_code=''):
+		index_key = (
+				cell_id,	
+				substrate_code,
+				energy,
+				gear_code,
+				feature_code
+				)
+		return index_key
+
+	# Get a storage table indexed by the index keys.
+	# note: at some later point this might need optimization later, e.g. w/ pytables
+	def get_indexed_table(self):
+		table = {}
+		for k in self.index_keys:
+			table[k] = 0.0
+		return table
 		
-			##
-			## Adverse effects.
-			##
 
-			# Initialize list of adverse effects.
-			# Adverse effects will be dictionaries with these keys:
-			# (swept_area, habitat, gear, feature)
-			self.Y[t][c.id] = []
-
-			# For each contact-adjusted effort...
-			for effort in self.A[t][c.id]:
-
-				# Get susceptibility for the effort.
-				susceptibility = self.va.get_susceptibility(
-						gear_code = effort.get('gear'),
-						substrate_code = effort.get('habitat').substrate.id,
-						feature_code = effort.get('feature').id,
-						energy = effort.get('habitat').energy
-						)
-
-				# Get stochastic modifier for the susceptibility
-				omega = self.omegas.get(susceptibility)
-
-				# Calculate adverse effect.
-				adverse_effect_swept_area = effort.get('swept_area') * omega
-
-				# Add resulting adverse effect to the cell.
-				self.Y[t][c.id].append(
-						{
-							'swept_area': adverse_effect_swept_area,
-							'habitat': effort.get('habitat'),
-							'gear': effort.get('gear'),
-							'feature': effort.get('feature')
-							}
-						)
+		
 
 
-			##
-			## Recovery
-			## 
 
-			# Set recovery by summing recoveries from
-			# previous damage.
-			# Recoveries are stored as dictionaries.
 
-			# Initialize list of recoveries.
-			self.X[t][c.id] = []
-
-			# For each previous timestep...
-			for x_t in range(self.t0, t, self.dt):
-
-				# For each adverse effect in the timestep...
-				for effort in self.Y[x_t][c.id]:
-
-					# Get recover for the effort.
-					recovery = self.va.get_recovery(
-							gear_code = effort.get('gear'),
-							substrate_code = effort.get('habitat').substrate.id,
-							feature_code = effort.get('feature').id,
-							energy = effort.get('habitat').energy
-							)
-
-					# Get stochastic modifier for the susceptibility
-					tau = self.taus.get(recovery)
-
-					# If the time difference between 
-					# when the damage occured (x_t) and the current timestep
-					# time step is less than the habitat's
-					# recovery time (tau), then the habitat is still
-					# recovering, and we should add
-					# to the habitat's recovery value.
-					if (x_t - t) <= tau:
-
-						# Calculate recovered area.
-						# Recovered area per timestep is the effort's swept area
-						# distribute equally over the reocvery period.
-						recovered_area = effort.get('swept_area')/tau
-
-						# Add resulting recovered area to the cell.
-						self.X[t][c.id].append(
-							{
-								'recovered_area': recovered_area,
-								'effort': effort
-								}
-							)
-
-			# Set modified swept area for the timestep.
-			#self.Z[t][c.id] = self.X[t][c.id] - self.Y[t][c.id]
 
 

@@ -34,8 +34,11 @@ if __name__ == '__main__':
 
 	for n in range(t0, tf):
 		print "iteration: %s" % n
-
 		model.iterate(n)
-		#print ["cell %s: %s" % (c, sum([r['recovered_area'] for r in model.X[n][c]]) ) for c in model.X[n]]
+		sample_size = 5
+		for table_name in ['A', 'Y', 'X', 'Z']:
+			table = getattr(model, table_name)
+			print "table '%s': %s" % (table_name, [table[n].values()[0:5]] )
+
 
 
