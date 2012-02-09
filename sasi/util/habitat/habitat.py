@@ -8,7 +8,7 @@ import sasi.conf.substrate_mappings as substrate_mappings
 import sasi.conf.energy_mappings as energy_mappings
 import sasi.tests.geo_util as geo_util
 
-def generate_habitats(n):
+def generate_habitats(n, default_area = lambda: 1):
 	energy_codes = list(set(energy_mappings.shp_to_va.values()))
 
 	substrate_codes = list(set(substrate_mappings.shp_to_va.values()))
@@ -32,7 +32,7 @@ def generate_habitats(n):
 				energy = energy,
 				substrate = substrate,
 				features = features,
-				area = i,
+				area = default_area(),
 				geom = geo_util.generate_multipolygon(),
 				)
 
@@ -41,19 +41,24 @@ def generate_habitats(n):
 	return habitats
 
 
-def generate_cells(n):
+def generate_cells(n, default_area = lambda: 1.0, habitats=None, habitats_per_cell=2):
 
 	cells = []
 
+	# Generate habitats if none were given.
+	if not habitats:
+		default_habitat_area = lambda: 1.0 * default_area()/habitats_per_cell 
+		habitats = generate_habitats(n * habitats_per_cell, default_area = default_habitat_area)
+
 	for i in range(n):
 
-		habitats = generate_habitats(2)
+		cell_habitats = [habitats.pop() for i in range(habitats_per_cell)]
 
 		c = Cell(
 				id = i,
-				area = i,
+				area = default_area(),
 				geom = geo_util.generate_multipolygon(),
-				habitats = habitats
+				habitats = cell_habitats
 				)
 
 		cells.append(c)
