@@ -9,10 +9,9 @@ class Test_Cell_DAO(Cell_DAO):
 		self.cells = {}
 
 		n = 0
-		for c in habitat_util.generate_cells(num_cells):
+		for c in habitat_util.generate_cells(num_cells, default_area = lambda: (1000.0 * 100)**2 ):
 			c.id = n
 			c.type='km100'
-			c.area = (100.0 * 1000)**2
 			self.cells[n] = c
 			n += 1		
 
