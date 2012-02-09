@@ -57,6 +57,13 @@ class VulnerabilityAssessment(object):
 			habs_for_gears.add(hab_key)
 		return h_by_g
 
+	def get_features_by_gears(self):
+		f_by_g = {}
+		for key, assessment in self.assessments.items():
+			features_for_gears = f_by_g.setdefault(assessment['GEAR_CODE'], set())
+			features_for_gears.add(assessment['FEATURE_CODE'])
+		return f_by_g
+
 	def get_habitats_for_gear(self, gear_code):
 		habitats = set()
 		for key, assessment in self.assessments.items():
