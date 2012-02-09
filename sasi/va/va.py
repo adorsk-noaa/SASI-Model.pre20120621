@@ -49,3 +49,11 @@ class VulnerabilityAssessment(object):
 			gears_for_hab.add(assessment['GEAR_CODE'])
 		return g_by_h
 
+	def get_gears(self):
+		gears = {} 
+		for key, assessment in self.assessments.items():
+			gears[assessment['GEAR_CODE']] = {
+					'GEAR_CODE': assessment['GEAR_CODE'],
+					'GEAR': assessment['GEAR']
+					}
+		return gears
