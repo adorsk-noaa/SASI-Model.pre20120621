@@ -58,7 +58,6 @@ class VulnerabilityAssessment(object):
 		return h_by_g
 
 	def get_habitats_for_gear(self, gear_code):
-		print gear_code
 		habitats = set()
 		for key, assessment in self.assessments.items():
 			if assessment['GEAR_CODE'] == gear_code:
@@ -66,6 +65,12 @@ class VulnerabilityAssessment(object):
 				habitats.add(hab_key)
 		return habitats
 
+	def get_features_for_gear(self, gear_code):
+		features = set()
+		for key, assessment in self.assessments.items():
+			if assessment['GEAR_CODE'] == gear_code:
+				features.add(assessment['FEATURE_CODE'])
+		return features
 
 	def get_gears(self):
 		gears = {} 

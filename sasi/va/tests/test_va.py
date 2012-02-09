@@ -15,6 +15,7 @@ class VulnerabilityAssessmentTest(unittest.TestCase):
 		gears = va.get_gears()
 		h_by_g = va.get_habitats_by_gears()
 		habitats_for_gear = va.get_habitats_for_gear(gears.keys().pop())
+		features_for_gear = va.get_features_for_gear(gears.keys().pop())
 
 if __name__ == '__main__':
 	unittest.main()
