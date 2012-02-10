@@ -87,7 +87,7 @@ class SASIModel:
 		# For each cell...
 		for c in self.grid_model.get_cells():
 
-			# Get fishing efforts for the cell.
+			# Get contact-adjusted fishing efforts for the cell.
 			cell_efforts = self.effort_model.get_effort(c, t)
 
 			# For each effort...
@@ -131,12 +131,9 @@ class SASIModel:
 										feature_code = feature.id
 										)
 
-								# Calculate contact-adjusted swept area.
-								contact_adjusted_swept_area = swept_area_per_feature
-
 								# Add the resulting contact-adjusted
 								# swept area to the A table.
-								self.A[t][index_key] += contact_adjusted_swept_area
+								self.A[t][index_key] += swept_area_per_feature
 
 								# Get vulnerability assessment for the effort.
 								vulnerability_assessment = self.va.get_assessment(
@@ -202,12 +199,3 @@ class SASIModel:
 		for k in self.index_keys:
 			table[k] = 0.0
 		return table
-		
-
-		
-
-
-
-
-
-
