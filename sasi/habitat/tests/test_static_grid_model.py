@@ -6,7 +6,7 @@ from sasi.habitat.static_grid_model import StaticGridModel
 class StaticGridModelTest(unittest.TestCase):
 
 	def test(self):
-		grid_model = StaticGridModel(cell_dao=Test_Cell_DAO()) 
+		grid_model = StaticGridModel(cell_dao=Test_Cell_DAO(), default_filters={'type': ['km100']}) 
 
 		cells = grid_model.get_cells()
 
