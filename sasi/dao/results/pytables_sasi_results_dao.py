@@ -6,6 +6,7 @@ class SASI_Result(pytables.IsDescription):
 	key = pytables.StringCol(128)
 	result_type = pytables.StringCol(8)
 	time = pytables.IntCol()
+	cell_id = pytables.IntCol()
 	substrate = pytables.StringCol(8)
 	energy = pytables.StringCol(8)
 	gear = pytables.StringCol(8)
@@ -25,7 +26,7 @@ class Pytables_SASI_Results_DAO(Results_DAO):
 		self.results_table = None
 
 		# Result components to use for uniquely identifying results.
-		self.key_components = ['result_type', 'time', 'substrate', 'energy', 'gear']
+		self.key_components = ['result_type', 'time', 'cell_id', 'substrate', 'energy', 'gear']
 
 		self.setup()
 		
@@ -48,13 +49,16 @@ class Pytables_SASI_Results_DAO(Results_DAO):
 	def get_results(self, filters=None, as_proxy=False):
 	
 		if filters:
-
-			# If there is a 'results'-type filter, convert it into a
 			
 			# Initialize list of conditions to be constructed from filters.
 			conditions = []
 
 			for f in filters:
+
+				# If there is a 'results'-type filter, convert it into a 'key'-type filter.
+				if f['name'] == 'results':
+					f['name'] = 'key'
+					f['values'] = [self.get_key_for_result(fv) for fv in f['values']]
 
 				quote_values = False
 				if isinstance(SASI_Result.columns[f['name']],pytables.description.StringCol):

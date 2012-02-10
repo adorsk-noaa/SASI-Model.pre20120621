@@ -14,6 +14,7 @@ class Pytables_SASI_Results_DAO_Test(unittest.TestCase):
 			result = {
 					'result_type': 'X',
 					'time': i % 2,
+					'cell_id': i,
 					'substrate': "S%s" % ((i % 2) + 1),
 					'energy': 'High',
 					'gear': "G%s" % ((i % 2) + 1),
@@ -39,7 +40,17 @@ class Pytables_SASI_Results_DAO_Test(unittest.TestCase):
 
 		results_dao.update_results(results)
 			
-		fetched_results = results_dao.get_results(as_proxy=False)
+		fetched_results = results_dao.get_results()
+
+		fetched_results2 = results_dao.get_results(
+				filters=[
+					{
+						'name': 'results',
+						'operator': '==',
+						'values': results[5:7]
+						}
+					]
+				)
 
 if __name__ == '__main__':
 	unittest.main()
