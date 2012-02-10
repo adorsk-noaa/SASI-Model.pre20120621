@@ -3,7 +3,7 @@
 
 class SASIModel:
 
-	def __init__(self, t0=0, tf=10, dt=1, grid_model=None, effort_model=None, va=None, taus=None, omegas=None):
+	def __init__(self, t0=0, tf=10, dt=1, grid_model=None, effort_model=None, va=None, results_model=None, taus=None, omegas=None):
 		
 		# Start time.
 		self.t0 = t0
@@ -22,6 +22,9 @@ class SASIModel:
 
 		# Vulnerability Assessment
 		self.va = va
+
+		# Results model.
+		self.results_model = results_model
 
 		# tau (stochastic modifier for recovery)
 		if not taus:
@@ -44,16 +47,16 @@ class SASIModel:
 		self.omegas = omegas
 
 		# Modified Swept Area.
-		self.Z = {} 
+		self.Z = self.results_model.Z 
 
 		# Contact-Adjusted Swept Area
-		self.A = {} 
+		self.A = self.results_model.A 
 
 		# Recovery.
-		self.X = {} 
+		self.X = self.results_model.X 
 
 		# Adverse Effects.
-		self.Y = {} 
+		self.Y = self.results_model.Y 
 
 		# List of index keys to be used when creating index results.
 		self.index_keys = self.get_index_keys()
@@ -148,7 +151,7 @@ class SASIModel:
 								tau = self.taus.get(vulnerability_assessment['R'])
 
 								# Calculate adverse effect swept area.
-								adverse_effect_swept_area = contact_adjusted_swept_area * omega
+								adverse_effect_swept_area = swept_area_per_feature * omega
 
 								# Add to adverse effect table.
 								self.Y[t][index_key] += adverse_effect_swept_area
@@ -158,12 +161,12 @@ class SASIModel:
 
 								# Add recover to future recovery table entries.
 								for future_t in (t + 1, t + tau, self.dt):
-									self.X.setdefault(future_t, self.get_indexed_table())
-									self.X[future_t][index_key] += recovery_per_dt
+									if future_t <= self.tf:
+										self.X.setdefault(future_t, self.get_indexed_table())
+										self.X[future_t][index_key] += recovery_per_dt
 
 								# Add to modified swept area for the timestep.
 								self.Z[t][index_key] += self.X[t][index_key] - self.Y[t][index_key]
-
 
 	# Get index keys for storing model effects. 
 	# The keys consist of valid (cell, substrate, energy, gear, feature) combinations,

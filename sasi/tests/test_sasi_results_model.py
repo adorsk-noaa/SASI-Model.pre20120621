@@ -1,19 +1,15 @@
 import unittest
 from sasi.sasi_results_model import SASI_Results_Model
-from sasi.dao.results.pytables_sasi_results_dao import Pytables_SASI_Results_DAO
 
 class SASI_Results_ModelTest(unittest.TestCase):
 
 	def test(self):
 
-		results_dao = Pytables_SASI_Results_DAO(h5file_path='/tmp/test.hd5')
-
-		results_model = SASI_Results_Model(results_dao=results_dao)
+		results_model = SASI_Results_Model()
 
 		results = []
 		for i in range(10):
 			result = {
-					'result_type': 'X',
 					'time': i % 2,
 					'cell_id': i,
 					'substrate': "S%s" % ((i % 2) + 1),
@@ -24,25 +20,9 @@ class SASI_Results_ModelTest(unittest.TestCase):
 			results.append(result)
 
 		for result in results:
-			results_model.create_result(result)
-
-		for result in results:
-			result['value'] *= 10
-			results_model.update_result(result)
-
-		old_result = results[0]
-		old_result['value'] = 99
-		new_result = {
-				'result_type': 'Y',
-				'time': 0,
-				'cell_id': 1000,
-				'substrate': 'S10',
-				'energy': 'High',
-				'gear': 'G1',
-				'value': 1000
-				}
-		results_model.create_or_update_result(old_result)
-		results_model.create_or_update_result(new_result)
+			result_key = ','.join("%s" % s for s in [ result['time'], result['cell_id'], result['substrate'], result['energy'], result['gear'] ])
+			results_model.A[result_key] = result['value']
+			results_model.A[result_key] += 50
 
 		self.failUnless(True)
 

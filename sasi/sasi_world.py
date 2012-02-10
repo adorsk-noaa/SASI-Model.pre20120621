@@ -2,18 +2,23 @@ from sasi.dao.habitat.test_cell_dao import Test_Cell_DAO
 from sasi.dao.va.csv_va_dao import CSV_VA_DAO
 from sasi.fishing.nominal_effort_model import NominalEffortModel
 
+from sasi.sasi_results_model import SASI_Results_Model
+
 from sasi.sasi_model import SASIModel
+
 
 from sasi.habitat.static_grid_model import StaticGridModel
 
 if __name__ == '__main__':
 
-	grid_model = StaticGridModel(cell_dao=Test_Cell_DAO()) 
+	grid_model = StaticGridModel(cell_dao=Test_Cell_DAO(), default_filters={'type': 'km100'}) 
 
 	va_dao = CSV_VA_DAO()
 	va = va_dao.load_va()
 
 	effort_model = NominalEffortModel(grid_model=grid_model, va=va)
+
+	results_model = SASI_Results_Model()
 
 	t0 = 0
 	tf = 10
@@ -28,6 +33,7 @@ if __name__ == '__main__':
 			grid_model=grid_model,
 			effort_model=effort_model,
 			va=va,
+			results_model=results_model,
 			taus=taus,
 			omegas=omegas
 			)

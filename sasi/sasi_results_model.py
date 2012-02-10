@@ -1,33 +1,8 @@
+from shove import Shove
+
 class SASI_Results_Model(object):
 
-	def __init__(self, results_dao=None):
-		self.results_dao = results_dao
+	def __init__(self, basename="results"):
 
-	def get_results(self, filters=None):
-		return self.results_dao.get_results(filters=filters)
-
-	def create_result(self, result):
-		self.results_dao.create_results(results=[result])
-
-	def update_result(self, result):
-		self.results_dao.update_results(results=[result])
-
-	def create_or_update_result(self, result):
-		results = self.get_results(
-				filters=[
-					{
-						'name': 'results',
-						'operator': '==',
-						'values': [result]
-						}
-					]
-				)
-
-		if results:
-			self.update_result(result)
-		else:
-			self.create_result(result)
-
-		
-
-		
+		for result_type in ['A', 'Y', 'X', 'Z']:
+			setattr(self.__class__, result_type, Shove("sqlite:///%s.%s.sqlite" % (basename, result_type)))
