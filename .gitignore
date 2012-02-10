@@ -1,4 +1,5 @@
 *.hd5
+*.sqlite
 *.pyc
 *.pck
 .virtualenv
