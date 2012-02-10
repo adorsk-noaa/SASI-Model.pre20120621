@@ -24,12 +24,13 @@ class Pytables_SASI_Results_DAO_Test(unittest.TestCase):
 		results_dao.create_results(results)
 
 		fetched_results = results_dao.get_results(
-				filters={
-					'time': {
+				filters=[
+					{
+						'name': 'time',
 						'operator': '==',
 						'values': [1],
 						}
-					},
+				],
 				as_proxy=False
 				)
 

@@ -45,22 +45,25 @@ class Pytables_SASI_Results_DAO(Results_DAO):
 		return ','.join(["%s" % result.get(kc,'') for kc in self.key_components])
 
 
-	def get_results(self, filters=None, as_proxy=True):
+	def get_results(self, filters=None, as_proxy=False):
 	
 		if filters:
+
+			# If there is a 'results'-type filter, convert it into a
+			
 			# Initialize list of conditions to be constructed from filters.
 			conditions = []
 
-			for filter_name, filter_definition in filters.items():
+			for f in filters:
 
 				quote_values = False
-				if isinstance(SASI_Result.columns[filter_name],pytables.description.StringCol):
+				if isinstance(SASI_Result.columns[f['name']],pytables.description.StringCol):
 					quote_values = True
 
 				filter_conditions = []
-				for fv in filter_definition['values']:
+				for fv in f['values']:
 					if quote_values: fv = "'%s'" % fv
-					filter_conditions.append("(%s %s %s)" % (filter_name, filter_definition['operator'], fv))
+					filter_conditions.append("(%s %s %s)" % (f['name'], f['operator'], fv))
 				filter_conditions_string = ' | '.join(filter_conditions)
 
 				conditions.append(filter_conditions_string)
@@ -90,12 +93,15 @@ class Pytables_SASI_Results_DAO(Results_DAO):
 		# Fetch results.
 		result_keys = [self.get_key_for_result(r) for r in results]
 		fetched_results = self.get_results(
-				filters = {
-					'key': {
+				filters = [
+					{
+						'name': 'key',
 						'operator' : '==',
 						'values' : result_keys
-						}
-					})
+						},
+					],
+				as_proxy = True
+				)
 
 		# Update each result...
 		i = 0
@@ -108,8 +114,3 @@ class Pytables_SASI_Results_DAO(Results_DAO):
 
 		# Flush updates to the table.
 		self.results_table.flush()
-
-
-			
-
-		
