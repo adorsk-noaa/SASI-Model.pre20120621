@@ -13,7 +13,7 @@ class NominalEffortPerGearModel(EffortModel):
 		efforts = []
 
 		# Get cell for the given location and time.
-		cell = self.grid_model.get_cells(filters={'type': ['km100'], 'id': [cell.id]}).pop()
+		cell = self.grid_model.get_cells(filters={'id': [cell.id]}).pop()
 
 		# Set the nominal effort to be the cell's area.
 		nominal_effort = cell.area
