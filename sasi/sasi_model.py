@@ -2,6 +2,7 @@
 # we store as contact adjusted areas.  Seems to get used in several places...
 
 import sasi.conf.conf as conf
+import sys
 
 class SASIModel:
 
@@ -84,16 +85,12 @@ class SASIModel:
 
 	def iterate(self, t):
 
-		# Initialize tables for the timestep if not already initialized.
-		for table in [self.Z, self.A, self.X, self.Y]:
-			table.setdefault(t, self.get_indexed_table())
-
 		# For each cell...
 		cell_counter = 0
 		for c in self.grid_model.get_cells():
 
 			if conf.conf['verbose']:
-				if (cell_counter % 1000) == 0: print "c: %s" % cell_counter,
+				if (cell_counter % 1000) == 0: print >> sys.stderr, "\tc: %s" % cell_counter
 
 			cell_counter += 1
 
@@ -111,7 +108,7 @@ class SASIModel:
 
 				# If there were relevant habitats...
 				if relevant_habitats:
-				
+					
 					# Distribute the effort's swept area equally over the habitats.
 					swept_area_per_habitat = 1.0 * effort.swept_area/len(relevant_habitats)
 
@@ -134,6 +131,7 @@ class SASIModel:
 
 								# Generate an index key for the results.
 								index_key = self.get_index_key(
+										time = t,
 										cell_id = c.id,
 										substrate_code = habitat.substrate.id,
 										energy = habitat.energy,
@@ -143,7 +141,7 @@ class SASIModel:
 
 								# Add the resulting contact-adjusted
 								# swept area to the A table.
-								self.A[t][index_key] += swept_area_per_feature
+								self.A[index_key] = self.A.get(index_key,0.0) + swept_area_per_feature
 
 								# Get vulnerability assessment for the effort.
 								vulnerability_assessment = self.va.get_assessment(
@@ -161,7 +159,7 @@ class SASIModel:
 								adverse_effect_swept_area = swept_area_per_feature * omega
 
 								# Add to adverse effect table.
-								self.Y[t][index_key] += adverse_effect_swept_area
+								self.Y[index_key] = self.Y.get(index_key,0.0) + adverse_effect_swept_area
 
 								# Calculate recovery per timestep.
 								recovery_per_dt = adverse_effect_swept_area/tau
@@ -169,11 +167,18 @@ class SASIModel:
 								# Add recover to future recovery table entries.
 								for future_t in (t + 1, t + tau, self.dt):
 									if future_t <= self.tf:
-										self.X.setdefault(future_t, self.get_indexed_table())
-										self.X[future_t][index_key] += recovery_per_dt
+										future_key = self.get_index_key(
+												time = t,
+												cell_id = c.id,
+												substrate_code = habitat.substrate.id,
+												energy = habitat.energy,
+												gear_code = effort.gear.id,
+												feature_code = feature.id
+												)
+										self.X[future_key] = self.X.get(future_key, 0.0) + recovery_per_dt 
 
 								# Add to modified swept area for the timestep.
-								self.Z[t][index_key] += self.X[t][index_key] - self.Y[t][index_key]
+								self.Z[index_key] = self.Z.get(index_key, self.X[index_key] - self.Y[index_key])
 
 	# Get index keys for storing model effects. 
 	# The keys consist of valid (cell, substrate, energy, gear, feature) combinations,
@@ -192,14 +197,16 @@ class SASIModel:
 		return index_keys
 
 	# Format index key from key components.
-	def get_index_key(self, cell_id='', substrate_code='', energy='', gear_code='', feature_code=''):
+	def get_index_key(self, time='', cell_id='', substrate_code='', energy='', gear_code='', feature_code=''):
 		index_key = (
+				time,
 				cell_id,	
 				substrate_code,
 				energy,
 				gear_code,
 				feature_code
 				)
+		return ','.join(["%s" % key_part for key_part in index_key])
 		return index_key
 
 	# Get a storage table indexed by the index keys.

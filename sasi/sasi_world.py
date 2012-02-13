@@ -14,6 +14,7 @@ import sasi.conf.conf as conf
 from sasi.habitat.static_grid_model import StaticGridModel
 
 from datetime import datetime
+import sys
 
 
 if __name__ == '__main__':
@@ -22,14 +23,14 @@ if __name__ == '__main__':
 
 	db_session = sa_session.get_session()
 	
-	#grid_model = StaticGridModel(cell_dao=Test_Cell_DAO(), default_filters={'type': 'km100'}) 
-	grid_model = StaticGridModel(cell_dao=SA_Cell_DAO(session=db_session), default_filters={'type': ['km100']}) 
+	grid_model = StaticGridModel(cell_dao=Test_Cell_DAO(), default_filters={'type': 'km100'}) 
 
 	va_dao = CSV_VA_DAO()
 	va = va_dao.load_va()
 
 	gears = []
-	for i in range(1,6+1):
+	#for i in range(1,6+1):
+	for i in [3]:
 		gear_code = "GC%s" % i
 		gear = Gear(
 				id=gear_code,
@@ -70,14 +71,7 @@ if __name__ == '__main__':
 			omegas=omegas
 			)
 
-	for n in range(t0, tf):
-		print "iteration: %s" % n
-		print datetime.now()
+	for n in range(t0, tf+1):
+		print >> sys.stderr, "iteration: %s" % n
+		print >> sys.stderr, datetime.now()
 		model.iterate(n)
-		sample_size = 5
-		for table_name in ['A', 'Y', 'X', 'Z']:
-			table = getattr(model, table_name)
-			print "table '%s': %s" % (table_name, [table[n].items()[0:5]] )
-
-
-
