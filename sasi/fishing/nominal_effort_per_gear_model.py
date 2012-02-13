@@ -25,7 +25,7 @@ class NominalEffortPerGearModel(EffortModel):
 		for gear in gears:
 
 			# Create an effort for the gear.
-			efforts.append(Effort(gear=gear, swept_area=effort_per_feature, location=cell, time=time))
+			efforts.append(Effort(gear=gear, swept_area=nominal_effort, location=cell, time=time))
 
 		return efforts
 

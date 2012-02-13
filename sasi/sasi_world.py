@@ -1,6 +1,7 @@
 from sasi.dao.habitat.test_cell_dao import Test_Cell_DAO
 from sasi.dao.va.csv_va_dao import CSV_VA_DAO
-from sasi.fishing.nominal_effort_model import NominalEffortModel
+from sasi.fishing.nominal_effort_per_gear_model import NominalEffortPerGearModel
+from sasi.fishing.gear import Gear
 
 from sasi.sasi_results_model import SASI_Results_Model
 
@@ -16,7 +17,16 @@ if __name__ == '__main__':
 	va_dao = CSV_VA_DAO()
 	va = va_dao.load_va()
 
-	effort_model = NominalEffortModel(grid_model=grid_model, va=va)
+	gears = []
+	for i in range(1,6+1):
+		gear_code = "GC%s" % i
+		gear = Gear(
+				id=gear_code,
+				name=gear_code
+				)
+		gears.append(gear)
+
+	effort_model = NominalEffortPerGearModel(grid_model=grid_model, gears=gears)
 
 	results_model = SASI_Results_Model()
 

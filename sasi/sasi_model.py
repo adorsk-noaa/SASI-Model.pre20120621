@@ -100,7 +100,7 @@ class SASIModel:
 				relevant_habitats = []
 				for habitat in c.habitats:
 					habitat_type = (habitat.substrate.id, habitat.energy)
-					if habitat_type in self.h_by_g[effort.gear]: relevant_habitats.append(habitat)
+					if habitat_type in self.h_by_g[effort.gear.id]: relevant_habitats.append(habitat)
 
 				# If there were relevant habitats...
 				if relevant_habitats:
@@ -114,7 +114,7 @@ class SASIModel:
 						# Get the features for which the gear can be applied. 
 						relevant_features = []
 						for feature in habitat.features:
-							if feature.id in self.f_by_g[effort.gear]: relevant_features.append(feature)
+							if feature.id in self.f_by_g[effort.gear.id]: relevant_features.append(feature)
 
 						# If there were relevant features...
 						if relevant_features:
@@ -130,7 +130,7 @@ class SASIModel:
 										cell_id = c.id,
 										substrate_code = habitat.substrate.id,
 										energy = habitat.energy,
-										gear_code = effort.gear,
+										gear_code = effort.gear.id,
 										feature_code = feature.id
 										)
 
@@ -140,7 +140,7 @@ class SASIModel:
 
 								# Get vulnerability assessment for the effort.
 								vulnerability_assessment = self.va.get_assessment(
-									gear_code = effort.gear,
+									gear_code = effort.gear.id,
 									substrate_code = habitat.substrate.id,
 									feature_code = feature.id,
 									energy = habitat.energy
