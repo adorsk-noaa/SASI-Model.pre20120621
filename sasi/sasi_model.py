@@ -79,7 +79,7 @@ class SASIModel:
 		# Do setup stuff here for running? or in setup?
 
 		# Iterate from t0 to tf...
-		for t in range(self.t0, self.tf, self.dt):
+		for t in range(self.t0, self.tf + 1, self.dt):
 			self.iterate(t)
 
 	def iterate(self, t):
