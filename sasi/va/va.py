@@ -102,3 +102,11 @@ class VulnerabilityAssessment(object):
 					'GEAR': assessment['GEAR']
 					}
 		return gears
+
+	def get_habitats(self):
+		habitats = set()
+		for key, assessment in self.assessments.items():
+			hab_key = (assessment['SUBSTRATE_CODE'], assessment['ENERGY'])
+			habitats.add(hab_key)
+		return habitats
+
