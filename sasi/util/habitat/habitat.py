@@ -9,15 +9,17 @@ import sasi.conf.energy_mappings as energy_mappings
 import sasi.tests.geo_util as geo_util
 
 def generate_habitats(n, default_area = lambda: 1):
-	energy_codes = list(set(energy_mappings.shp_to_va.values()))
 
-	substrate_codes = list(set(substrate_mappings.shp_to_va.values()))
+	valid_habitats = [('S5', 'High'), ('S2', 'Low'), ('S4', 'Low'), ('S3', 'Low'), ('S1', 'Low'), ('S2', 'High'), ('S5', 'Low'), ('S1', 'High'), ('S3', 'High'), ('S4', 'High')]
 
 	habitats = []
 	for i in range(n):
-		energy = energy_codes[i % len(energy_codes)]
+
+		habitat_type = valid_habitats[i % len(valid_habitats)]
 		
-		substrate_id = substrate_codes[i % len(substrate_codes)]
+		substrate_id = habitat_type[0]
+		energy = habitat_type[1]
+
 		substrate = Substrate(id=substrate_id, name=substrate_id)
 
 		assignments = feature_assignments.assignments[(substrate_id, energy)]
