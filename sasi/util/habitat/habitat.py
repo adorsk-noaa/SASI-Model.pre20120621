@@ -10,7 +10,7 @@ import sasi.tests.geo_util as geo_util
 
 def generate_habitats(n, default_area = lambda: 1):
 
-	valid_habitats = [('S5', 'High'), ('S2', 'Low'), ('S4', 'Low'), ('S3', 'Low'), ('S1', 'Low'), ('S2', 'High'), ('S5', 'Low'), ('S1', 'High'), ('S3', 'High'), ('S4', 'High')]
+	valid_habitats = [('S5', '1.0'), ('S2', '0.0'), ('S4', '0.0'), ('S3', '0.0'), ('S1', '0.0'), ('S2', '1.0'), ('S5', '0.0'), ('S1', '1.0'), ('S3', '1.0'), ('S4', '1.0')]
 
 	habitats = []
 	for i in range(n):

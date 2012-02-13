@@ -62,7 +62,7 @@ class SASIModel:
 		self.Y = self.results_model.Y 
 
 		# List of index keys to be used when creating index results.
-		self.index_keys = self.get_index_keys()
+		#self.index_keys = self.get_index_keys()
 
 		self.setup()
 
@@ -90,7 +90,7 @@ class SASIModel:
 		for c in self.grid_model.get_cells():
 
 			if conf.conf['verbose']:
-				if (cell_counter % 1000) == 0: print >> sys.stderr, "\tc: %s" % cell_counter
+				if (cell_counter % 100) == 0: print >> sys.stderr, "\tc: %s" % cell_counter
 
 			cell_counter += 1
 
@@ -108,7 +108,7 @@ class SASIModel:
 
 				# If there were relevant habitats...
 				if relevant_habitats:
-					
+
 					# Distribute the effort's swept area equally over the habitats.
 					swept_area_per_habitat = 1.0 * effort.swept_area/len(relevant_habitats)
 
@@ -132,7 +132,8 @@ class SASIModel:
 								# Generate an index key for the results.
 								index_key = self.get_index_key(
 										time = t,
-										cell_id = c.id,
+										cell_type = c.type,
+										cell_type_id = c.type_id,
 										substrate_code = habitat.substrate.id,
 										energy = habitat.energy,
 										gear_code = effort.gear.id,
@@ -142,6 +143,7 @@ class SASIModel:
 								# Add the resulting contact-adjusted
 								# swept area to the A table.
 								self.A[index_key] = self.A.get(index_key,0.0) + swept_area_per_feature
+
 
 								# Get vulnerability assessment for the effort.
 								vulnerability_assessment = self.va.get_assessment(
@@ -169,7 +171,8 @@ class SASIModel:
 									if future_t <= self.tf:
 										future_key = self.get_index_key(
 												time = t,
-												cell_id = c.id,
+												cell_type = c.type,
+												cell_type_id = c.type_id,
 												substrate_code = habitat.substrate.id,
 												energy = habitat.energy,
 												gear_code = effort.gear.id,
@@ -187,7 +190,10 @@ class SASIModel:
 		index_keys = [] 
 		for c in self.grid_model.get_cells():
 			for a in self.va.assessments.values():
-				index_key = self.get_index_key(cell_id = c.id,
+				index_key = self.get_index_key(
+						time = 0,
+						cell_type = c.type,
+						cell_type_id = c.type_id,
 						substrate_code = a['SUBSTRATE_CODE'],
 						energy = a['ENERGY'],
 						gear_code = a['GEAR_CODE'],
@@ -197,17 +203,17 @@ class SASIModel:
 		return index_keys
 
 	# Format index key from key components.
-	def get_index_key(self, time='', cell_id='', substrate_code='', energy='', gear_code='', feature_code=''):
+	def get_index_key(self, time='', cell_type='', cell_type_id='', substrate_code='', energy='', gear_code='', feature_code=''):
 		index_key = (
 				time,
-				cell_id,	
+				cell_type,
+				cell_type_id,	
 				substrate_code,
 				energy,
 				gear_code,
 				feature_code
 				)
 		return ','.join(["%s" % key_part for key_part in index_key])
-		return index_key
 
 	# Get a storage table indexed by the index keys.
 	# note: at some later point this might need optimization later, e.g. w/ pytables

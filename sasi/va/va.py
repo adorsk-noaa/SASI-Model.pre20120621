@@ -8,8 +8,14 @@ class VulnerabilityAssessment(object):
 		# Save rows, keyed by (GEAR_CODE, SUBSTRATE_CODE, FEATURE_CODE,ENERGY)
 		assessments = {}
 		for r in rows:
+
+			# Map energy to numerical strings.
+			if r['ENERGY'] == 'High': r['ENERGY'] = '1.0'
+			else: r['ENERGY'] = '0.0'
+
 			key = (r['GEAR_CODE'], r['SUBSTRATE_CODE'], r['FEATURE_CODE'], r['ENERGY'])
 			assessments[key] = r
+
 		return assessments
 
 	def get_assessment(self, gear_code='', substrate_code='', feature_code='', energy=''):

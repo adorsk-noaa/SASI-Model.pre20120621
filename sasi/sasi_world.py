@@ -23,7 +23,8 @@ if __name__ == '__main__':
 
 	db_session = sa_session.get_session()
 	
-	grid_model = StaticGridModel(cell_dao=Test_Cell_DAO(), default_filters={'type': 'km100'}) 
+	#grid_model = StaticGridModel(cell_dao=Test_Cell_DAO(), default_filters={'type': 'km100'}) 
+	grid_model = StaticGridModel(cell_dao=SA_Cell_DAO(session=db_session), default_filters={'type': ['km100'], 'type_id': ['0']}) 
 
 	va_dao = CSV_VA_DAO()
 	va = va_dao.load_va()

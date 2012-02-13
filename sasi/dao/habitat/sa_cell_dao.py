@@ -10,7 +10,6 @@ class SA_Cell_DAO(Cell_DAO):
 
 	def get_cells(self, filters=None):
 		q = self.session.query(Cell)
-
 		if filters:
 			for filter_name, filter_values in filters.items():
 				q = q.filter(getattr(Cell, filter_name).in_(filter_values))
