@@ -1,5 +1,5 @@
 import unittest
-from sasi.sasi_results_model import SASI_Results_Model
+from sasi.results.sasi_results_model import SASI_Results_Model
 
 class SASI_Results_ModelTest(unittest.TestCase):
 

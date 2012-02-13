@@ -1,6 +1,8 @@
 # @TODO: consider making something like a 'SweptAreaEffect' class to represent the objects
 # we store as contact adjusted areas.  Seems to get used in several places...
 
+import sasi.conf.conf as conf
+
 class SASIModel:
 
 	def __init__(self, t0=0, tf=10, dt=1, grid_model=None, effort_model=None, va=None, results_model=None, taus=None, omegas=None):
@@ -64,7 +66,6 @@ class SASIModel:
 		self.setup()
 
 	def setup(self):
-
 		# Get habitat types, grouped by gears that can be applied to those
 		# habitat types. 
 		self.h_by_g = self.va.get_habitats_by_gears()
@@ -88,7 +89,13 @@ class SASIModel:
 			table.setdefault(t, self.get_indexed_table())
 
 		# For each cell...
+		cell_counter = 0
 		for c in self.grid_model.get_cells():
+
+			if conf.conf['verbose']:
+				if (cell_counter % 1000) == 0: print "c: %s" % cell_counter,
+
+			cell_counter += 1
 
 			# Get contact-adjusted fishing efforts for the cell.
 			cell_efforts = self.effort_model.get_effort(c, t)
