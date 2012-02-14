@@ -21,7 +21,6 @@ class SASIModelTest(unittest.TestCase):
 			print "t is: %s" % t	
 			m.iterate(t)
 
-		print m.Z
 		self.failUnless(True)
 
 if __name__ == '__main__':

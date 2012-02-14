@@ -8,7 +8,7 @@ import sasi.util.habitat.habitat as habitat_util
 class HabitatTest(unittest.TestCase):
 
 	def test(self):
-		h = habitat_util.generate_habitats(1).pop()
+		h = habitat_util.generate_habitats().pop()
 		print h
 		self.failUnless(True)
 

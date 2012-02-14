@@ -11,9 +11,7 @@ class Test_Habitat_DAO(Habitat_DAO):
 		num_cells = num_habitats/2
 
 		n = 0
-		for h in generate_habitats(num_habitats):
-			h.id_km100 = (n % num_cells)
-			h.km100_percent = .5
+		for h in generate_habitats():
 			self.habitats[h.id] = h
 			n += 1		
 

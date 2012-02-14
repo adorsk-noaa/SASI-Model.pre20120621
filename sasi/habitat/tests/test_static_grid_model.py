@@ -1,7 +1,7 @@
 import unittest
 
-from sasi.dao.habitat.test_cell_dao import Test_Cell_DAO
 from sasi.habitat.static_grid_model import StaticGridModel
+from sasi.dao.habitat.test_cell_dao import Test_Cell_DAO
 
 class StaticGridModelTest(unittest.TestCase):
 
