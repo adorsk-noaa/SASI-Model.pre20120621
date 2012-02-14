@@ -1,9 +1,9 @@
 class Cell(object):
 
-	def __init__(self, id=None, type=None, type_id=None, geom=None, area=None, habitats=None):
+	def __init__(self, id=None, type=None, type_id=None, geom=None, area=None, regions=None):
 		self.id = id
 		self.type = type
 		self.type_id = type_id
 		self.geom = geom
 		self.area = area
-		self.habitats = habitats
+		self.regions = regions

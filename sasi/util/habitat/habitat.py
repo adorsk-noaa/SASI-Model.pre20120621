@@ -1,66 +1,112 @@
 from sasi.habitat.habitat import Habitat
 from sasi.habitat.feature import Feature
 from sasi.habitat.substrate import Substrate
+from sasi.habitat.region import Region
 from sasi.habitat.cell import Cell
 import sasi.conf.conf as conf
-import sasi.conf.feature_assignments as feature_assignments
 import sasi.conf.substrate_mappings as substrate_mappings
 import sasi.conf.energy_mappings as energy_mappings
-import sasi.tests.geo_util as geo_util
+import sasi.util.geo_util as geo_util
 
-def generate_habitats(n, default_area = lambda: 1):
+def generate_substrates(n):
+	substrates = []
 
-	valid_habitats = [('S5', '1.0'), ('S2', '0.0'), ('S4', '0.0'), ('S3', '0.0'), ('S1', '0.0'), ('S2', '1.0'), ('S5', '0.0'), ('S1', '1.0'), ('S3', '1.0'), ('S4', '1.0')]
+	for i in range(n):
+		s = Substrate(
+				id = n,
+				name = "S%s" % i
+				)
+		substrates.append(s)
+	
+	return substrates
+
+
+def generate_features(n):
+
+	features = []
+
+	for i in range(n):
+		f = Feature(
+				id = n,
+				name = "F%s" % i
+				)
+		features.append(f)
+	
+	return features
+
+def generate_habitats():
 
 	habitats = []
-	for i in range(n):
 
-		habitat_type = valid_habitats[i % len(valid_habitats)]
-		
+	valid_habitat_types = [
+			('S5', 'High'),
+			('S2', 'Low'),
+			('S4', 'Low'),
+			('S3', 'Low'),
+			('S1', 'Low'),
+			('S2', 'High'),
+			('S5', 'Low'),
+			('S1', 'High'),
+			('S3', 'High'),
+			('S4', 'High')
+			]
+
+	for habitat_type in valid_habitat_types:
+
 		substrate_id = habitat_type[0]
 		energy = habitat_type[1]
 
 		substrate = Substrate(id=substrate_id, name=substrate_id)
 
-		assignments = feature_assignments.assignments[(substrate_id, energy)]
-		features = [Feature(id=a,name=a) for a in assignments]
-
 		h = Habitat(
-				id = i,
-				id_km100 = i,
-				id_km1000 = i,
-				id_vor = i,
-				z = i * -1.0,
 				energy = energy,
 				substrate = substrate,
-				features = features,
-				area = default_area(),
-				geom = geo_util.generate_multipolygon(),
 				)
 
 		habitats.append(h)
 
 	return habitats
 
+def generate_regions(n, default_area = lambda: 1.0, habitats=None):
 
-def generate_cells(n, default_area = lambda: 1.0, habitats=None, habitats_per_cell=2):
-
-	cells = []
+	regions = []
 
 	# Generate habitats if none were given.
 	if not habitats:
-		default_habitat_area = lambda: 1.0 * default_area()/habitats_per_cell 
-		habitats = generate_habitats(n * habitats_per_cell, default_area = default_habitat_area)
+		habitats = generate_habitats()
+
+	for i in range(n):
+		habitat = habitats[i % len(habitats)]
+		r = Region(
+				id = i,
+				habitat = habitat,
+				z = i * 100,
+				area = default_area(),
+				geom = geo_util.generate_multipolygon(),
+				)
+		regions.append(r)
+
+	return regions
+
+
+def generate_cells(n, default_area = lambda: 1.0, regions=None, regions_per_cell=2):
+
+	cells = []
+
+	# Generate regions if none were given.
+	if not regions:
+		default_region_area = lambda: 1.0 * default_area()/regions_per_cell 
+		regions = generate_regions(n * regions_per_cell, default_area = default_region_area)
 
 	for i in range(n):
 
-		cell_habitats = [habitats.pop() for i in range(habitats_per_cell)]
+		cell_regions = [regions.pop() for i in range(regions_per_cell)]
 
 		c = Cell(
 				id = i,
 				area = default_area(),
 				geom = geo_util.generate_multipolygon(),
-				habitats = cell_habitats
+				regions = cell_regions
 				)
 
 		cells.append(c)

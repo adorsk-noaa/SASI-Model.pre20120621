@@ -12,6 +12,9 @@ metadata = sa_metadata.metadata
 
 table = Table('region', metadata,
 		Column('id', Integer, primary_key=True),
+		Column('id_km100', Integer),
+		Column('id_km1000', Integer),
+		Column('id_vor', Integer),
 		Column('habitat_id', String, ForeignKey(sa_habitat.table.c.id)),
 		Column('z', Float),
 		Column('area', Float),
