@@ -1,16 +1,19 @@
 import unittest
 from sasi.sa.tests.basetest import BaseTest
+import sasi.sa.metadata as sa_metadata
 import sasi.sa.habitat.substrate as sa_substrate
-from sasi.habitat.substrate import Substrate
-import sasi.habitat.tests.test_substrate as test_substrate
+import sasi.util.habitat.habitat as habitat_util
 
 class SubstrateTest(BaseTest):
 
 	def test(self):
-		substrates = test_substrate.generate_substrates(1)
 		s = self.session
-		sa_substrate.metadata.create_all(s.bind)
-		s.add_all(substrates)
+		sa_metadata.metadata.drop_all(s.bind)
+		sa_metadata.metadata.create_all(s.bind)
+
+		substrate = habitat_util.generate_substrates(1).pop()
+
+		s.add(substrate)
 		s.commit()
 		self.failUnless(True)
 
