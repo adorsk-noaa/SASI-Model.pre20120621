@@ -77,8 +77,6 @@ class SASIModel:
 	
 	def run(self):
 
-		# Do setup stuff here for running? or in setup?
-
 		# Iterate from t0 to tf...
 		for t in range(self.t0, self.tf + 1, self.dt):
 			self.iterate(t)
@@ -109,79 +107,93 @@ class SASIModel:
 				# If there were relevant habitats...
 				if relevant_habitats:
 
-					# Distribute the effort's swept area equally over the habitats.
-					swept_area_per_habitat = 1.0 * effort.swept_area/len(relevant_habitats)
+					# Calculate the total area of the relevant habitats.
+					relevant_habitats_area = sum([h.area for h in relevant_habitats])
 
 					# For each habitat...
 					for habitat in relevant_habitats:
+					
+						# Distribute the effort's swept area proportionally to the habitat's area as a fraction of the total relevant area.
+						swept_area_per_habitat = effort.swept_area * habitat.area/relevant_habitats_area
 
-						# Get the features for which the gear can be applied. 
-						relevant_features = []
-						for feature in habitat.features:
-							if feature.id in self.f_by_g[effort.gear.id]: relevant_features.append(feature)
+						# Get feature categories.
+						# @TODO: get categories from config or VA.
+						feature_categories = ['2']
 
-						# If there were relevant features...
-						if relevant_features:
+						# Distribute swept area equally across feature categories.
+						# @TODO: maybe weight this? rather than just num categories?
+						#swept_area_per_feature_category = swept_area_per_habitat/len(feature_categories)
+						swept_area_per_feature_category = swept_area_per_habitat/2
 
-							# Distribute the habitat's effort equally over the features.
-							swept_area_per_feature= swept_area_per_habitat/len(relevant_features)
+						# For each feature category...
+						for feature_category in feature_categories:
 
-							# For each feature...
-							for feature in relevant_features:
+							# Get the features for which the gear can be applied. 
+							relevant_features = []
+							for feature in habitat.features:
+								if feature.category == feature_category and feature.id in self.f_by_g[effort.gear.id]: relevant_features.append(feature)
 
-								# Generate an index key for the results.
-								index_key = self.get_index_key(
-										time = t,
-										cell_type = c.type,
-										cell_type_id = c.type_id,
-										substrate_code = habitat.substrate.id,
-										energy = habitat.energy,
+							# If there were relevant features...
+							if relevant_features:
+
+								# Distribute the category's effort equally over the features.
+								swept_area_per_feature= swept_area_per_feature_category/len(relevant_features)
+
+								# For each feature...
+								for feature in relevant_features:
+
+									# Generate an index key for the results.
+									index_key = self.get_index_key(
+											time = t,
+											cell_type = c.type,
+											cell_type_id = c.type_id,
+											substrate_code = habitat.substrate.id,
+											energy = habitat.energy,
+											gear_code = effort.gear.id,
+											feature_code = feature.id
+											)
+
+									# Add the resulting contact-adjusted
+									# swept area to the A table.
+									self.A[index_key] = self.A.get(index_key,0.0) + swept_area_per_feature
+
+									# Get vulnerability assessment for the effort.
+									vulnerability_assessment = self.va.get_assessment(
 										gear_code = effort.gear.id,
-										feature_code = feature.id
+										substrate_code = habitat.substrate.id,
+										feature_code = feature.id,
+										energy = habitat.energy
 										)
 
-								# Add the resulting contact-adjusted
-								# swept area to the A table.
-								self.A[index_key] = self.A.get(index_key,0.0) + swept_area_per_feature
+									# Get stochastic modifiers 
+									omega = self.omegas.get(vulnerability_assessment['S'])
+									tau = self.taus.get(vulnerability_assessment['R'])
 
+									# Calculate adverse effect swept area.
+									adverse_effect_swept_area = swept_area_per_feature * omega
 
-								# Get vulnerability assessment for the effort.
-								vulnerability_assessment = self.va.get_assessment(
-									gear_code = effort.gear.id,
-									substrate_code = habitat.substrate.id,
-									feature_code = feature.id,
-									energy = habitat.energy
-									)
+									# Add to adverse effect table.
+									self.Y[index_key] = self.Y.get(index_key,0.0) + adverse_effect_swept_area
 
-								# Get stochastic modifiers 
-								omega = self.omegas.get(vulnerability_assessment['S'])
-								tau = self.taus.get(vulnerability_assessment['R'])
+									# Calculate recovery per timestep.
+									recovery_per_dt = adverse_effect_swept_area/tau
 
-								# Calculate adverse effect swept area.
-								adverse_effect_swept_area = swept_area_per_feature * omega
+									# Add recover to future recovery table entries.
+									for future_t in (t + 1, t + tau, self.dt):
+										if future_t <= self.tf:
+											future_key = self.get_index_key(
+													time = t,
+													cell_type = c.type,
+													cell_type_id = c.type_id,
+													substrate_code = habitat.substrate.id,
+													energy = habitat.energy,
+													gear_code = effort.gear.id,
+													feature_code = feature.id
+													)
+											self.X[future_key] = self.X.get(future_key, 0.0) + recovery_per_dt 
 
-								# Add to adverse effect table.
-								self.Y[index_key] = self.Y.get(index_key,0.0) + adverse_effect_swept_area
-
-								# Calculate recovery per timestep.
-								recovery_per_dt = adverse_effect_swept_area/tau
-
-								# Add recover to future recovery table entries.
-								for future_t in (t + 1, t + tau, self.dt):
-									if future_t <= self.tf:
-										future_key = self.get_index_key(
-												time = t,
-												cell_type = c.type,
-												cell_type_id = c.type_id,
-												substrate_code = habitat.substrate.id,
-												energy = habitat.energy,
-												gear_code = effort.gear.id,
-												feature_code = feature.id
-												)
-										self.X[future_key] = self.X.get(future_key, 0.0) + recovery_per_dt 
-
-								# Add to modified swept area for the timestep.
-								self.Z[index_key] = self.Z.get(index_key, self.X[index_key] - self.Y[index_key])
+									# Add to modified swept area for the timestep.
+									self.Z[index_key] = self.Z.get(index_key, 0.0) + self.X.get(index_key, 0.0) - self.Y[index_key]
 
 	# Get index keys for storing model effects. 
 	# The keys consist of valid (cell, substrate, energy, gear, feature) combinations,

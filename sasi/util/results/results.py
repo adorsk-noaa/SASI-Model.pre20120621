@@ -28,4 +28,4 @@ def result_key_to_simid(result_key):
 	simid += key_parts['energy'] * 100
 	simid += key_parts['feature']
 
-	return simid
+	return "%s" % simid

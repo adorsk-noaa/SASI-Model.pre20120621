@@ -44,7 +44,7 @@ if __name__ == '__main__':
 	results_model = SASI_Results_Model()
 
 	t0 = 0
-	tf = 6
+	tf = 0
 	dt = 1
 	taus = {
 			'0': 1,
