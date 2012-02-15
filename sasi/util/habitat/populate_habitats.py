@@ -1,40 +1,115 @@
+# Populates table of habitat_types from shapefile
+# Assumes that substrates and features have already been populated.
 import sasi.conf.conf as conf
-from sasi.va.va import VulnerabilityAssessment
-from sasi.habitat.habitat import Habitat
-from sasi.habitat.substrate import Substrate
-import sasi.util.va
-import sasi.sa.session as sa_session
-import sasi.sa.metadata as sa_metadata
-import sasi.sa.habitat.habitat as sa_habitat
+import sasi.conf.feature_assignments as feature_assignments
+import sasi.conf.substrate_mappings as substrate_mappings
+import sasi.conf.energy_mappings as energy_mappings
 
+from sasi.habitat_type.habitat_type import HabitatType
+from sasi.habitat_type.habitat import Habitat
+from sasi.habitat_type.substrate import Substrate
+from sasi.habitat_type.feature import Feature
+
+import sasi.sa.session as sa_session
+import sasi.sa.habitat_type.habitat as sa_habitat
+import sasi.sa.habitat_type.habitat_type as sa_habitat_type
+import sasi.sa.habitat_type.cell as sa_cell
+import sasi.sa.habitat_type.feature as sa_feature
+import sasi.sa.habitat_type.substrate as sa_substrate
+
+import ogr
+from shapely import wkb
+from shapely.geometry import Polygon, MultiPolygon
+
+from sqlalchemy import func, MetaData
+from geoalchemy.functions import functions as geo_func
+from geoalchemy.geometry import Geometry
+
+import sys
 
 def main():
-	# Read features from vulernability assessment.
-	va_rows = sasi.util.va.read_va_from_csv(conf.conf['va_file'])
-	va = VulnerabilityAssessment(rows = va_rows)	
-	valid_habitats = va.get_habitats()
 
-	# Get DB session.
+
+	# Get db session.
 	session = sa_session.get_session()
+
+	# Clear habitat_type tables
+	for t in [sa_habitat.table]:
+		session.execute(t.delete())
+	session.commit()
+
+	# Load shapefile
+	sf = ogr.Open(conf.conf['sasi_habitat_type_file'])
 	
-	# Clear habitats table.
-	session.execute(sa_habitat.table.delete())
+	# Get feature layer.
+	layer = sf.GetLayer(0)
+
+	# Get fields.
+	layer_def = layer.GetLayerDefn()
+	field_count = layer_def.GetFieldCount()
+	fields = [layer_def.GetFieldDefn(i).GetName() for i in range(field_count)]
+
+	# Initialize a list to hold habitat objects.
+	habitats = []
+
+	# For each cell feature... 
+	counter = 0
+	features = [f for f in layer]
+	for f in features:
+
+		if (counter % 1000) == 0: print >> sys.stderr, "%s" % (counter),
+		counter += 1
+
+		# Get feature attributes.
+		f_attributes = {}
+		for i in range(field_count): 
+			f_attributes[fields[i]] = f.GetField(i)
+
+		# Skip blank rows.
+		if (not f_attributes['SOURCE']): continue
+
+		# Get feature geometry. We convert each feature into a multipolygon, since
+		# we may have a mix of normal polygons and multipolygons.
+		geom = wkb.loads(f.GetGeometryRef().ExportToWkb())
+		if geom.geom_type =='Polygon':
+			geom = MultiPolygon([(geom.exterior.coords, geom.interiors )])
+
+		# Get habitat_type's energy code.
+		energy = energy_mappings.shp_to_va[f_attributes['Energy']] 
+		
+		# Get habitat_type's substrate object.
+		substrate_id = substrate_mappings.shp_to_va[f_attributes['TYPE_SUB'].strip()]
+		substrate = session.query(Substrate).filter(Substrate.id == substrate_id).one()
+
+		# Get habitat_type object.
+		habitat_type = session.query(HabitatType).join(HabitatType.substrate).filter(Substrate.id == substrate_id).filter(HabitatType.energy == energy).one()
+
+		# Make habitat object from feature data.
+		r = Habitat(
+				id_km100 = f_attributes['100km_Id'],
+				id_km1000 = f_attributes['1000Km_Id'],
+				id_vor = f_attributes['Vor_id'],
+				z = f_attributes['z'],
+				habitat_type = habitat_type,
+				area = f_attributes['Area_Km'],	
+				geom = geom.wkt
+				)
+
+		habitats.append(r)	
+
+	
+	print >> sys.stderr, "Writing habitats to db"
+	session.add_all(habitats)
 	session.commit()
 
-	# For each valid habitat...
-	for h in valid_habitats:
-
-		# Get substrate object.
-		substrate = session.query(Substrate).filter(Substrate.id == h[0]).one()
-
-		# Create habitat object.
-		habitat_obj = Habitat(substrate=substrate, energy=h[1])
-
-		# Add to session.
-		session.add(habitat_obj)
-
-	# Save to db. 
+	print >> sys.stderr, "Calculating areas for habitats."
+	habitat_area = geo_func.area(Habitat.geom).label('habitat_area')
+	habitat_infos = session.query(Habitat, habitat_area).all()
+	for (habitat, habitat_area) in habitat_infos:
+		habitat.area = habitat_area
 	session.commit()
 
+	print >> sys.stderr, "done"
 
-if __name__ == '__main__': main()
+if __name__ == '__main__':
+	main()

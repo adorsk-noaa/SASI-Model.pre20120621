@@ -1,10 +1,10 @@
 # Populates cell table.
-# Assumes that regions have already been loaded into db.
-from sasi.habitat.region import Region
+# Assumes that habitats have already been loaded into db.
+from sasi.habitat.habitat import Habitat
 from sasi.habitat.cell import Cell
 
 import sasi.sa.session as sa_session
-import sasi.sa.habitat.region as sa_region
+import sasi.sa.habitat.habitat as sa_habitat
 import sasi.sa.habitat.cell as sa_cell
 
 from sqlalchemy.sql import func
@@ -21,7 +21,7 @@ def main():
 	session = sa_session.get_session()
 
 	# Clear cell tables
-	for t in [sa_cell.cell_region_table, sa_cell.cell_table]:
+	for t in [sa_cell.cell_habitat_table, sa_cell.cell_table]:
 		session.execute(t.delete())
 	session.commit()
 
@@ -34,9 +34,9 @@ def main():
 		cells = []
 
 		# Get cell ids
-		cell_id_attr = getattr(Region, "id_%s" % cell_size)
-		cell_area = func.sum(geo_func.area(Region.geom)).label('cell_area')
-		cell_geom_wkb = geo_func.wkb(func.st_union(Region.geom).label('cell_geom'))
+		cell_id_attr = getattr(Habitat, "id_%s" % cell_size)
+		cell_area = func.sum(geo_func.area(Habitat.geom)).label('cell_area')
+		cell_geom_wkb = geo_func.wkb(func.st_union(Habitat.geom).label('cell_geom'))
 		cell_infos = session.query(cell_id_attr, cell_area, cell_geom_wkb).group_by(cell_id_attr).all()
 
 		# For each id, create cell and assign habitats.
@@ -49,7 +49,7 @@ def main():
 			cell_counter += 1	
 
 			# Get cell's habitats.
-			cell_regions = session.query(Region).filter(cell_id_attr == cell_id).all()
+			cell_habitats = session.query(Habitat).filter(cell_id_attr == cell_id).all()
 
 			# Format cell's geometry.
 			cell_geom = wkb.loads("%s" % cell_geom_wkb)
@@ -61,7 +61,7 @@ def main():
 					type_id = cell_id,
 					geom = cell_geom.wkt,
 					area = cell_area,
-					regions = cell_regions
+					habitats = cell_habitats
 					)
 
 			cells.append(cell)

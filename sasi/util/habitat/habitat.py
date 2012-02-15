@@ -1,7 +1,7 @@
+from sasi.habitat.habitat_type import Habitat_Type
 from sasi.habitat.habitat import Habitat
 from sasi.habitat.feature import Feature
 from sasi.habitat.substrate import Substrate
-from sasi.habitat.region import Region
 from sasi.habitat.cell import Cell
 import sasi.conf.conf as conf
 import sasi.conf.substrate_mappings as substrate_mappings
@@ -34,9 +34,9 @@ def generate_features(n):
 	
 	return features
 
-def generate_habitats():
+def generate_habitat_types():
 
-	habitats = []
+	habitat_types = []
 
 	valid_habitat_types = [
 			('S5', 'High'),
@@ -51,62 +51,62 @@ def generate_habitats():
 			('S4', 'High')
 			]
 
-	for habitat_type in valid_habitat_types:
+	for valid_habitat_type in valid_habitat_types:
 
-		substrate_id = habitat_type[0]
-		energy = habitat_type[1]
+		substrate_id = valid_habitat_type[0]
+		energy = valid_habitat_type[1]
 
 		substrate = Substrate(id=substrate_id, name=substrate_id)
 
-		h = Habitat(
+		ht = Habitat_Type(
 				energy = energy,
 				substrate = substrate,
 				)
 
-		habitats.append(h)
+		habitat_types.append(ht)
 
-	return habitats
+	return habitat_types
 
-def generate_regions(n, default_area = lambda: 1.0, habitats=None):
+def generate_habitats(n, default_area = lambda: 1.0, habitat_types=None):
 
-	regions = []
+	habitats= []
 
-	# Generate habitats if none were given.
-	if not habitats:
-		habitats = generate_habitats()
+	# Generate habitat types if none were given.
+	if not habitat_types:
+		habitat_types = generate_habitat_types()
 
 	for i in range(n):
-		habitat = habitats[i % len(habitats)]
-		r = Region(
+		habitat_type = habitat_types[i % len(habitat_types)]
+		r = Habitat(
 				id = i,
-				habitat = habitat,
+				habitat_type = habitat_type,
 				z = i * 100,
 				area = default_area(),
 				geom = geo_util.generate_multipolygon(),
 				)
-		regions.append(r)
+		habitats.append(r)
 
-	return regions
+	return habitats
 
 
-def generate_cells(n, default_area = lambda: 1.0, regions=None, regions_per_cell=2):
+def generate_cells(n, default_area = lambda: 1.0, habitats=None, habitats_per_cell=2):
 
 	cells = []
 
-	# Generate regions if none were given.
-	if not regions:
-		default_region_area = lambda: 1.0 * default_area()/regions_per_cell 
-		regions = generate_regions(n * regions_per_cell, default_area = default_region_area)
+	# Generate habitats if none were given.
+	if not habitats:
+		default_habitat_area = lambda: 1.0 * default_area()/habitats_per_cell 
+		habitats = generate_habitats(n * habitats_per_cell, default_area = default_habitat_area)
 
 	for i in range(n):
 
-		cell_regions = [regions.pop() for i in range(regions_per_cell)]
+		cell_habitats = [habitats.pop() for i in range(habitats_per_cell)]
 
 		c = Cell(
 				id = i,
 				area = default_area(),
 				geom = geo_util.generate_multipolygon(),
-				regions = cell_regions
+				habitats = cell_habitats
 				)
 
 		cells.append(c)

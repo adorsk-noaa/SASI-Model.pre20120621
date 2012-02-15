@@ -4,9 +4,9 @@ from geoalchemy import *
 from geoalchemy.postgis import PGComparator
 
 from sasi.habitat.cell import Cell
-from sasi.habitat.region import Region
+from sasi.habitat.habitat import Habitat
 
-import sasi.sa.habitat.region as sa_region
+import sasi.sa.habitat.habitat as sa_habitat
 
 import sasi.sa.metadata as sa_metadata
 metadata = sa_metadata.metadata
@@ -21,9 +21,9 @@ cell_table = Table('cell', metadata,
 
 GeometryDDL(cell_table)
 
-cell_region_table = Table('cell_region', metadata,
+cell_habitat_table = Table('cell_habitat', metadata,
 		Column('cell_id', Integer, ForeignKey(cell_table.c.id), primary_key=True),
-		Column('region_id', Integer, ForeignKey(sa_region.table.c.id), primary_key=True),
+		Column('habitat_id', Integer, ForeignKey(sa_habitat.table.c.id), primary_key=True),
 		)
 
 mapper(
@@ -31,7 +31,7 @@ mapper(
 		cell_table,
 		properties = {
 			'geom': GeometryColumn(cell_table.c.geom, comparator=PGComparator),
-			'regions': relationship(Region, cascade='all', secondary=cell_region_table)
+			'habitats': relationship(Habitat, cascade='all', secondary=cell_habitat_table)
 			}
 	)
 

@@ -1,6 +1,6 @@
 from sasi.dao.habitat.habitat_dao import Habitat_DAO
 from sasi.habitat.habitat import Habitat
-from sasi.util.habitat.habitat import generate_habitats
+import sasi.util.habitat.habitat as habitat_util
 
 
 class Test_Habitat_DAO(Habitat_DAO):
@@ -8,12 +8,8 @@ class Test_Habitat_DAO(Habitat_DAO):
 	def __init__(self, num_habitats=10):
 		self.habitats = {}
 
-		num_cells = num_habitats/2
-
-		n = 0
-		for h in generate_habitats():
+		for h in habitat_util.generate_habitats(num_habitats):
 			self.habitats[h.id] = h
-			n += 1		
 
 	def get_habitats(self, filters=None):
 

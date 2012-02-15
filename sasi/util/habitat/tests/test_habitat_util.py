@@ -5,8 +5,8 @@ class HabitatUtilTest(unittest.TestCase):
 
 	def test(self):
 
-		habitats = habitat_util.generate_habitats()
-		regions = habitat_util.generate_regions(10)
+		habitat_types = habitat_util.generate_habitat_types()
+		habitats = habitat_util.generate_habitats(10)
 		cells = habitat_util.generate_cells(10)
 
 		self.failUnless(True)

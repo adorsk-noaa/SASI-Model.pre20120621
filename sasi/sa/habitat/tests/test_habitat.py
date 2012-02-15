@@ -17,8 +17,8 @@ class HabitatTest(BaseTest):
 		sa_metadata.metadata.drop_all(s.bind)
 		sa_metadata.metadata.create_all(s.bind)
 
-		# Generate test habitats
-		h = habitat_util.generate_habitats().pop()
+		# Generate test habitat
+		h = habitat_util.generate_habitats(1).pop()
 
 		# Add to the session and commit.
 		s.add(h)

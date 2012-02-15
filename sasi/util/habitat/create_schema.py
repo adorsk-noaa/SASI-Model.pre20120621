@@ -1,5 +1,6 @@
 import sasi.sa.session as sa_session
 import sasi.sa.metadata as sa_metadata
+import sasi.sa.habitat.habitat_type as sa_habitat_type
 import sasi.sa.habitat.habitat as sa_habitat
 import sasi.sa.habitat.cell as sa_cell
 import sasi.sa.habitat.feature as sa_feature
