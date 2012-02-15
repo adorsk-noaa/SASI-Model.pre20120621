@@ -30,7 +30,7 @@ def result_key_to_simid(result_key):
 	simid += simid_parts['energy'] * 100
 	simid += simid_parts['feature']
 
-	return "%s" % simid
+	return "%d" % simid
 
 def result_key_to_dict(result_key):
 
