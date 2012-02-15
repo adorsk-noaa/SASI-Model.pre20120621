@@ -1,6 +1,7 @@
 import sasi.conf.conf as conf
 import re
 import csv
+from StringIO import StringIO
 
 # Converts a result key to a legacy-style simid key
 def result_key_to_simid(result_key):
@@ -54,7 +55,7 @@ def result_key_to_dict(result_key):
 
 
 # Print results as csv.
-def results_to_csv(results=None):
+def results_to_csv_buffer(results=None, buffer=None):
 
 	# Group results into rows by simid.
 	result_rows = {}
@@ -92,8 +93,7 @@ def results_to_csv(results=None):
 	# Create csv field headers for results.
 	fields = result_rows.values()[0].keys()
 	fields.sort()
-	csv_str = ','.join(fields) + "\n"
+	print >> buffer, ','.join(fields)
 	for row in result_rows.values():
-		csv_str += ','.join(["%s" % row[f] for f in fields]) + "\n"
+		print >> buffer, ','.join(["%s" % row[f] for f in fields])
 	
-	return csv_str
