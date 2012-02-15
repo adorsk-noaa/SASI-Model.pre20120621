@@ -60,6 +60,9 @@ def results_to_csv_buffer(results=None, buffer=None):
 	# Group results into rows by simid.
 	result_rows = {}
 
+	# Fields to output.
+	fields = set()
+
 	for result_type in ['Z', 'A', 'Y', 'X']:
 		type_table = getattr(results, result_type)
 
@@ -70,12 +73,19 @@ def results_to_csv_buffer(results=None, buffer=None):
 
 			row = result_rows.setdefault(simid, {})
 			t = result_key[0]
-			row["%s_%s" % (result_type, t)] = value
+
+			# Format the field for this result.
+			result_field = "%s_%s" % (result_type, t)
+			fields.add(result_field)
+
+			row[result_field] = value
 
 			# Save simid to row.
 			row['simid'] = simid
+			fields.add('simid')
 
 			# Save result key to row.
+			# Note: we don't put out the result_key, so we don't add it to fields.
 			row['result_key'] = result_key
 
 	# For each result row... 
@@ -86,14 +96,15 @@ def results_to_csv_buffer(results=None, buffer=None):
 		for k,v in rk_dict.items():
 			if not k == 'time':
 				row[k] = v
+				fields.add(k)
 
 		# Remove result key.
 		del row['result_key']
 
 	# Create csv field headers for results.
-	fields = result_rows.values()[0].keys()
+	fields = list(fields)
 	fields.sort()
 	print >> buffer, ','.join(fields)
 	for row in result_rows.values():
-		print >> buffer, ','.join(["%s" % row[f] for f in fields])
+		print >> buffer, ','.join(["%s" % row.get(f,'') for f in fields])
 	
