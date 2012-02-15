@@ -14,7 +14,8 @@ class VulnerabilityAssessment(object):
 
 		return assessments
 
-	def get_assessment(self, gear_code='', substrate_code='', feature_code='', energy=''):
+	def get_assessment(self, habitat_key='', gear_code='', feature_code=''):
+		(substrate_code,energy) = self.get_hab_key_parts(habitat_key=habitat_key)
 		key = (gear_code, substrate_code, feature_code, energy)
 		return self.assessments.get(key, None)
 
@@ -32,7 +33,7 @@ class VulnerabilityAssessment(object):
 	def get_features_by_habitats(self):
 		f_by_h = {}
 		for key, assessment in self.assessments.items():
-			hab_key = (assessment['SUBSTRATE_CODE'], assessment['ENERGY'])
+			hab_key = self.get_hab_key(assessment=assessment)
 			features_for_hab = f_by_h.setdefault(hab_key,{})
 			features_for_category = features_for_hab.setdefault(assessment['FEATURE_CLASS_CODE'],set())
 			features_for_category.add(assessment['FEATURE_CODE'])
@@ -57,11 +58,16 @@ class VulnerabilityAssessment(object):
 					}
 		return substrates
 
+	def get_hab_key(self, assessment=None):
+		return ','.join([assessment['SUBSTRATE_CODE'], assessment['ENERGY']])
+
+	def get_hab_key_parts(self, habitat_key=None):
+		return habitat_key.split(',')
 
 	def get_gears_by_habitats(self):
 		g_by_h = {}
 		for key, assessment in self.assessments.items():
-			hab_key = (assessment['SUBSTRATE_CODE'], assessment['ENERGY'])
+			hab_key = self.get_hab_key(assessment=assessment)
 			gears_for_hab = g_by_h.setdefault(hab_key,set())
 			gears_for_hab.add(assessment['GEAR_CODE'])
 		return g_by_h
@@ -69,7 +75,7 @@ class VulnerabilityAssessment(object):
 	def get_habitats_by_gears(self):
 		h_by_g = {}
 		for key, assessment in self.assessments.items():
-			hab_key = (assessment['SUBSTRATE_CODE'], assessment['ENERGY'])
+			hab_key = self.get_hab_key(assessment=assessment)
 			habs_for_gears= h_by_g.setdefault(assessment['GEAR_CODE'], set())
 			habs_for_gears.add(hab_key)
 		return h_by_g
@@ -85,7 +91,7 @@ class VulnerabilityAssessment(object):
 		habitats = set()
 		for key, assessment in self.assessments.items():
 			if assessment['GEAR_CODE'] == gear_code:
-				hab_key = (assessment['SUBSTRATE_CODE'], assessment['ENERGY'])
+				hab_key = self.get_hab_key(assessment=assessment)
 				habitats.add(hab_key)
 		return habitats
 
@@ -108,7 +114,7 @@ class VulnerabilityAssessment(object):
 	def get_habitats(self):
 		habitats = set()
 		for key, assessment in self.assessments.items():
-			hab_key = (assessment['SUBSTRATE_CODE'], assessment['ENERGY'])
+			hab_key = self.get_hab_key(assessment=assessment)
 			habitats.add(hab_key)
 		return habitats
 
