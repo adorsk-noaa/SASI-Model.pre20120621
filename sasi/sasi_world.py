@@ -16,6 +16,8 @@ from sasi.habitat.static_grid_model import StaticGridModel
 from datetime import datetime
 import sys
 
+import sasi.util.results.results as results_util
+
 
 if __name__ == '__main__':
 
@@ -25,6 +27,7 @@ if __name__ == '__main__':
 	
 	#grid_model = StaticGridModel(cell_dao=Test_Cell_DAO(), default_filters={'type': 'km100'}) 
 	grid_model = StaticGridModel(cell_dao=SA_Cell_DAO(session=db_session), default_filters={'type': ['km100'], 'type_id': ['0']}) 
+	#grid_model = StaticGridModel(cell_dao=SA_Cell_DAO(session=db_session), default_filters={'type': ['km100']}) 
 
 	va_dao = CSV_VA_DAO()
 	va = va_dao.load_va()
@@ -43,14 +46,14 @@ if __name__ == '__main__':
 
 	results_model = SASI_Results_Model()
 
-	t0 = 0
-	tf = 0
+	t0 = 1
+	tf = 6
 	dt = 1
 	taus = {
 			'0': 1,
 			'1': 1,
-			'2': 1.5,
-			'3': 3.5
+			'2': 2,
+			'3': 4 
 			}
 
 	omegas = {
@@ -76,3 +79,6 @@ if __name__ == '__main__':
 		print >> sys.stderr, "iteration: %s" % n
 		print >> sys.stderr, datetime.now()
 		model.iterate(n)
+	
+	# Print results as csv.
+	results_util.results_to_csv_buffer(results=results_model, buffer=sys.stdout)

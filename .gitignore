@@ -4,3 +4,4 @@
 *.pck
 .virtualenv
 sasi/conf.py
+outputs

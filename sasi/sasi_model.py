@@ -92,6 +92,7 @@ class SASIModel:
 
 			# Create entry in c_h_f for cell.
 			c_ht_f[c.id] = {
+					'type_id': c.type_id,
 					'area': c.area,
 					'ht': {}
 					}
@@ -188,7 +189,7 @@ class SASIModel:
 							if relevant_features:
 
 								# Distribute the category's effort equally over the features.
-								swept_area_per_feature= swept_area_per_feature_category/len(relevant_features)
+								swept_area_per_feature = swept_area_per_feature_category/len(relevant_features)
 
 								# For each feature...
 								for f_id in relevant_features:
@@ -196,7 +197,7 @@ class SASIModel:
 									# Generate an index key for the results.
 									index_key = self.get_index_key(
 											time = t,
-											cell_id = c_id,
+											cell_id = self.c_ht_f[c_id]['type_id'],
 											habitat_type_id = ht,
 											gear_id = effort.gear.id,
 											feature_id = f_id
@@ -227,11 +228,11 @@ class SASIModel:
 									recovery_per_dt = adverse_effect_swept_area/tau
 
 									# Add recover to future recovery table entries.
-									for future_t in (t + 1, t + tau, self.dt):
+									for future_t in range(t + 1, t + tau + 1, self.dt):
 										if future_t <= self.tf:
 											future_key = self.get_index_key(
 													time = future_t,
-													cell_id = c_id,
+													cell_id = self.c_ht_f[c_id]['type_id'],
 													habitat_type_id = ht,
 													gear_id = effort.gear.id,
 													feature_id = f_id
