@@ -39,7 +39,7 @@ def main():
 	session.commit()
 
 	# Load shapefile
-	sf = ogr.Open(conf.conf['sasi_habitat_type_file'])
+	sf = ogr.Open(conf.conf['sasi_habitat_file'])
 	
 	# Get feature layer.
 	layer = sf.GetLayer(0)

@@ -12,7 +12,7 @@ def main():
 	# Read features from vulernability assessment.
 	va_rows = sasi.util.va.read_va_from_csv(conf.conf['va_file'])
 	va = VulnerabilityAssessment(rows = va_rows)	
-	valid_habitat_types = va.get_habitat_types()
+	valid_habitat_types = va.get_habitats()
 
 	# Get DB session.
 	session = sa_session.get_session()
