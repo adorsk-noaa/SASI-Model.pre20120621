@@ -1,11 +1,11 @@
 import sasi.conf.conf as conf
 from sasi.va.va import VulnerabilityAssessment
-from sasi.habitat_type.habitat_type import Habitat_Type
-from sasi.habitat_type.substrate import Substrate
+from sasi.habitat.habitat_type import Habitat_Type
+from sasi.habitat.substrate import Substrate
 import sasi.util.va
 import sasi.sa.session as sa_session
 import sasi.sa.metadata as sa_metadata
-import sasi.sa.habitat_type.habitat_type as sa_habitat_type
+import sasi.sa.habitat.habitat_type as sa_habitat_type
 
 
 def main():

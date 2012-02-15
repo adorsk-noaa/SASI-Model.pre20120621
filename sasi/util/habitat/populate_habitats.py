@@ -5,17 +5,17 @@ import sasi.conf.feature_assignments as feature_assignments
 import sasi.conf.substrate_mappings as substrate_mappings
 import sasi.conf.energy_mappings as energy_mappings
 
-from sasi.habitat_type.habitat_type import HabitatType
-from sasi.habitat_type.habitat import Habitat
-from sasi.habitat_type.substrate import Substrate
-from sasi.habitat_type.feature import Feature
+from sasi.habitat.habitat_type import Habitat_Type
+from sasi.habitat.habitat import Habitat
+from sasi.habitat.substrate import Substrate
+from sasi.habitat.feature import Feature
 
 import sasi.sa.session as sa_session
-import sasi.sa.habitat_type.habitat as sa_habitat
-import sasi.sa.habitat_type.habitat_type as sa_habitat_type
-import sasi.sa.habitat_type.cell as sa_cell
-import sasi.sa.habitat_type.feature as sa_feature
-import sasi.sa.habitat_type.substrate as sa_substrate
+import sasi.sa.habitat.habitat as sa_habitat
+import sasi.sa.habitat.habitat_type as sa_habitat_type
+import sasi.sa.habitat.cell as sa_cell
+import sasi.sa.habitat.feature as sa_feature
+import sasi.sa.habitat.substrate as sa_substrate
 
 import ogr
 from shapely import wkb
@@ -82,7 +82,7 @@ def main():
 		substrate = session.query(Substrate).filter(Substrate.id == substrate_id).one()
 
 		# Get habitat_type object.
-		habitat_type = session.query(HabitatType).join(HabitatType.substrate).filter(Substrate.id == substrate_id).filter(HabitatType.energy == energy).one()
+		habitat_type = session.query(Habitat_Type).join(Habitat_Type.substrate).filter(Substrate.id == substrate_id).filter(Habitat_Type.energy == energy).one()
 
 		# Make habitat object from feature data.
 		r = Habitat(
