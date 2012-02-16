@@ -6,7 +6,7 @@ import sys
 
 class SASIModel:
 
-	def __init__(self, t0=0, tf=10, dt=1, grid_model=None, effort_model=None, va=None, taus=None, omegas=None):
+	def __init__(self, t0=0, tf=10, dt=1, grid_model=None, features_model=None, effort_model=None, va=None, taus=None, omegas=None):
 		
 		# Start time.
 		self.t0 = t0
@@ -17,8 +17,11 @@ class SASIModel:
 		# Timestep.
 		self.dt = dt
 
-		# Habitats
+		# Grid
 		self.grid_model = grid_model 
+
+		# Features.
+		self.features_model = features_model 
 		
 		# Fishing effort model.
 		self.effort_model = effort_model
@@ -83,10 +86,8 @@ class SASIModel:
 		# For each cell...
 		for c in self.grid_model.get_cells():
 
-			# Create entry in c_h_f for cell.
-			c_ht_f[c.id] = {
-					'type_id': c.type_id,
-					'area': c.area,
+			# Create entry in c_ht_f for cell.
+			c_ht_f[c] = {
 					'ht': {}
 					}
 
@@ -96,28 +97,29 @@ class SASIModel:
 			# Group habitats by habitat type.
 			habitats_by_type = {}
 			for h in cell_habitats:
-				habitat_type = h.habitat_type.id
+				habitat_type = h.habitat_type
 				habitats_by_type.setdefault(habitat_type, [])
 				habitats_by_type[habitat_type].append(h)
 
 			# For each habitat type...
 			for ht in habitats_by_type.keys():
 
+				# Create entry for ht in c_ht_f.
+				c_ht_f[c]['ht'][ht] = {}
+
 				# Calculate combined area.
 				ht_area = sum([h.area for h in habitats_by_type[ht]])
+				c_ht_f[c]['ht'][ht]['area'] = ht_area
 
 				# Calculate percentage of cell area.
-				ht_percent_cell_area = ht_area/c.area
+				c_ht_f[c]['ht'][ht]['percent_cell_area'] = ht_area/c.area
 
 				# Get features for habitat, grouped by featured category.
-				ht_features = self.f_by_h[ht]
+				c_ht_f[c]['ht'][ht]['f'] = {}
+				for feature_category, feature_ids in self.f_by_h[ht.id].items():
+					features = self.features_model.get_features(filters={'id': feature_ids})
+					c_ht_f[c]['ht'][ht]['f'][feature_category] = features 
 
-				# Create entry in c_h_f for habitat type.
-				c_ht_f[c.id]['ht'][ht] = {
-						'area': ht_area,
-						'percent_cell_area': ht_percent_cell_area,
-						'f': ht_features
-						}
 		return c_ht_f
 		
 	
@@ -131,7 +133,7 @@ class SASIModel:
 
 		# For each cell...
 		cell_counter = 0
-		for c_id in self.c_ht_f.keys():
+		for c in self.c_ht_f.keys():
 
 			if conf.conf['verbose']:
 				if (cell_counter % 100) == 0: print >> sys.stderr, "\tc: %s" % cell_counter
@@ -139,27 +141,27 @@ class SASIModel:
 			cell_counter += 1
 
 			# Get contact-adjusted fishing efforts for the cell.
-			cell_efforts = self.effort_model.get_effort(c_id, t)
+			cell_efforts = self.effort_model.get_effort(c, t)
 
 			# For each effort...
 			for effort in cell_efforts:
 
 				# Get cell's habitat types which are relevant to the effort.
 				relevant_habitat_types = []
-				for ht in self.c_ht_f[c_id]['ht'].keys():
-					if ht in self.h_by_g[effort.gear.id]: relevant_habitat_types.append(ht)
+				for ht in self.c_ht_f[c]['ht'].keys():
+					if ht.id in self.h_by_g[effort.gear.id]: relevant_habitat_types.append(ht)
 
 				# If there were relevant habitat types...
 				if relevant_habitat_types:
 
 					# Calculate the total area of the relevant habitats.
-					relevant_habitats_area = sum([self.c_ht_f[c_id]['ht'][ht]['area'] for ht in relevant_habitat_types])
+					relevant_habitats_area = sum([self.c_ht_f[c]['ht'][ht]['area'] for ht in relevant_habitat_types])
 
 					# For each habitat type...
 					for ht in relevant_habitat_types:
 					
 						# Distribute the effort's swept area proportionally to the habitat type's area as a fraction of the total relevant area.
-						swept_area_per_habitat_type = effort.swept_area * (self.c_ht_f[c_id]['ht'][ht]['area']/relevant_habitats_area)
+						swept_area_per_habitat_type = effort.swept_area * (self.c_ht_f[c]['ht'][ht]['area']/relevant_habitats_area)
 
 						# Get feature categories.
 						# @TODO: get categories from config or VA.
@@ -175,8 +177,8 @@ class SASIModel:
 
 							# Get the features for which the gear can be applied. 
 							relevant_features = []
-							for f_id in self.c_ht_f[c_id]['ht'][ht]['f'].get(fc,[]):
-								if f_id in self.f_by_g[effort.gear.id]: relevant_features.append(f_id)
+							for f in self.c_ht_f[c]['ht'][ht]['f'].get(fc,[]):
+								if f.id in self.f_by_g[effort.gear.id]: relevant_features.append(f)
 
 							# If there were relevant features...
 							if relevant_features:
@@ -185,15 +187,15 @@ class SASIModel:
 								swept_area_per_feature = swept_area_per_feature_category/len(relevant_features)
 
 								# For each feature...
-								for f_id in relevant_features:
+								for f in relevant_features:
 
 									# Generate an index key for the results.
 									index_key = self.get_index_key(
 											time = t,
-											cell_id = self.c_ht_f[c_id]['type_id'],
-											habitat_type_id = ht,
-											gear_id = effort.gear.id,
-											feature_id = f_id
+											cell = c,
+											habitat_type = ht,
+											gear = effort.gear,
+											feature = f
 											)
 
 									# Add the resulting contact-adjusted
@@ -203,8 +205,8 @@ class SASIModel:
 									# Get vulnerability assessment for the effort.
 									vulnerability_assessment = self.va.get_assessment(
 										gear_code = effort.gear.id,
-										habitat_key = ht,
-										feature_code = f_id,
+										habitat_key = ht.id,
+										feature_code = f.id,
 										)
 
 									# Get stochastic modifiers 
@@ -225,10 +227,10 @@ class SASIModel:
 										if future_t <= self.tf:
 											future_key = self.get_index_key(
 													time = future_t,
-													cell_id = self.c_ht_f[c_id]['type_id'],
-													habitat_type_id = ht,
-													gear_id = effort.gear.id,
-													feature_id = f_id
+													cell = c,
+													habitat_type = ht,
+													gear = effort.gear,
+													feature = f
 													)
 											self.results['X'][future_key] = self.results['X'].get(future_key, 0.0) + recovery_per_dt 
 
@@ -236,12 +238,13 @@ class SASIModel:
 									self.results['Z'][index_key] = self.results['Z'].get(index_key, 0.0) + self.results['X'].get(index_key, 0.0) - self.results['Y'][index_key]
 
 	# Format index key from key components.
-	def get_index_key(self, time='', cell_id='', habitat_type_id='', gear_id='', feature_id=''):
+	def get_index_key(self, time=None, cell=None, habitat_type=None, gear=None, feature=None):
 		index_key = (
 				time,
-				cell_id,	
-				habitat_type_id,
-				gear_id,
-				feature_id
+				cell,	
+				habitat_type,
+				gear,
+				feature
 				)
-		return ','.join(["%s" % key_part for key_part in index_key])
+
+		return index_key

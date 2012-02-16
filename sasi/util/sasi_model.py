@@ -1,5 +1,13 @@
 import sasi.conf.conf as conf
 import re
+from sasi.habitat.cell import Cell
+from sasi.habitat.feature import Feature
+from sasi.habitat.substrate import Substrate
+from sasi.habitat.habitat_type import Habitat_Type
+from sasi.fishing.gear import Gear
+
+from sasi.results.sasi_result import SASI_Result
+from sasi.results.sasi_result_collection import SASI_Result_Collection
 
 # Converts a result key to a legacy-style simid key
 def result_key_to_simid(result_key):
@@ -33,22 +41,17 @@ def result_key_to_simid(result_key):
 
 def result_key_to_dict(result_key):
 
-	result_key_dict = {}
-
-	result_key_parts = result_key.split(',')
-
-	key_part_positions = {
-			0: 'time',
-			1: 'cell_id',
-			2: 'substrate',
-			3: 'energy',
-			4: 'gear',
-			5: 'feature'
+	result_key_dict = {
+			'time': result_key[0],
+			'cell_id': result_key[1].id,
+			'cell_type': result_key[1].type,
+			'cell_type_id': result_key[1].type_id,
+			'substrate': result_key[2].substrate.id,
+			'energy': result_key[2].energy,
+			'gear': result_key[3].id,
+			'feature': result_key[4].id
 			}
 
-	for pos, part_name in key_part_positions.items():
-		result_key_dict[part_name] = result_key_parts[pos]
-	
 	return result_key_dict
 
 
@@ -105,3 +108,35 @@ def results_to_csv_buffer(results=None, buffer=None):
 	for row in result_rows.values():
 		print >> buffer, ','.join(["%s" % row.get(f,'') for f in fields])
 	
+
+# Create Result Collection from results.
+def results_to_sasi_results_collection(collection_id, results=None):
+
+	sasi_results = []
+
+	# For each result field...
+	for result_field in ['Z', 'A', 'Y', 'X', 'ZCum']:
+
+		# Get results for that field.
+		field_results = results[result_field]
+
+		# For each result...
+		for result_key, field_value in field_results.items():
+
+			# Create SASI_Result object w/ minimal stub objects as attributes.
+			sasi_result = SASI_Result(
+					time = result_key[0],
+					cell = result_key[1],
+					habitat_type = result_key[2],
+					gear = result_key[3],
+					feature = result_key[4],
+					value = field_value
+					)
+			sasi_results.append(sasi_result)
+	
+	return SASI_Result_Collection(id = collection_id, results = sasi_results)
+
+
+
+
+

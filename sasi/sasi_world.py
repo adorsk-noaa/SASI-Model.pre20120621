@@ -1,6 +1,7 @@
 import sasi.sa.session as sa_session
 from sasi.dao.habitat.test_cell_dao import Test_Cell_DAO
 from sasi.dao.habitat.sa_cell_dao import SA_Cell_DAO
+from sasi.dao.habitat.sa_feature_dao import SA_Feature_DAO
 from sasi.dao.va.csv_va_dao import CSV_VA_DAO
 from sasi.fishing.nominal_effort_per_gear_model import NominalEffortPerGearModel
 from sasi.fishing.gear import Gear
@@ -10,6 +11,7 @@ from sasi.sasi_model import SASIModel
 import sasi.conf.conf as conf
 
 from sasi.habitat.static_grid_model import StaticGridModel
+from sasi.habitat.features_model import Features_Model
 
 from datetime import datetime
 import sys
@@ -29,6 +31,8 @@ if __name__ == '__main__':
 
 	va_dao = CSV_VA_DAO()
 	va = va_dao.load_va()
+
+	features_model = Features_Model(feature_dao=SA_Feature_DAO(session=db_session))
 
 	gears = []
 	#for i in range(1,6+1):
@@ -64,6 +68,7 @@ if __name__ == '__main__':
 			tf=tf,
 			dt=dt,
 			grid_model=grid_model,
+			features_model=features_model,
 			effort_model=effort_model,
 			va=va,
 			taus=taus,
@@ -76,4 +81,7 @@ if __name__ == '__main__':
 		model.iterate(n)
 	
 	# Print results as csv.
-	sasi_model_util.results_to_csv_buffer(results=model.results, buffer=sys.stdout)
+	#sasi_model_util.results_to_csv_buffer(results=model.results, buffer=sys.stdout)
+
+	# Get SASI Result Collection from results.
+	result_collection = sasi_model_util.results_to_sasi_results_collection('myresults', results=model.results)
