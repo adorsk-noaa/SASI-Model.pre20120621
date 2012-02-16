@@ -1,10 +1,11 @@
 import unittest
 from sasi.sa.tests.basetest import BaseTest
 import sasi.sa.metadata as sa_metadata
+import sasi.sa.habitat.habitat_metadata
 import sasi.sa.habitat.substrate as sa_substrate
 import sasi.util.habitat.habitat as habitat_util
 
-class SubstrateTest(BaseTest):
+class Substrate_Test(BaseTest):
 
 	def test(self):
 		s = self.session
@@ -13,7 +14,7 @@ class SubstrateTest(BaseTest):
 
 		substrate = habitat_util.generate_substrates(1).pop()
 
-		s.add(substrate)
+		s.merge(substrate)
 		s.commit()
 		self.failUnless(True)
 

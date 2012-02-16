@@ -13,8 +13,8 @@ def generate_substrates(n):
 
 	for i in range(n):
 		s = Substrate(
-				id = n,
-				name = "S%s" % i
+				id = "S%s" % i,
+				name = "Substrate %s" % i
 				)
 		substrates.append(s)
 	
@@ -27,8 +27,8 @@ def generate_features(n):
 
 	for i in range(n):
 		f = Feature(
-				id = n,
-				name = "F%s" % i
+				id = "F%s" % i,
+				name = "Feature %s" % i
 				)
 		features.append(f)
 	

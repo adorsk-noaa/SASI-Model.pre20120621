@@ -21,7 +21,7 @@ class HabitatTest(BaseTest):
 		h = habitat_util.generate_habitats(1).pop()
 
 		# Add to the session and commit.
-		s.add(h)
+		s.merge(h)
 		s.commit()
 
 		self.failUnless(True)

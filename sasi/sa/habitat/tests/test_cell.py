@@ -23,7 +23,7 @@ class CellTest(BaseTest):
 		cell = habitat_util.generate_cells(1).pop()
 
 		# Add to the session and commit.
-		s.add(cell)
+		s.merge(cell)
 		s.commit()
 
 		cells = s.query(Cell).all()

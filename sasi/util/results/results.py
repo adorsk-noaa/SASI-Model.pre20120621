@@ -2,6 +2,58 @@ import sasi.conf.conf as conf
 import re
 import csv
 from StringIO import StringIO
+import sasi.util.habitat.habitat as habitat_util
+import sasi.util.fishing.fishing as fishing_util
+
+from sasi.results.sasi_result import SASI_Result
+from sasi.results.sasi_result_collection import SASI_Result_Collection
+
+# Generate SASI Results.
+def generate_sasi_results(n=10):
+
+	sasi_results = []
+
+	# Get gears.
+	gears = fishing_util.generate_gears()
+
+	# Get features.
+	features = habitat_util.generate_features(n)
+
+	# Get cells.
+	cells = habitat_util.generate_cells(n/2)
+
+	for i in range(n):
+		cell_i = cells[i % len(cells)]
+		gear_i = gears[i % len(gears)]
+		feature_i = features[i % len(features)]
+		sasi_result = SASI_Result(
+				id = i,
+				time = i,
+				cell = cell_i,
+				habitat_type = cell_i.habitats[0].habitat_type,
+				gear = gear_i,
+				feature = feature_i,
+				field = "field_%s" % i,
+				value = i
+				)
+		sasi_results.append(sasi_result)
+	return sasi_results
+
+
+# Generate SASI Result Collections.
+def generate_sasi_result_collections(n=1, results_per_collection=10):
+	sasi_result_collections = []
+
+	for i in range(n):
+		sasi_results = generate_sasi_results(results_per_collection)
+		sasi_result_collection = SASI_Result_Collection(
+				id = i,
+				results = sasi_results
+				)
+		sasi_result_collections.append(sasi_result_collection)
+
+	return sasi_result_collections
+
 
 # Converts a result key to a legacy-style simid key
 def result_key_to_simid(result_key):

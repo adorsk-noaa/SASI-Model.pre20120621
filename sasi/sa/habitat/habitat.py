@@ -28,6 +28,6 @@ mapper(
 		table,
 		properties = {
 		'geom': GeometryColumn(table.c.geom, comparator=PGComparator),
-		'habitat_type': relationship(Habitat_Type, cascade='all'),
+		'habitat_type': relationship(Habitat_Type, cascade='merge'),
 		})
 
