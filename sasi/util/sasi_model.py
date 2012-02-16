@@ -1,56 +1,5 @@
 import sasi.conf.conf as conf
-import sasi.util.habitat.habitat as habitat_util
-import sasi.util.fishing.fishing as fishing_util
-
-from sasi.results.sasi_result import SASI_Result
-from sasi.results.sasi_result_collection import SASI_Result_Collection
-
-# Generate SASI Results.
-def generate_sasi_results(n=10):
-
-	sasi_results = []
-
-	# Get gears.
-	gears = fishing_util.generate_gears()
-
-	# Get features.
-	features = habitat_util.generate_features(n)
-
-	# Get cells.
-	cells = habitat_util.generate_cells(n/2)
-
-	for i in range(n):
-		cell_i = cells[i % len(cells)]
-		gear_i = gears[i % len(gears)]
-		feature_i = features[i % len(features)]
-		sasi_result = SASI_Result(
-				id = i,
-				time = i,
-				cell = cell_i,
-				habitat_type = cell_i.habitats[0].habitat_type,
-				gear = gear_i,
-				feature = feature_i,
-				field = "field_%s" % i,
-				value = i
-				)
-		sasi_results.append(sasi_result)
-	return sasi_results
-
-
-# Generate SASI Result Collections.
-def generate_sasi_result_collections(n=1, results_per_collection=10):
-	sasi_result_collections = []
-
-	for i in range(n):
-		sasi_results = generate_sasi_results(results_per_collection)
-		sasi_result_collection = SASI_Result_Collection(
-				id = i,
-				results = sasi_results
-				)
-		sasi_result_collections.append(sasi_result_collection)
-
-	return sasi_result_collections
-
+import re
 
 # Converts a result key to a legacy-style simid key
 def result_key_to_simid(result_key):
@@ -112,10 +61,10 @@ def results_to_csv_buffer(results=None, buffer=None):
 	# Fields to output.
 	fields = set()
 
-	for result_type in ['Z', 'A', 'Y', 'X']:
-		type_table = getattr(results, result_type)
+	for result_field in ['Z', 'A', 'Y', 'X']:
+		field_results = results[result_field]
 
-		for result_key, value in type_table.items():
+		for result_key, value in field_results.items():
 
 			# Get simid.
 			simid = result_key_to_simid(result_key)
@@ -124,10 +73,9 @@ def results_to_csv_buffer(results=None, buffer=None):
 			t = result_key[0]
 
 			# Format the field for this result.
-			result_field = "%s_%s" % (result_type, t)
-			fields.add(result_field)
-
-			row[result_field] = value
+			field_time = "%s_%s" % (result_field, t)
+			row[field_time] = value
+			fields.add(field_time)
 
 			# Save simid to row.
 			row['simid'] = simid

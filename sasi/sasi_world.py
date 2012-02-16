@@ -5,8 +5,6 @@ from sasi.dao.va.csv_va_dao import CSV_VA_DAO
 from sasi.fishing.nominal_effort_per_gear_model import NominalEffortPerGearModel
 from sasi.fishing.gear import Gear
 
-from sasi.results.sasi_results_model import SASI_Results_Model
-
 from sasi.sasi_model import SASIModel
 
 import sasi.conf.conf as conf
@@ -16,7 +14,7 @@ from sasi.habitat.static_grid_model import StaticGridModel
 from datetime import datetime
 import sys
 
-import sasi.util.results.results as results_util
+import sasi.util.sasi_model as sasi_model_util
 
 
 if __name__ == '__main__':
@@ -44,8 +42,6 @@ if __name__ == '__main__':
 
 	effort_model = NominalEffortPerGearModel(grid_model=grid_model, gears=gears)
 
-	results_model = SASI_Results_Model()
-
 	t0 = 1
 	tf = 6
 	dt = 1
@@ -70,7 +66,6 @@ if __name__ == '__main__':
 			grid_model=grid_model,
 			effort_model=effort_model,
 			va=va,
-			results_model=results_model,
 			taus=taus,
 			omegas=omegas
 			)
@@ -81,4 +76,4 @@ if __name__ == '__main__':
 		model.iterate(n)
 	
 	# Print results as csv.
-	results_util.results_to_csv_buffer(results=results_model, buffer=sys.stdout)
+	sasi_model_util.results_to_csv_buffer(results=model.results, buffer=sys.stdout)

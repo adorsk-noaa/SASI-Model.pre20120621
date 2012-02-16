@@ -6,7 +6,7 @@ import sys
 
 class SASIModel:
 
-	def __init__(self, t0=0, tf=10, dt=1, grid_model=None, effort_model=None, va=None, results_model=None, taus=None, omegas=None):
+	def __init__(self, t0=0, tf=10, dt=1, grid_model=None, effort_model=None, va=None, taus=None, omegas=None):
 		
 		# Start time.
 		self.t0 = t0
@@ -25,9 +25,6 @@ class SASIModel:
 
 		# Vulnerability Assessment
 		self.va = va
-
-		# Results model.
-		self.results_model = results_model
 
 		# tau (stochastic modifier for recovery)
 		if not taus:
@@ -49,20 +46,16 @@ class SASIModel:
 					}
 		self.omegas = omegas
 
-		# Modified Swept Area.
-		self.Z = self.results_model.Z 
-
-		# Contact-Adjusted Swept Area
-		self.A = self.results_model.A 
-
-		# Recovery.
-		self.X = self.results_model.X 
-
-		# Adverse Effects.
-		self.Y = self.results_model.Y 
-
-		# List of index keys to be used when creating index results.
-		#self.index_keys = self.get_index_keys()
+		# Results.
+		self.results = {}
+		for field in [
+				'A', # Contact-Adjusted Swept Area.
+				'X', # Recovered Swept Area.
+				'Y', # Modified Swept Area.
+				'Z', # Instantaneous X - Y
+				'ZCum', # Cumulative Z.
+				]:
+			self.results[field] = {}
 
 		self.setup()
 
@@ -205,7 +198,7 @@ class SASIModel:
 
 									# Add the resulting contact-adjusted
 									# swept area to the A table.
-									self.A[index_key] = self.A.get(index_key,0.0) + swept_area_per_feature
+									self.results['A'][index_key] = self.results['A'].get(index_key,0.0) + swept_area_per_feature
 
 									# Get vulnerability assessment for the effort.
 									vulnerability_assessment = self.va.get_assessment(
@@ -222,7 +215,7 @@ class SASIModel:
 									adverse_effect_swept_area = swept_area_per_feature * omega
 
 									# Add to adverse effect table.
-									self.Y[index_key] = self.Y.get(index_key,0.0) + adverse_effect_swept_area
+									self.results['Y'][index_key] = self.results['Y'].get(index_key,0.0) + adverse_effect_swept_area
 
 									# Calculate recovery per timestep.
 									recovery_per_dt = adverse_effect_swept_area/tau
@@ -237,29 +230,10 @@ class SASIModel:
 													gear_id = effort.gear.id,
 													feature_id = f_id
 													)
-											self.X[future_key] = self.X.get(future_key, 0.0) + recovery_per_dt 
+											self.results['X'][future_key] = self.results['X'].get(future_key, 0.0) + recovery_per_dt 
 
 									# Add to modified swept area for the timestep.
-									self.Z[index_key] = self.Z.get(index_key, 0.0) + self.X.get(index_key, 0.0) - self.Y[index_key]
-
-	# Get index keys for storing model effects. 
-	# The keys consist of valid (cell, substrate, energy, gear, feature) combinations,
-	# as defined by the grid model and the vulnerability assessment.
-	def get_index_keys(self):
-		index_keys = [] 
-		for c in self.grid_model.get_cells():
-			for a in self.va.assessments.values():
-				index_key = self.get_index_key(
-						time = 0,
-						cell_type = c.type,
-						cell_type_id = c.type_id,
-						substrate_code = a['SUBSTRATE_CODE'],
-						energy = a['ENERGY'],
-						gear_code = a['GEAR_CODE'],
-						feature_code = a['FEATURE_CODE']
-					)	
-				index_keys.append(index_key)
-		return index_keys
+									self.results['Z'][index_key] = self.results['Z'].get(index_key, 0.0) + self.results['X'].get(index_key, 0.0) - self.results['Y'][index_key]
 
 	# Format index key from key components.
 	def get_index_key(self, time='', cell_id='', habitat_type_id='', gear_id='', feature_id=''):
@@ -271,11 +245,3 @@ class SASIModel:
 				feature_id
 				)
 		return ','.join(["%s" % key_part for key_part in index_key])
-
-	# Get a storage table indexed by the index keys.
-	# note: at some later point this might need optimization later, e.g. w/ pytables
-	def get_indexed_table(self):
-		table = {}
-		for k in self.index_keys:
-			table[k] = 0.0
-		return table
