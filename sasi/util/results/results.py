@@ -24,7 +24,6 @@ def generate_sasi_results(n=10):
 		gear_i = gears[i % len(gears)]
 		feature_i = features[i % len(features)]
 		sasi_result = SASI_Result(
-				id = i,
 				time = i,
 				cell = cell_i,
 				habitat_type = cell_i.habitats[0].habitat_type,
@@ -44,7 +43,7 @@ def generate_sasi_result_collections(n=1, results_per_collection=10):
 	for i in range(n):
 		sasi_results = generate_sasi_results(results_per_collection)
 		sasi_result_collection = SASI_Result_Collection(
-				id = i,
+				id = "sasi_result_collection_%s" % i,
 				results = sasi_results
 				)
 		sasi_result_collections.append(sasi_result_collection)

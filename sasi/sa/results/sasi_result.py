@@ -4,6 +4,7 @@ from sqlalchemy.orm import relationship, mapper
 import sasi.sa.metadata as sa_metadata
 
 from sasi.results.sasi_result import SASI_Result
+from sasi.results.sasi_result_collection import SASI_Result_Collection
 from sasi.habitat.cell import Cell
 from sasi.habitat.habitat_type import Habitat_Type
 from sasi.habitat.feature import Feature
@@ -13,7 +14,7 @@ import sasi.sa.habitat.cell as sa_cell
 import sasi.sa.habitat.habitat_type as sa_habitat_type
 import sasi.sa.habitat.feature as sa_feature
 import sasi.sa.fishing.gear as sa_gear
-
+import sasi.sa.results.sasi_result_collection as sa_sasi_result_collection
 
 metadata = sa_metadata.metadata
 
@@ -26,6 +27,7 @@ table = Table('sasi_result', metadata,
 		Column('feature_id', String, ForeignKey(sa_feature.table.c.id)),
 		Column('field', String),
 		Column('value', String),
+		Column('sasi_result_collection_id', String, ForeignKey(sa_sasi_result_collection.table.c.id)),
 		)
 
 mapper(
@@ -36,6 +38,7 @@ mapper(
 			'habitat_type': relationship(Habitat_Type, cascade='merge'),
 			'gear': relationship(Gear, cascade='merge'),
 			'feature': relationship(Feature, cascade='merge'),
+			'parent': relationship(SASI_Result_Collection, cascade='merge'),
 			}
 	)
 
