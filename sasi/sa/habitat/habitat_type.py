@@ -22,6 +22,6 @@ mapper(
 		Habitat_Type,
 		table,
 		properties = {
-		'substrate': relationship(Substrate, cascade='merge'),
+		'substrate': relationship(Substrate, cascade='merge', lazy='joined'),
 		})
 
