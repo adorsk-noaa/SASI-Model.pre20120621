@@ -14,5 +14,5 @@ class StaticGridModel(GridModel):
 			combined_filters.update(filters)
 			return self.cell_dao.get_cells(filters=combined_filters)
 		else:
-			return self.cell_dao>get_cells(filters=filters)
+			return self.cell_dao.get_cells(filters=filters)
 
