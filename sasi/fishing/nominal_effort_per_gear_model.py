@@ -7,13 +7,10 @@ class NominalEffortPerGearModel(EffortModel):
 		self.grid_model = grid_model
 		self.gears = gears
 
-	def get_effort(self, cell_id=None, time=None):
+	def get_effort(self, cell=None, time=None):
 
 		# Initialize a list of efforts.
 		efforts = []
-
-		# Get cell for the given location and time.
-		cell = self.grid_model.get_cells(filters={'id': [cell_id]}).pop()
 
 		# Set the nominal effort to be the cell's area.
 		nominal_effort = cell.area
@@ -25,7 +22,7 @@ class NominalEffortPerGearModel(EffortModel):
 		for gear in gears:
 
 			# Create an effort for the gear.
-			efforts.append(Effort(gear=gear, swept_area=nominal_effort, location=cell_id, time=time))
+			efforts.append(Effort(gear=gear, swept_area=nominal_effort, location=cell, time=time))
 
 		return efforts
 
