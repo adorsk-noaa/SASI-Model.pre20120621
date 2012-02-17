@@ -37,7 +37,7 @@ class SA_Result_DAO(object):
 		q.delete()
 		if commit: self.session.commit()
 
-	def save_result_sets(self, result_sets, commit=True):
+	def save_result_sets(self, result_sets=None, commit=True):
 		for result_set in result_sets:
 			self.session.add(result_set)
 		if commit: self.session.commit()
@@ -61,5 +61,8 @@ class SA_Result_DAO(object):
 		q = self.session.query(Result_Set)
 		if filters:
 			for filter_name, filter_values in filters.items():
-				q = q.filter(getattr(Result_Set, filter_name).in_(filter_values))
+				if filter_name == 'result_sets':
+					q = q.filter(Result_Set.id.in_([result_set.id for result_set in filter_values]))
+				else:
+					q = q.filter(getattr(Result_Set, filter_name).in_(filter_values))
 		return q

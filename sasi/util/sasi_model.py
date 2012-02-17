@@ -6,8 +6,8 @@ from sasi.habitat.substrate import Substrate
 from sasi.habitat.habitat_type import Habitat_Type
 from sasi.fishing.gear import Gear
 
-from sasi.results.sasi_result import SASI_Result
-from sasi.results.sasi_result_collection import SASI_Result_Collection
+from sasi.results.result import Result
+from sasi.results.result_set import Result_Set
 
 # Converts a result key to a legacy-style simid key
 def result_key_to_simid(result_key):
@@ -109,10 +109,10 @@ def results_to_csv_buffer(results=None, buffer=None):
 		print >> buffer, ','.join(["%s" % row.get(f,'') for f in fields])
 	
 
-# Create Result Collection from results.
-def results_to_result_collection(results=None):
+# Create Result Set from results.
+def results_to_result_set(results=None):
 
-	sasi_results = []
+	result_objects = []
 
 	# For each result field...
 	for result_field in ['Z', 'A', 'Y', 'X', 'ZCum']:
@@ -124,7 +124,7 @@ def results_to_result_collection(results=None):
 		for result_key, field_value in field_results.items():
 
 			# Create SASI_Result object w/ minimal stub objects as attributes.
-			sasi_result = SASI_Result(
+			result_object = Result(
 					time = result_key[0],
 					cell = result_key[1],
 					habitat_type = result_key[2],
@@ -132,9 +132,9 @@ def results_to_result_collection(results=None):
 					feature = result_key[4],
 					value = field_value
 					)
-			sasi_results.append(sasi_result)
+			result_objects.append(result_object)
 	
-	return SASI_Result_Collection(results = sasi_results)
+	return Result_Set(results = result_objects)
 
 
 

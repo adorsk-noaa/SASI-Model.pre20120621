@@ -1,6 +1,6 @@
 class Result_Set(object):
 
-	def __init__(self, id = id, results = None):
+	def __init__(self, id = id, results = []):
 		self.id = id
 		self.results = results
 	

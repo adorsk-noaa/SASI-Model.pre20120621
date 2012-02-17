@@ -12,6 +12,7 @@ def main():
 			]
 
 	for m in populating_modules:
+		print >> sys.stderr, m
 		m_name = "sasi.util.habitat.%s" % m
 		__import__(m_name)
 		imported_m = sys.modules[m_name]

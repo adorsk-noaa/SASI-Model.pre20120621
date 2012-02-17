@@ -24,11 +24,13 @@ def main():
 	# For each valid habitat_type...
 	for h in valid_habitat_types:
 
+		(substrate_id,energy) = h.split(',')
+
 		# Get substrate object.
-		substrate = session.query(Substrate).filter(Substrate.id == h[0]).one()
+		substrate = session.query(Substrate).filter(Substrate.id == substrate_id).one()
 
 		# Create habitat_type object.
-		habitat_type_obj = Habitat_Type(substrate=substrate, energy=h[1])
+		habitat_type_obj = Habitat_Type(substrate=substrate, energy=energy)
 
 		# Add to session.
 		session.add(habitat_type_obj)
