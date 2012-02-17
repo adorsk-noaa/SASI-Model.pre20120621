@@ -1,4 +1,5 @@
 import unittest
+from sasi.dao.habitat.test_feature_dao import Test_Feature_DAO
 
 from sasi.habitat.features_model import Features_Model
 

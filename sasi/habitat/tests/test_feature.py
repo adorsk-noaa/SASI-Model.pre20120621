@@ -6,7 +6,6 @@ class FeatureTest(unittest.TestCase):
 
 	def test(self):
 		f = generate_features(1).pop()
-		print f
 
 		self.failUnless(True)
 
