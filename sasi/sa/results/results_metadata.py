@@ -1,2 +1,2 @@
-import sasi.sa.results.sasi_result
-import sasi.sa.results.sasi_result_collection
+import sasi.sa.results.result
+import sasi.sa.results.result_set

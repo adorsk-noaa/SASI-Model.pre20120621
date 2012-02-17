@@ -1,4 +1,4 @@
-class SASI_Result(object):
+class Result(object):
 
 	def __init__(self, id=None, time=None, cell=None, habitat_type=None, gear=None, feature = None, field = None, value = None):
 		self.id = id

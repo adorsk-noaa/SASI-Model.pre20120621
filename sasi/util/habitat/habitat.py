@@ -7,26 +7,18 @@ import sasi.conf.conf as conf
 import sasi.conf.substrate_mappings as substrate_mappings
 import sasi.conf.energy_mappings as energy_mappings
 import sasi.util.geo_util as geo_util
-
-generated_substrates = {}
-generated_features = {}
-generated_habitat_types = {}
-generated_habitats = {}
-generated_cells = {}
+import sasi.util.registry as util_registry 
 
 def generate_substrates(n):
 	substrates = []
 
 	for i in range(n):
-		s = Substrate(
+		o = Substrate(
 				id = "S%s" % i,
 				name = "Substrate %s" % i
 				)
 
-		if not generated_substrates.has_key(s.id):
-			generated_substrates[s.id] = s
-
-		substrates.append(generated_substrates[s.id])
+		substrates.append(util_registry.get_or_register_object(o))
 	
 	return substrates
 
@@ -36,16 +28,13 @@ def generate_features(n):
 	features = []
 
 	for i in range(n):
-		f = Feature(
+		o = Feature(
 				id = "F%s" % i,
 				name = "Feature %s" % i
 				)
 
-		if not generated_features.has_key(f.id):
-			generated_features[f.id] = f
+		features.append(util_registry.get_or_register_object(o))
 
-		features.append(generated_features[f.id])
-	
 	return features
 
 def generate_habitat_types():
@@ -70,17 +59,15 @@ def generate_habitat_types():
 		substrate_id = valid_habitat_type[0]
 		energy = valid_habitat_type[1]
 
-		substrate = Substrate(id=substrate_id, name=substrate_id)
+		s = Substrate(id=substrate_id, name=substrate_id)
+		substrate = util_registry.get_or_register_object(s)
 
-		ht = Habitat_Type(
+		o = Habitat_Type(
 				energy = energy,
 				substrate = substrate,
 				)
 
-		if not generated_habitat_types.has_key(ht.id):
-			generated_habitat_types[ht.id] = ht
-
-		habitat_types.append(generated_habitat_types[ht.id])
+		habitat_types.append(util_registry.get_or_register_object(o))
 
 	return habitat_types
 
@@ -94,7 +81,7 @@ def generate_habitats(n, default_area = lambda: 1.0, habitat_types=None):
 
 	for i in range(n):
 		habitat_type = habitat_types[i % len(habitat_types)]
-		h = Habitat(
+		o = Habitat(
 				id = i,
 				habitat_type = habitat_type,
 				z = i * 100,
@@ -102,10 +89,7 @@ def generate_habitats(n, default_area = lambda: 1.0, habitat_types=None):
 				geom = geo_util.generate_multipolygon(),
 				)
 
-		if not generated_habitats.has_key(h.id):
-			generated_habitats[h.id] = h
-
-		habitats.append(generated_habitats[h.id])
+		habitats.append(util_registry.get_or_register_object(o))
 
 	return habitats
 
@@ -123,16 +107,13 @@ def generate_cells(n, default_area = lambda: 1.0, habitats=None, habitats_per_ce
 
 		cell_habitats = [habitats.pop() for i in range(habitats_per_cell)]
 
-		c = Cell(
+		o = Cell(
 				id = i,
 				area = default_area(),
 				geom = geo_util.generate_multipolygon(),
 				habitats = cell_habitats
 				)
 
-		if not generated_cells.has_key(c.id):
-			generated_cells[c.id] = c
-
-		cells.append(generated_cells[c.id])
+		cells.append(util_registry.get_or_register_object(o))
 
 	return cells

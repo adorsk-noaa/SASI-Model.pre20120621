@@ -1,4 +1,4 @@
-class SASI_Result_Collection(object):
+class Result_Set(object):
 
 	def __init__(self, id = id, results = None):
 		self.id = id

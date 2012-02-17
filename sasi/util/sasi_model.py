@@ -110,7 +110,7 @@ def results_to_csv_buffer(results=None, buffer=None):
 	
 
 # Create Result Collection from results.
-def results_to_sasi_results_collection(collection_id, results=None):
+def results_to_result_collection(results=None):
 
 	sasi_results = []
 
@@ -134,8 +134,7 @@ def results_to_sasi_results_collection(collection_id, results=None):
 					)
 			sasi_results.append(sasi_result)
 	
-	return SASI_Result_Collection(id = collection_id, results = sasi_results)
-
+	return SASI_Result_Collection(results = sasi_results)
 
 
 

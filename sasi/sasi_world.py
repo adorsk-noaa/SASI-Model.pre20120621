@@ -3,8 +3,11 @@ from sasi.dao.habitat.test_cell_dao import Test_Cell_DAO
 from sasi.dao.habitat.sa_cell_dao import SA_Cell_DAO
 from sasi.dao.habitat.sa_feature_dao import SA_Feature_DAO
 from sasi.dao.va.csv_va_dao import CSV_VA_DAO
+from sasi.dao.results.sa_sasi_result_collection_dao import SA_SASI_Result_Collection_DAO
 from sasi.fishing.nominal_effort_per_gear_model import NominalEffortPerGearModel
 from sasi.fishing.gear import Gear
+
+from sasi.results.persistent_sasi_result_collection import Persistent_SASI_Result_Collection
 
 from sasi.sasi_model import SASIModel
 
@@ -24,13 +27,24 @@ if __name__ == '__main__':
 	conf.conf['verbose'] = True
 
 	db_session = sa_session.get_session()
-	
+
+	# Get persistent collection to hold results.
+	result_collection_dao = SA_SASI_Result_Collection_DAO(session=db_session)
+	collection_id = 'myresults'
+	existing_collection = result_collection_dao.
+
+	result_collection = SASI_Result_Collection(id='myresults')
+
+	# Clear any existing results.
+	result_collection.delete_results()
+
 	#grid_model = StaticGridModel(cell_dao=Test_Cell_DAO(), default_filters={'type': 'km100'}) 
 	#grid_model = StaticGridModel(cell_dao=SA_Cell_DAO(session=db_session), default_filters={'type': ['km100'], 'type_id': ['0']}) 
 	grid_model = StaticGridModel(cell_dao=SA_Cell_DAO(session=db_session), default_filters={'type': ['km100']}) 
 
 	va_dao = CSV_VA_DAO()
 	va = va_dao.load_va()
+
 
 	features_model = Features_Model(feature_dao=SA_Feature_DAO(session=db_session))
 
@@ -83,5 +97,11 @@ if __name__ == '__main__':
 	# Print results as csv.
 	#sasi_model_util.results_to_csv_buffer(results=model.results, buffer=sys.stdout)
 
-	# Get SASI Result Collection from results.
-	result_collection = sasi_model_util.results_to_sasi_results_collection('myresults', results=model.results)
+	# Add raw results to results collection.
+	tmp_results_collection = sasi_model_util.results_to_result_collection(
+			results = model.results 
+			)
+	result_collection.add_results(tmp_result_collection.results)
+
+	# Save the collection.
+	result_collection.save()
