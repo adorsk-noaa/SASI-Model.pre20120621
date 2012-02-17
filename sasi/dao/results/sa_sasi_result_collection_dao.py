@@ -17,6 +17,22 @@ class SA_SASI_Result_Collection_DAO(object):
 
 		return q.all()
 
+	def add_collections(self, collections = None):
+		for c in collections:
+			self.session.add(c)
+		self.session.commit()
+
+	def delete_collections(self, collections = None, filters=None):
+		if collections:
+			for c in collections:
+				self.session.merge(c)
+				self.session.delete(c)
+
+		elif filters:
+			for c in self.get_collections(filters=filters):
+				self.session.delete(c)
+		
+		self.session.commit()
 
 	def get_collection_results(self, collection, filters=None):
 		q = self.session.query(SASI_Result).join(SASI_Result_Collection).filter(SASI_Result_Collection.id == collection.id)
@@ -29,17 +45,14 @@ class SA_SASI_Result_Collection_DAO(object):
 	def save_collection(self, collection):
 		self.session.merge(collection)
 		self.session.commit()
-
+	
 	def delete_collection_results(self, collection, results=None, filters=None):
 
 		if results:
 			for r in results: self.session.delete(r)
-			self.session.commit()
-			return
 
 		elif filters:
-			q = self.session.query(SASI_Result).join(SASI_Result_Collection).filter(SASI_Result_Collection.id == collection.id)
-			for filter_name, filter_values in filters.items():
-				q = q.filter(getattr(SASI_Result, filter_name).in_(filter_values))
-			q.delete()
-			return
+			for r in self.get_collection_results(collection, filters=filters):
+				self.session.delete(r)
+
+		self.session.commit()

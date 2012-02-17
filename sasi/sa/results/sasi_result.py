@@ -34,11 +34,11 @@ mapper(
 		SASI_Result, 
 		table,
 		properties = {
-			'cell': relationship(Cell, cascade='merge'),
-			'habitat_type': relationship(Habitat_Type, cascade='merge'),
-			'gear': relationship(Gear, cascade='merge'),
-			'feature': relationship(Feature, cascade='merge'),
-			'parent': relationship(SASI_Result_Collection, cascade='merge'),
+			'cell': relationship(Cell),
+			'habitat_type': relationship(Habitat_Type,),
+			'gear': relationship(Gear),
+			'feature': relationship(Feature),
+			'parent': relationship(SASI_Result_Collection),
 			}
 	)
 

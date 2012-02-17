@@ -16,6 +16,6 @@ mapper(
 		SASI_Result_Collection, 
 		table,
 		properties = {
-			'results': relationship(SASI_Result, cascade='all')
+			'results': relationship(SASI_Result, cascade='all, delete, delete-orphan')
 			}
 	)
