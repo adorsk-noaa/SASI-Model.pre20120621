@@ -39,8 +39,9 @@ class SA_Result_Set_Test(BaseTest):
 		new_rs = dao.get_results_as_result_set(result_set_id='morfog', filters={'result_set': [result_sets[1]]})
 		dao.save_result_sets([new_rs])
 		fetched_results_new_rs = dao.get_results(filters={'result_set': [new_rs]})
-
 		field_density_by_t_c = dao.get_field_density_by_t_c(filters={'result_set': [new_rs]})
+		values_by_t_c_f = dao.get_values_by_t_c_f(filters={'result_set': [new_rs]})
+		print values_by_t_c_f
 
 		self.failUnless(True)
 

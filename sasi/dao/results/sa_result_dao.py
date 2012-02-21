@@ -72,6 +72,7 @@ class SA_Result_DAO(object):
 		return q
 
 	# Get field density (sum/cell area) by time and cell.
+	# NOTE: THIS IS INCORRECT! VALUES ARE ALREADY SCALED BY AREA, SO DON'T NEED DENSITY.
 	def get_field_density_by_t_c(self, filters=None):
 
 		# Initialize dictionary to hold field_density by cell, time, field.
@@ -95,7 +96,27 @@ class SA_Result_DAO(object):
 
 		return fd_by_t_c_f
 
+	# Get field values by cell, time, and field.
+	def get_values_by_t_c_f(self, filters=None):
 
+		# Initialize dictionary to hold values by cell, time, field.
+		t_c_f = {}
 
+		# Get aliased subquery for selecting filtered results.
+		sub_q = self.get_filtered_results_query(filters=filters).subquery()
+		alias = aliased(Result, sub_q)
 
+		# Get field values, grouped by cell, time and field.		
+		value_sum = func.sum(alias.value).label('value_sum')
+		q = self.session.query(alias.time, alias.field, Cell, value_sum)
+		q = q.join(Cell)
+		q = q.group_by(alias.time).group_by(alias.field).group_by(Cell)
+
+		# Assemble results into c_t dictionary.
+		for row in q.all():
+			t_c_f.setdefault(row.time, {})
+			t_c_f[row.time].setdefault(row.Cell, {})
+			t_c_f[row.time][row.Cell][row.field] = row.value_sum
+
+		return t_c_f
 
