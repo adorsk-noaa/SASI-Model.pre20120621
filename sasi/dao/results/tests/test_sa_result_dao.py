@@ -40,6 +40,8 @@ class SA_Result_Set_Test(BaseTest):
 		dao.save_result_sets([new_rs])
 		fetched_results_new_rs = dao.get_results(filters={'result_set': [new_rs]})
 
+		field_density_by_t_c = dao.get_field_density_by_t_c(filters={'result_set': [new_rs]})
+
 		self.failUnless(True)
 
 if __name__ == '__main__':

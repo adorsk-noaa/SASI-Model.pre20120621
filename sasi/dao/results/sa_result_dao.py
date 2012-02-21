@@ -1,7 +1,11 @@
 import sasi.sa.results.result
 import sasi.sa.results.result_set
+from sasi.habitat.cell import Cell
 from sasi.results.result import Result
 from sasi.results.result_set import Result_Set
+
+from sqlalchemy import func
+from sqlalchemy.orm import aliased
 
 class SA_Result_DAO(object):
 
@@ -66,3 +70,32 @@ class SA_Result_DAO(object):
 				else:
 					q = q.filter(getattr(Result_Set, filter_name).in_(filter_values))
 		return q
+
+	# Get field density (sum/cell area) by time and cell.
+	def get_field_density_by_t_c(self, filters=None):
+
+		# Initialize dictionary to hold field_density by cell, time, field.
+		fd_by_t_c_f = {}
+
+		# Get aliased subquery for selecting filtered results.
+		sub_q = self.get_filtered_results_query(filters=filters).subquery()
+		alias = aliased(Result, sub_q)
+
+		# Get field density, grouped by cell, time and field.		
+		density = (func.sum(alias.value)/Cell.area).label('density')
+		q = self.session.query(alias.time, alias.field, Cell, density)
+		q = q.join(Cell)
+		q = q.group_by(alias.time).group_by(alias.field).group_by(Cell)
+
+		# Assemble results into c_t dictionary.
+		for row in q.all():
+			fd_by_t_c_f.setdefault(row.time, {})
+			fd_by_t_c_f[row.time].setdefault(row.Cell, {})
+			fd_by_t_c_f[row.time][row.Cell][row.field] = row.density
+
+		return fd_by_t_c_f
+
+
+
+
+
