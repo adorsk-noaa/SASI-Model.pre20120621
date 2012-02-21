@@ -22,7 +22,8 @@ class Test_Cell_DAO(Cell_DAO):
 
 		# Apply filters.
 		if filters:
-			for filter_name, filter_values in filters.items():
-				cells= [c for c in cells if getattr(c,filter_name) in filter_values]
+			for f in filters:
+				code = compile("cells = [c for c in cells if getattr(c, f['attr']) %s f['value'] ]" % f['op'], '<code>', 'exec')
+				exec code
 
 		return cells

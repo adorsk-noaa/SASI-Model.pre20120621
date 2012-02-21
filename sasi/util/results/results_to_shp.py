@@ -9,11 +9,13 @@ from sasi.results.result_set import Result_Set
 from fiona import collection
 from fiona.ogrext import GeomBuilder
 
+import sys
+
 def main():
 
 	output_dir = '/home/adorsk/projects/sasi/sasi_model/outputs/shapefiles'
 
-	result_set_id = 'g3_c0-5'
+	result_set_id = 'g3_full'
 
 	times = ['5']
 
@@ -25,7 +27,7 @@ def main():
 	result_set = result_dao.get_result_sets(filters={'id': [result_set_id]}).pop()
 	
 	# Get field densities by time, cell, and field for result set.
-	fd_by_t_c_f = result_dao.get_field_density_by_t_c(filters={'result_set': [result_set]})
+	values_by_t_c_f = result_dao.get_values_by_t_c_f(filters={'result_set': [result_set], 'time': times})
 
 	#
 	# Make fiona collection from result set.
@@ -58,7 +60,10 @@ def main():
 				crs=crs
 				) as c:
 			record_counter = 1
-			for cell, cell_fields in fd_by_t_c_f[t].items():
+			for cell, cell_fields in values_by_t_c_f[t].items():
+
+				if (record_counter % 1000) == 0:
+					print >> sys.stderr, "%s" % record_counter
 
 				# Populate record properties.
 				habitat_types = set(["(%s)" % h.habitat_type.id for h in cell.habitats])

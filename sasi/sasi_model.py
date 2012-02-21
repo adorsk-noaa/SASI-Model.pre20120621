@@ -56,7 +56,7 @@ class SASIModel:
 				'X', # Recovered Swept Area.
 				'Y', # Modified Swept Area.
 				'Z', # Instantaneous X - Y
-				'ZCum', # Cumulative Z.
+				'ZZ', # Cumulative Z.
 				]:
 			self.results[field] = {}
 
@@ -236,6 +236,20 @@ class SASIModel:
 
 									# Add to modified swept area for the timestep.
 									self.results['Z'][index_key] = self.results['Z'].get(index_key, 0.0) + self.results['X'].get(index_key, 0.0) - self.results['Y'][index_key]
+
+									# Add to cumulative (assumes previous timesteps have been run).
+									if t > self.t0:
+										past_key = self.get_index_key(
+												time = t - self.dt,
+												cell = c,
+												habitat_type = ht,
+												gear = effort.gear,
+												feature = f
+												)
+										self.results['ZZ'][index_key] = self.results['ZZ'].get(index_key, 0.0) + self.results['ZZ'][past_key] + self.results['Z'][index_key]
+									else:
+										self.results['ZZ'][index_key] = self.results['ZZ'].get(index_key, 0.0) + self.results['Z'][index_key]
+
 
 	# Format index key from key components.
 	def get_index_key(self, time=None, cell=None, habitat_type=None, gear=None, feature=None):

@@ -115,7 +115,7 @@ def results_to_result_set(results=None):
 	result_objects = []
 
 	# For each result field...
-	for result_field in ['Z', 'A', 'Y', 'X', 'ZCum']:
+	for result_field in ['Z', 'A', 'Y', 'X', 'ZZ']:
 
 		# Get results for that field.
 		field_results = results[result_field]
@@ -130,6 +130,7 @@ def results_to_result_set(results=None):
 					habitat_type = result_key[2],
 					gear = result_key[3],
 					feature = result_key[4],
+					field = result_field,
 					value = field_value
 					)
 			result_objects.append(result_object)

@@ -32,18 +32,22 @@ if __name__ == '__main__':
 
 	# Get or create persistent result set to hold results.
 	# Will overwrite an existing set of the same name.
-	result_set_id = 'myresults'
+	#result_set_id = 'g3_138'
+	result_set_id = 'tmp'
 	result_set = None
 	fetched_sets = result_dao.get_result_sets(filters={'id': [result_set_id]})
 	if not fetched_sets:
-		result_set = Result_Set(id='myresults')
+		result_set = Result_Set(id=result_set_id)
 	else: 
 		result_set = fetched_sets[0]
 	result_set.results = []
 
 	#grid_model = StaticGridModel(cell_dao=Test_Cell_DAO(), default_filters={'type': 'km100'}) 
-	grid_model = StaticGridModel(cell_dao=SA_Cell_DAO(session=db_session), default_filters={'type': ['km100'], 'type_id': ['0']}) 
-	#grid_model = StaticGridModel(cell_dao=SA_Cell_DAO(session=db_session), default_filters={'type': ['km100']}) 
+	#grid_model = StaticGridModel(cell_dao=SA_Cell_DAO(session=db_session), default_filters=[{'attr': 'type','value': ['km100'] }, {'attr': 'type_id', 'value': ['0']}]) 
+	#grid_model = StaticGridModel(cell_dao=SA_Cell_DAO(session=db_session), default_filters=[{'attr': 'type','value': ['km100'] }]) 
+
+	# Filter domain for cells w/ depth less than 138 (for G3).
+	grid_model = StaticGridModel(cell_dao=SA_Cell_DAO(session=db_session), default_filters=[{'attr': 'type','value': ['km100'] }, {'attr': 'depth', 'op': '>=', 'value': -138}]) 
 
 	va_dao = CSV_VA_DAO()
 	va = va_dao.load_va()
