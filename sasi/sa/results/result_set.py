@@ -23,6 +23,6 @@ mapper(
 		Result_Set, 
 		result_set_table,
 		properties = {
-			'results': relationship(Result, cascade='all', secondary=result_set_result_table, backref='result_sets')
+			'results': relationship(Result, cascade='all', secondary=result_set_result_table)
 			}
 	)
