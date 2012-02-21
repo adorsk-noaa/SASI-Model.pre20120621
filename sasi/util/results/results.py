@@ -56,4 +56,3 @@ def generate_result_sets(n=1, results_per_set=10):
 
 	return result_sets
 
-

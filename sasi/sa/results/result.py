@@ -24,7 +24,7 @@ table = Table('result', metadata,
 		Column('gear_id', String, ForeignKey(sa_gear.table.c.id)),
 		Column('feature_id', String, ForeignKey(sa_feature.table.c.id)),
 		Column('field', String),
-		Column('value', String),
+		Column('value', Float),
 		)
 
 mapper(
