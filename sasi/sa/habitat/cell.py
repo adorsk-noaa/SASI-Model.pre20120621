@@ -16,6 +16,7 @@ cell_table = Table('cell', metadata,
 		Column('type', String),
 		Column('type_id', String),
 		Column('area', Float),
+		Column('depth', Float),
 		GeometryExtensionColumn('geom', MultiPolygon(2)),
 		)
 

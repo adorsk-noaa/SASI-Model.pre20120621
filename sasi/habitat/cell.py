@@ -6,4 +6,5 @@ class Cell(object):
 		self.type_id = type_id
 		self.geom = geom
 		self.area = area
+		self.depth = depth
 		self.habitats = habitats
