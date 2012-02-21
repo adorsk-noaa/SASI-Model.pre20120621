@@ -59,7 +59,7 @@ if __name__ == '__main__':
 				id=gear_code,
 				name=gear_code
 				)
-		gears.append(gear)
+		gears.append(db_session.merge(gear))
 
 	effort_model = NominalEffortPerGearModel(grid_model=grid_model, gears=gears)
 
