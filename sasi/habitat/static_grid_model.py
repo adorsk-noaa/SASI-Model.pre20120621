@@ -10,8 +10,8 @@ class StaticGridModel(GridModel):
 		if self.default_filters and not filters:
 			return self.cell_dao.get_cells(filters=self.default_filters)
 		elif self.default_filters and filters and not override_default_filters:
-			combined_filters = self.default_filters.copy()
-			combined_filters.update(filters)
+			combined_filters = [f.copy() for f in self.default_filters]
+			combined_filters.extend(filters)
 			return self.cell_dao.get_cells(filters=combined_filters)
 		else:
 			return self.cell_dao.get_cells(filters=filters)
