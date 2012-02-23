@@ -6,8 +6,8 @@ class Results_Util_Test(unittest.TestCase):
 
 	def test(self):
 
-		sasi_results = results_util.generate_sasi_results(n=10)
-		sasi_result_collections = results_util.generate_sasi_result_collections(n=1, results_per_collection=5)	
+		results = results_util.generate_results(n=10)
+		result_sets =results_util.generate_result_sets(n=1, results_per_collection=5)	
 
 if __name__ == '__main__':
 	unittest.main()

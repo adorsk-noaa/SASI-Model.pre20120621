@@ -15,7 +15,7 @@ def main():
 
 	output_dir = '/home/adorsk/projects/sasi/sasi_model/outputs/shapefiles'
 
-	result_set_id = 'g3_full'
+	result_set_id = 'g3_138'
 
 	times = ['5']
 
