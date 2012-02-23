@@ -19,7 +19,7 @@ class DAO_Effort_Model(EffortModel):
 	def get_efforts_for_c_t(self, cell=None, time=None):
 		filters = [
 				{'attr': 'cell', 'value': [cell]},
-				{'attr': 'time': 'op': '==', 'value': time}
+				{'attr': 'time', 'op': '==', 'value': time}
 				]
 		if self.default_filters: filters.extend(self.default_filters)
 		
