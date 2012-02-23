@@ -18,7 +18,7 @@ metadata = sa_metadata.metadata
 
 table = Table('result', metadata,
 		Column('id', Integer, primary_key=True),
-		Column('time', int),
+		Column('time', Integer),
 		Column('cell_id', Integer),
 		Column('habitat_type_id', String, ForeignKey(sa_habitat_type.table.c.id)),
 		Column('gear_id', String, ForeignKey(sa_gear.table.c.id)),
