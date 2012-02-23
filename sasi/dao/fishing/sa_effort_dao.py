@@ -76,6 +76,12 @@ class SA_Effort_DAO(object):
 					join_code = "join(Effort_Set.efforts)"
 					value_code = "[es.id for es in f['value']]"
 
+				# Handle cells.
+				elif f['attr'] == 'cells':
+					attr_code = "Cell.id"
+					join_code = "join(Cell)"
+					value_code = "[c.id for c in f['value']]"
+
 				# Handle all other attrs.
 				else: 
 					attr_code = "getattr(Effort, f['attr'])"
