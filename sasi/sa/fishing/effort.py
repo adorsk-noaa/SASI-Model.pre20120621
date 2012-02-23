@@ -15,7 +15,7 @@ metadata = sa_metadata.metadata
 table = Table('effort', metadata,
 		Column('id', Integer, primary_key=True),
 		Column('cell_id', Integer),
-		Column('time', String),
+		Column('time', int),
 		Column('gear_id', String),
 		Column('swept_area', Float),
 		Column('hours_fished', Float),
