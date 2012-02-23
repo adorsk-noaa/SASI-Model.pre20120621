@@ -69,6 +69,7 @@ class SA_Effort_DAO(object):
 				if f['attr'] == 'effort_set_id':
 					attr_code = "Effort_Set.id"
 					join_code = "join(Effort_Set.efforts)"
+					value_code = f['value']
 
 				# Handle effort_sets.
 				elif f['attr'] == 'effort_sets':
