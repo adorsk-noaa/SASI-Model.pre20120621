@@ -69,6 +69,7 @@ class SA_Result_DAO(object):
 				if f['attr'] == 'result_set_id':
 					attr_code = "Result_Set.id"
 					join_code = "join(Result_Set.results)"
+					value_code = "f['value']"
 
 				# Handle result_sets.
 				elif f['attr'] == 'result_sets':
@@ -79,7 +80,7 @@ class SA_Result_DAO(object):
 				# Handle all other attrs.
 				else: 
 					attr_code = "getattr(Effort, f['attr'])"
-					value_code = f['value']
+					value_code = "f['value']"
 
 				# Assemble filter.
 				filter_code = "q = q.filter(%s%s(%s))" % (attr_code, op_code, value_code)
@@ -122,7 +123,7 @@ class SA_Result_DAO(object):
 				# Handle all other attrs.
 				else: 
 					attr_code = "getattr(Result_Set, f['attr'])"
-					value_code = f['value']
+					value_code = "f['value']"
 
 				# Assemble filter.
 				filter_code = "q = q.filter(%s%s(%s))" % (attr_code, op_code, value_code)

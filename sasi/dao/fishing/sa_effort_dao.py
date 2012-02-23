@@ -69,7 +69,7 @@ class SA_Effort_DAO(object):
 				if f['attr'] == 'effort_set_id':
 					attr_code = "Effort_Set.id"
 					join_code = "join(Effort_Set.efforts)"
-					value_code = f['value']
+					value_code = "f['value']"
 
 				# Handle effort_sets.
 				elif f['attr'] == 'effort_sets':
@@ -86,7 +86,7 @@ class SA_Effort_DAO(object):
 				# Handle all other attrs.
 				else: 
 					attr_code = "getattr(Effort, f['attr'])"
-					value_code = f['value']
+					value_code = "f['value']"
 
 				# Assemble filter.
 				filter_code = "q = q.filter(%s%s(%s))" % (attr_code, op_code, value_code)
@@ -128,7 +128,7 @@ class SA_Effort_DAO(object):
 				# Handle all other attrs.
 				else: 
 					attr_code = "getattr(Effort_Set, f['attr'])"
-					value_code = f['value']
+					value_code = "f['value']"
 
 				# Assemble filter.
 				filter_code = "q = q.filter(%s%s(%s))" % (attr_code, op_code, value_code)
