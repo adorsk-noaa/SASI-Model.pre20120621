@@ -1,6 +1,7 @@
 import sasi.sa.fishing.effort
 import sasi.sa.fishing.effort_set
 from sasi.habitat.cell import Cell
+from sasi.fishing.gear import Gear
 from sasi.fishing.effort import Effort
 from sasi.fishing.effort_set import Effort_Set
 
@@ -82,6 +83,12 @@ class SA_Effort_DAO(object):
 					attr_code = "Cell.id"
 					join_code = "join(Cell)"
 					value_code = "[c.id for c in f['value']]"
+
+				# Handle gears.
+				elif f['attr'] == 'gears':
+					attr_code = "Gear.id"
+					join_code = "join(Gear)"
+					value_code = "[g.id for g in f['value']]"
 
 				# Handle all other attrs.
 				else: 
