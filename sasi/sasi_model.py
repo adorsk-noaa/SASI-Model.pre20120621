@@ -135,13 +135,15 @@ class SASIModel:
 			{'attr': 'time', 'op': '>=', 'value': self.t0},
 			{'attr': 'time', 'op': '<=', 'value': self.tf},
 			]):
+
+			# Create cell-time key.
+			c_t_key = (e.cell, e.time)
 			
-			# Initialize lookup entries for effort, if not existing.
-			c_t_e.setdefault(e.cell, {})
-			c_t_e[e.cell].setdefault(e.time,[])
+			# Initialize lookup entries for cell-time key, if not existing.
+			c_t_e.setdefault(c_t_key, [])
 
 			# Add effort to lookup.	
-			c_t_e[e.cell][e.time].append(e)
+			c_t_e[c_t_key].append(e)
 
 		return c_t_e
 	
@@ -164,7 +166,7 @@ class SASIModel:
 			cell_counter += 1
 
 			# Get contact-adjusted fishing efforts for the cell.
-			cell_efforts = self.c_t_e[c][t]
+			cell_efforts = self.c_t_e.get((c,t),[])
 
 			# For each effort...
 			for effort in cell_efforts:
@@ -269,7 +271,7 @@ class SASIModel:
 												gear = effort.gear,
 												feature = f
 												)
-										self.results['ZZ'][index_key] = self.results['ZZ'].get(index_key, 0.0) + self.results['ZZ'][past_key] + self.results['Z'][index_key]
+										self.results['ZZ'][index_key] = self.results['ZZ'].get(index_key, 0.0) + self.results['ZZ'].get(past_key,0.0) + self.results['Z'][index_key]
 									else:
 										self.results['ZZ'][index_key] = self.results['ZZ'].get(index_key, 0.0) + self.results['Z'][index_key]
 
