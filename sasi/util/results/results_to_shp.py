@@ -24,10 +24,13 @@ def main():
 	result_dao = SA_Result_DAO(session=db_session)
 
 	# Load result set via DAO.
-	result_set = result_dao.get_result_sets(filters={'id': [result_set_id]}).pop()
+	result_set = result_dao.get_result_sets(filters=[{'attr':'id', 'op': 'in', 'value': [result_set_id]}]).pop()
 	
 	# Get field densities by time, cell, and field for result set.
-	values_by_t_c_f = result_dao.get_values_by_t_c_f(filters={'result_set': [result_set], 'time': times})
+	values_by_t_c_f = result_dao.get_values_by_t_c_f(filters=[
+		{'attr': 'result_sets', 'op': 'in', 'value': [result_set]}, 
+		{'attr': 'time', 'op': 'in', 'value': times}
+		])
 
 	#
 	# Make fiona collection from result set.

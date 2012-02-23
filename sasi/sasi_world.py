@@ -35,7 +35,7 @@ if __name__ == '__main__':
 	#result_set_id = 'g3_138'
 	result_set_id = 'tmp'
 	result_set = None
-	fetched_sets = result_dao.get_result_sets(filters={'id': [result_set_id]})
+	fetched_sets = result_dao.get_result_sets(filters=[{'attr': 'id', 'op': 'in', 'value': [result_set_id]}])
 	if not fetched_sets:
 		result_set = Result_Set(id=result_set_id)
 	else: 

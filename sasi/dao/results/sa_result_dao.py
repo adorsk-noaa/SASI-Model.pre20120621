@@ -49,26 +49,90 @@ class SA_Result_DAO(object):
 	def get_filtered_results_query(self, filters=None):
 		q = self.session.query(Result)
 		if filters:
-			for filter_name, filter_values in filters.items():
+			for f in filters:
 
-				if filter_name == 'result_set_id':
-					q = q.join(Result_Set.results).filter(Result_Set.id.in_(filter_values))
-				elif filter_name == 'result_set':
-					q = q.join(Result_Set.results).filter(Result_Set.id.in_([rs.id for rs in filter_values]))
-				elif filter_name == 'results':
-					q = q.filter(Result.id.in_([result.id for result in filter_values]))
+				# Default operator is 'in'.
+				if not f.has_key('op'): f['op'] = 'in'
+
+				attr_code = ""
+				join_code = ""
+				op_code = ""
+				value_code = ""
+
+				# Handle operators.
+				if f['op'] == 'in':
+					op_code = '.in_'
 				else:
-					q = q.filter(getattr(Result, filter_name).in_(filter_values))
+					op_code = " %s " % f['op']
+
+				# Handle result_set_id.
+				if f['attr'] == 'result_set_id':
+					attr_code = "Result_Set.id"
+					join_code = "join(Result_Set.results)"
+
+				# Handle result_sets.
+				elif f['attr'] == 'result_sets':
+					attr_code = "Result_Set.id"
+					join_code = "join(Result_Set.results)"
+					value_code = "[rs.id for rs in f['value']]"
+
+				# Handle all other attrs.
+				else: 
+					attr_code = "getattr(Effort, f['attr'])"
+					value_code = f['value']
+
+				# Assemble filter.
+				filter_code = "q = q.filter(%s%s(%s))" % (attr_code, op_code, value_code)
+				if join_code: filter_code += ".%s" % join_code
+
+				
+				# Compile and execute filter code to create filter.
+				compiled_filter_code = compile(filter_code, '<query>', 'exec')
+				exec compiled_filter_code
+
+		# Return query.
 		return q
+
 
 	def get_filtered_result_sets_query(self, filters=None):
 		q = self.session.query(Result_Set)
+
 		if filters:
-			for filter_name, filter_values in filters.items():
-				if filter_name == 'result_sets':
-					q = q.filter(Result_Set.id.in_([result_set.id for result_set in filter_values]))
+			for f in filters:
+
+				# Default operator is 'in'.
+				if not f.has_key('op'): f['op'] = 'in'
+
+				attr_code = ""
+				join_code = ""
+				op_code = ""
+				value_code = ""
+
+				# Handle operators.
+				if f['op'] == 'in':
+					op_code = '.in_'
 				else:
-					q = q.filter(getattr(Result_Set, filter_name).in_(filter_values))
+					op_code = " %s " % f['op']
+
+				# Handle result_sets attr.
+				if f['attr'] == 'result_sets':
+					attr_code = "Result_Set.id"
+					value_code = "[rs.id for rs in f['value']]"
+
+				# Handle all other attrs.
+				else: 
+					attr_code = "getattr(Result_Set, f['attr'])"
+					value_code = f['value']
+
+				# Assemble filter.
+				filter_code = "q = q.filter(%s%s(%s))" % (attr_code, op_code, value_code)
+				if join_code: filter_code += ".%s" % join_code
+
+				# Compile and execute filter code to create filter.
+				compiled_filter_code = compile(filter_code, '<query>', 'exec')
+				exec compiled_filter_code
+				
+		# Return query.
 		return q
 
 	# Get field density (sum/cell area) by time and cell.

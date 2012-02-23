@@ -34,14 +34,13 @@ class SA_Result_Set_Test(BaseTest):
 
 		# Test DAO operations.
 		dao.save_result_sets(result_sets)
-		fetched_result_sets = dao.get_result_sets(filters={'id': [result_sets[0].id]})
-		fetched_results = dao.get_results(filters={'result_set': [result_sets[1]]})
-		new_rs = dao.get_results_as_result_set(result_set_id='morfog', filters={'result_set': [result_sets[1]]})
+		fetched_result_sets = dao.get_result_sets(filters=[{'attr':'id', 'op': 'in', 'value': [result_sets[0].id]}])
+		fetched_results = dao.get_results(filters=[{'attr':'result_sets', 'value': [result_sets[1]]}])
+		new_rs = dao.get_results_as_result_set(result_set_id='morfog', filters=[{'attr': 'result_sets', 'value': [result_sets[1]]}])
 		dao.save_result_sets([new_rs])
-		fetched_results_new_rs = dao.get_results(filters={'result_set': [new_rs]})
-		field_density_by_t_c = dao.get_field_density_by_t_c(filters={'result_set': [new_rs]})
-		values_by_t_c_f = dao.get_values_by_t_c_f(filters={'result_set': [new_rs]})
-		print values_by_t_c_f
+		fetched_results_new_rs = dao.get_results(filters=[{'attr': 'result_sets', 'value': [new_rs]}])
+		field_density_by_t_c = dao.get_field_density_by_t_c(filters=[{'attr': 'result_sets', 'value': [new_rs]}])
+		values_by_t_c_f = dao.get_values_by_t_c_f(filters=[{'attr': 'result_sets', 'value': [new_rs]}])
 
 		self.failUnless(True)
 
