@@ -3,11 +3,19 @@ from sasi.fishing.effort import Effort
 
 class NominalEffortPerGearModel(EffortModel):
 
-	def __init__(self, grid_model=None, gears=None):
+	def __init__(self, grid_model=None, gears=None, times=None):
 		self.grid_model = grid_model
 		self.gears = gears
+		self.times = times
 
-	def get_effort(self, cell=None, time=None):
+	def get_efforts(self, filters=None):
+		efforts = []
+		for c in self.grid_model.get_cells():
+			for t in self.times:
+				efforts.append(self.get_efforts_for_c_t(cell=c, time=t)
+		return efforts
+
+	def get_efforts_for_c_t(self, cell=None, time=None):
 
 		# Initialize a list of efforts.
 		efforts = []
