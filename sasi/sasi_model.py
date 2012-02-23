@@ -141,7 +141,7 @@ class SASIModel:
 			cell_counter += 1
 
 			# Get contact-adjusted fishing efforts for the cell.
-			cell_efforts = self.effort_model.get_effort(c, t)
+			cell_efforts = self.effort_model.get_efforts_for_c_t(cell=c, time=t)
 
 			# For each effort...
 			for effort in cell_efforts:
