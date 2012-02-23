@@ -77,6 +77,9 @@ class SASIModel:
 		# Create cells-habitat_type-feature lookup to improve perfomance.
 		# Assumes static habitats.
 		self.c_ht_f = self.get_c_ht_f_lookup()
+
+		# Create effort lookup by cell and time to improve performance.
+		self.c_t_e = self.get_c_t_e_lookup()
 	
 	def get_c_ht_f_lookup(self):
 
@@ -121,8 +124,28 @@ class SASIModel:
 					c_ht_f[c]['ht'][ht]['f'][feature_category] = features 
 
 		return c_ht_f
-		
+
+	def get_c_t_e_lookup(self):
+
+		# Initialize lookup.
+		c_t_e = {}
+
+		# For each effort in the model's time range...
+		for e in self.effort_model.get_efforts(filters=[
+			{'attr': 'time', 'op': '>=', 'value': self.t0},
+			{'attr': 'time', 'op': '<=', 'value': self.tf},
+			]):
+			
+			# Initialize lookup entries for effort, if not existing.
+			c_t_e.setdefault(e.cell, {})
+			c_t_e[e.cell].setdefault(e.time,[])
+
+			# Add effort to lookup.	
+			c_t_e[e.cell][e.time].append(e)
+
+		return c_t_e
 	
+
 	def run(self):
 
 		# Iterate from t0 to tf...
@@ -141,7 +164,7 @@ class SASIModel:
 			cell_counter += 1
 
 			# Get contact-adjusted fishing efforts for the cell.
-			cell_efforts = self.effort_model.get_efforts_for_c_t(cell=c, time=t)
+			cell_efforts = self.c_t_e[c][t]
 
 			# For each effort...
 			for effort in cell_efforts:

@@ -12,7 +12,7 @@ class NominalEffortPerGearModel(EffortModel):
 		efforts = []
 		for c in self.grid_model.get_cells():
 			for t in self.times:
-				efforts.append(self.get_efforts_for_c_t(cell=c, time=t)
+				efforts.extend(self.get_efforts_for_c_t(cell=c, time=t))
 		return efforts
 
 	def get_efforts_for_c_t(self, cell=None, time=None):

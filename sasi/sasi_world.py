@@ -30,6 +30,10 @@ if __name__ == '__main__':
 
 	result_dao = SA_Result_DAO(session=db_session)
 
+	t0 = 1
+	tf = 6
+	dt = 1
+
 	# Get or create persistent result set to hold results.
 	# Will overwrite an existing set of the same name.
 	#result_set_id = 'g3_138'
@@ -43,15 +47,14 @@ if __name__ == '__main__':
 	result_set.results = []
 
 	#grid_model = StaticGridModel(cell_dao=Test_Cell_DAO(), default_filters={'type': 'km100'}) 
-	#grid_model = StaticGridModel(cell_dao=SA_Cell_DAO(session=db_session), default_filters=[{'attr': 'type','value': ['km100'] }, {'attr': 'type_id', 'value': ['0']}]) 
+	grid_model = StaticGridModel(cell_dao=SA_Cell_DAO(session=db_session), default_filters=[{'attr': 'type','value': ['km100'] }, {'attr': 'type_id', 'value': ['0']}]) 
 	#grid_model = StaticGridModel(cell_dao=SA_Cell_DAO(session=db_session), default_filters=[{'attr': 'type','value': ['km100'] }]) 
 
 	# Filter domain for cells w/ depth less than 138 (for G3).
-	grid_model = StaticGridModel(cell_dao=SA_Cell_DAO(session=db_session), default_filters=[{'attr': 'type','value': ['km100'] }, {'attr': 'depth', 'op': '>=', 'value': -138}]) 
+	#grid_model = StaticGridModel(cell_dao=SA_Cell_DAO(session=db_session), default_filters=[{'attr': 'type','value': ['km100'] }, {'attr': 'depth', 'op': '>=', 'value': -138}]) 
 
 	va_dao = CSV_VA_DAO()
 	va = va_dao.load_va()
-
 
 	features_model = Features_Model(feature_dao=SA_Feature_DAO(session=db_session))
 
@@ -65,11 +68,9 @@ if __name__ == '__main__':
 				)
 		gears.append(db_session.merge(gear))
 
-	effort_model = NominalEffortPerGearModel(grid_model=grid_model, gears=gears)
+	times = range(t0,tf+1,dt)
+	effort_model = NominalEffortPerGearModel(grid_model=grid_model, gears=gears, times=times)
 
-	t0 = 1
-	tf = 6
-	dt = 1
 	taus = {
 			'0': 1,
 			'1': 1,
@@ -102,7 +103,7 @@ if __name__ == '__main__':
 		model.iterate(n)
 	
 	# Print results as csv.
-	#sasi_model_util.results_to_csv_buffer(results=model.results, buffer=sys.stdout)
+	sasi_model_util.results_to_csv_buffer(results=model.results, buffer=sys.stdout)
 
 	# Add raw results to results collection.
 	tmp_result_set = sasi_model_util.results_to_result_set(
@@ -110,5 +111,7 @@ if __name__ == '__main__':
 			)
 	result_set.results.extend(tmp_result_set.results)
 
+	#print result_set.results
+
 	# Save the collection.
-	result_dao.save_result_sets(result_sets=[result_set])
+	#result_dao.save_result_sets(result_sets=[result_set])
