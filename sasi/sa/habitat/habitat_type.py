@@ -1,4 +1,4 @@
-from sqlalchemy import Table, Column, ForeignKey, Integer, String, Float
+from sqlalchemy import Table, Column, ForeignKey, ForeignKeyConstraint, Integer, String, Float
 from sqlalchemy.orm import relationship, mapper
 from geoalchemy import *
 from geoalchemy.postgis import PGComparator
@@ -12,8 +12,9 @@ metadata = sa_metadata.metadata
 
 table = Table('habitat_type', metadata,
 		Column('id', String, primary_key=True),
-		Column('substrate_id', String, ForeignKey(sa_substrate.table.c.id)),
+		Column('substrate_id', String),
 		Column('energy', String),
+		ForeignKeyConstraint(['substrate_id'], [sa_substrate.table.c.id], deferrable=True),
 		)
 
 GeometryDDL(table)

@@ -1,6 +1,7 @@
 import unittest
 from sasi.sa.tests.basetest import BaseTest
 import sasi.sa.metadata as sa_metadata
+import sasi.sa.all_metadata
 import sasi.sa.habitat.cell as sa_cell
 import sasi.util.habitat.habitat as habitat_util
 

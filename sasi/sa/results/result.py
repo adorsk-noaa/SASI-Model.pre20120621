@@ -1,4 +1,4 @@
-from sqlalchemy import Table, Column, ForeignKey, Integer, String, Float
+from sqlalchemy import Table, Column, ForeignKey, ForeignKeyConstraint, Integer, String, Float
 from sqlalchemy.orm import relationship, mapper
 
 import sasi.sa.metadata as sa_metadata
@@ -19,12 +19,13 @@ metadata = sa_metadata.metadata
 table = Table('result', metadata,
 		Column('id', Integer, primary_key=True),
 		Column('time', String),
-		Column('cell_id', Integer, ForeignKey(sa_cell.cell_table.c.id)),
+		Column('cell_id', Integer),
 		Column('habitat_type_id', String, ForeignKey(sa_habitat_type.table.c.id)),
 		Column('gear_id', String, ForeignKey(sa_gear.table.c.id)),
 		Column('feature_id', String, ForeignKey(sa_feature.table.c.id)),
 		Column('field', String),
 		Column('value', Float),
+		ForeignKeyConstraint(['cell_id'], [sa_cell.cell_table.c.id], deferrable=True),
 		)
 
 mapper(

@@ -1,4 +1,4 @@
-from sqlalchemy import Table, Column, ForeignKey, Integer, String, Float
+from sqlalchemy import Table, Column, ForeignKey, ForeignKeyConstraint, Integer, String, Float
 from sqlalchemy.orm import relationship, mapper
 from geoalchemy import *
 from geoalchemy.postgis import PGComparator
@@ -15,10 +15,11 @@ table = Table('habitat', metadata,
 		Column('id_km100', Integer),
 		Column('id_km1000', Integer),
 		Column('id_vor', Integer),
-		Column('habitat_type_id', String, ForeignKey(sa_habitat_type.table.c.id)),
+		Column('habitat_type_id', String), 
 		Column('z', Float),
 		Column('area', Float),
 		GeometryExtensionColumn('geom', MultiPolygon(2)),
+		ForeignKeyConstraint(['habitat_type_id'],[sa_habitat_type.table.c.id], deferrable=True),
 		)
 
 GeometryDDL(table)

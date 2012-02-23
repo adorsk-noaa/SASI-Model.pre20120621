@@ -1,4 +1,4 @@
-from sqlalchemy import Table, Column, ForeignKey, Integer, String, Float
+from sqlalchemy import Table, Column, ForeignKey, ForeignKeyConstraint, Integer, String, Float
 from sqlalchemy.orm import relationship, mapper
 
 import sasi.sa.metadata as sa_metadata
@@ -15,8 +15,10 @@ effort_set_table = Table('effort_set', metadata,
 		)
 
 effort_set_effort_table = Table('effort_set_effort_', metadata,
-		Column('effort_set_id', String, ForeignKey(effort_set_table.c.id), primary_key=True),
-		Column('effort_id', Integer, ForeignKey(sa_effort.table.c.id), primary_key=True)
+		Column('effort_set_id', String, primary_key=True),
+		Column('effort_id', Integer, primary_key=True),
+		ForeignKeyConstraint(['effort_set_id'],[effort_set_table.c.id], deferrable=True),
+		ForeignKeyConstraint(['effort_id'],[sa_effort.table.c.id], deferrable=True),
 		)
 
 mapper(
