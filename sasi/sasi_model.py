@@ -71,6 +71,12 @@ class SASIModel:
 		if conf.conf['verbose']: print >> sys.stderr, "Getting features by gear categories..."
 		self.f_by_h = self.va.get_features_by_habitats()
 
+		# Create feature lookup to improve perfomance.
+		if conf.conf['verbose']: print >> sys.stderr, "Creating features lookup..."
+		self.features = {}
+		for f in self.features_model.get_features():
+			self.features[f.id] = f
+
 		# Create cells-habitat_type-feature lookup to improve perfomance.
 		# Assumes static habitats.
 		if conf.conf['verbose']: print >> sys.stderr, "Creating cells-habitat_type-feature lookup..."
@@ -136,7 +142,8 @@ class SASIModel:
 				# Get features for habitat, grouped by featured category.
 				c_ht_f[c]['ht'][ht]['f'] = {}
 				for feature_category, feature_ids in self.f_by_h[ht.id].items():
-					features = self.features_model.get_features(filters={'id': feature_ids})
+					features = [self.features[f_id] for f_id in feature_ids]
+					#features = self.features_model.get_features(filters={'id': feature_ids})
 					c_ht_f[c]['ht'][ht]['f'][feature_category] = features 
 
 		return c_ht_f

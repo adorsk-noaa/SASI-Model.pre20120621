@@ -129,7 +129,10 @@ def results_to_result_set(results=None):
 				field_results = results[c][t][result_field]
 
 				# For each result...
-				for result_key, field_value in field_results.items():
+				for index_key, field_value in field_results.items():
+
+					# Create result key from cell, time, and index_key
+					result_key = (t, c) + index_key
 
 					# Create SASI_Result object w/ minimal stub objects as attributes.
 					result_object = Result(
