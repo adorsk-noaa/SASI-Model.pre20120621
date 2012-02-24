@@ -84,22 +84,17 @@ class SA_Effort_DAO(object):
 					join_code = "join(Cell)"
 					value_code = "[c.id for c in f['value']]"
 
-				# Handle cell ids.
-				elif f['attr'] == 'cell_id':
-					attr_code = "Cell.id"
-					join_code = "join(Cell)"
-					value_code = "f['value']"
-
 				# Handle gears.
 				elif f['attr'] == 'gears':
 					attr_code = "Gear.id"
 					join_code = "join(Gear)"
 					value_code = "[g.id for g in f['value']]"
 
-				# Handle gear ids.
-				elif f['attr'] == 'gear_id':
-					attr_code = "Gear.id"
-					join_code = "join(Gear)"
+				# Handle attrs on related objects.
+				elif '.' in f['attr']:
+					(obj_class, obj_attr) = f['attr'].split('.')
+					attr_code = "%s.%s" % (obj_class, obj_attr)
+					join_code = "join(%s)" % obj_class
 					value_code = "f['value']"
 
 				# Handle all other attrs.
@@ -111,7 +106,6 @@ class SA_Effort_DAO(object):
 				filter_code = "q = q.filter(%s%s(%s))" % (attr_code, op_code, value_code)
 				if join_code: filter_code += ".%s" % join_code
 
-				
 				# Compile and execute filter code to create filter.
 				compiled_filter_code = compile(filter_code, '<query>', 'exec')
 				exec compiled_filter_code

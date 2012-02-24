@@ -1,4 +1,5 @@
 import sasi.conf.conf as conf
+import sasi.conf.fishing as fishing_conf
 import re
 from sasi.habitat.cell import Cell
 from sasi.habitat.feature import Feature
@@ -15,9 +16,9 @@ def result_key_to_simid(result_key):
 	# Generic simid parts to be formatted.
 	simid_parts = {
 			'cell_id': 0,
-			'gear': 0,
 			'substrate': 0,
-			'feature': 0
+			'feature': 0,
+			'gear_dry_code': 0
 			}
 
 	# Get result key as dictionary.
@@ -29,10 +30,10 @@ def result_key_to_simid(result_key):
 	# Format energy.
 	simid_parts['energy'] = 0.0
 	if result_key_dict['energy'] == 'High': simid_parts['energy'] = 1.0
-	
+
 	# Generate legacy key from parts.
 	simid = simid_parts['cell_id'] * 1000000000
-	simid += simid_parts['gear'] * 100000
+	simid += simid_parts['gear_dry_code'] * 100000
 	simid += simid_parts['substrate'] * 1000
 	simid += simid_parts['energy'] * 100
 	simid += simid_parts['feature']
@@ -48,7 +49,7 @@ def result_key_to_dict(result_key):
 			'cell_type_id': result_key[1].type_id,
 			'substrate': result_key[2].substrate.id,
 			'energy': result_key[2].energy,
-			'gear': result_key[3].id,
+			'gear_dry_code': fishing_conf.gear_category_to_dry_code[result_key[3].category],
 			'feature': result_key[4].id
 			}
 
@@ -64,29 +65,31 @@ def results_to_csv_buffer(results=None, buffer=None):
 	# Fields to output.
 	fields = set()
 
-	for result_field in ['Z', 'A', 'Y', 'X']:
-		field_results = results[result_field]
+	for c in results.keys():
+		for t in results[c].keys():
+			for result_field in results[c][t].keys():
+				field_results = results[c][t][result_field]
 
-		for result_key, value in field_results.items():
+				for result_key, value in field_results.items():
 
-			# Get simid.
-			simid = result_key_to_simid(result_key)
+					# Get simid.
+					simid = result_key_to_simid(result_key)
 
-			row = result_rows.setdefault(simid, {})
-			t = result_key[0]
+					row = result_rows.setdefault(simid, {})
+					t = result_key[0]
 
-			# Format the field for this result.
-			field_time = "%s_%s" % (result_field, t)
-			row[field_time] = value
-			fields.add(field_time)
+					# Format the field for this result.
+					field_time = "%s_%s" % (result_field, t)
+					row[field_time] = value
+					fields.add(field_time)
 
-			# Save simid to row.
-			row['simid'] = simid
-			fields.add('simid')
+					# Save simid to row.
+					row['simid'] = simid
+					fields.add('simid')
 
-			# Save result key to row.
-			# Note: we don't put out the result_key, so we don't add it to fields.
-			row['result_key'] = result_key
+					# Save result key to row.
+					# Note: we don't put out the result_key, so we don't add it to fields.
+					row['result_key'] = result_key
 
 	# For each result row... 
 	for result_key, row in result_rows.items():
@@ -114,27 +117,29 @@ def results_to_result_set(results=None):
 
 	result_objects = []
 
-	# For each result field...
-	for result_field in ['Z', 'A', 'Y', 'X', 'ZZ']:
+	# For each result...
+	for c in results.keys():
+		for t in results[c].keys():
+			for result_field in results[c][t].keys():
 
-		# Get results for that field.
-		field_results = results[result_field]
+				# Get results for that field.
+				field_results = results[c][t][result_field]
 
-		# For each result...
-		for result_key, field_value in field_results.items():
+				# For each result...
+				for result_key, field_value in field_results.items():
 
-			# Create SASI_Result object w/ minimal stub objects as attributes.
-			result_object = Result(
-					time = result_key[0],
-					cell = result_key[1],
-					habitat_type = result_key[2],
-					gear = result_key[3],
-					feature = result_key[4],
-					field = result_field,
-					value = field_value
-					)
-			result_objects.append(result_object)
-	
+					# Create SASI_Result object w/ minimal stub objects as attributes.
+					result_object = Result(
+							time = result_key[0],
+							cell = result_key[1],
+							habitat_type = result_key[2],
+							gear = result_key[3],
+							feature = result_key[4],
+							field = result_field,
+							value = field_value
+							)
+					result_objects.append(result_object)
+			
 	return Result_Set(results = result_objects)
 
 

@@ -22,6 +22,10 @@ class SASIModel:
 
 		# Features.
 		self.features_model = features_model 
+
+		# Get feature categories.
+		# @TODO: get categories from config or VA.
+		self.feature_categories = ['2']
 		
 		# Fishing effort model.
 		self.effort_model = effort_model
@@ -49,37 +53,49 @@ class SASIModel:
 					}
 		self.omegas = omegas
 
-		# Results.
-		self.results = {}
-		for field in [
-				'A', # Contact-Adjusted Swept Area.
-				'X', # Recovered Swept Area.
-				'Y', # Modified Swept Area.
-				'Z', # Instantaneous X - Y
-				'ZZ', # Cumulative Z.
-				]:
-			self.results[field] = {}
-
 		self.setup()
 
 	def setup(self):
 		# Get habitat types, grouped by gear categories that can be applied to those
 		# habitat types. 
+
+		if conf.conf['verbose']: print >> sys.stderr, "Getting habitats by gear categories..."
 		self.h_by_gcat = self.va.get_habitats_by_gear_categories()
 
 		# Get feature codes, grouped by gear categories that can be applied to those
 		# feature types.
+		if conf.conf['verbose']: print >> sys.stderr, "Getting features by gear categories..."
 		self.f_by_gcat = self.va.get_features_by_gear_categories()
 
 		# Get features grouped by category, keyed by habitat types.
+		if conf.conf['verbose']: print >> sys.stderr, "Getting features by gear categories..."
 		self.f_by_h = self.va.get_features_by_habitats()
 
 		# Create cells-habitat_type-feature lookup to improve perfomance.
 		# Assumes static habitats.
+		if conf.conf['verbose']: print >> sys.stderr, "Creating cells-habitat_type-feature lookup..."
 		self.c_ht_f = self.get_c_ht_f_lookup()
 
 		# Create effort lookup by cell and time to improve performance.
+		if conf.conf['verbose']: print >> sys.stderr, "Creating cells-time-effort lookup..."
 		self.c_t_e = self.get_c_t_e_lookup()
+
+		# Initialize results, grouped by time, cell, and field.
+		if conf.conf['verbose']: print >> sys.stderr, "Initializing results..."
+		self.results = {}
+		for c in self.c_ht_f.keys():
+			self.results[c] = {}
+			for t in range(self.t0, self.tf + self.dt, self.dt):
+				self.results[c][t] = {}
+				for field in [
+						'A', # Contact-Adjusted Swept Area.
+						'X', # Recovered Swept Area.
+						'Y', # Modified Swept Area.
+						'Z', # Instantaneous X - Y
+						'ZZ', # Cumulative Z.
+						]:
+					self.results[c][t][field] = {}
+
 	
 	def get_c_ht_f_lookup(self):
 
@@ -131,10 +147,16 @@ class SASIModel:
 		c_t_e = {}
 
 		# For each effort in the model's time range...
+		effort_counter = 0
 		for e in self.effort_model.get_efforts(filters=[
 			{'attr': 'time', 'op': '>=', 'value': self.t0},
 			{'attr': 'time', 'op': '<=', 'value': self.tf},
 			]):
+
+			effort_counter += 1
+			if conf.conf['verbose']: 
+				if (effort_counter % 1000) == 0: print >> sys.stderr, "effort: %s" % effort_counter
+
 
 			# Create cell-time key.
 			c_t_key = (e.cell, e.time)
@@ -166,7 +188,15 @@ class SASIModel:
 			cell_counter += 1
 
 			# Get contact-adjusted fishing efforts for the cell.
-			cell_efforts = self.c_t_e.get((c,t),[])
+
+			# TMP HACK FOR COMPARING TO MODEL.
+			cell_efforts = []
+			realized_start_year = 2000
+			if t <= realized_start_year:
+				cell_efforts =  self.c_t_e.get((c,realized_start_year),[])
+			else:
+				cell_efforts =  self.c_t_e.get((c, t),[])
+			#cell_efforts = self.c_t_e.get((c,t),[])
 
 			# For each effort...
 			for effort in cell_efforts:
@@ -188,17 +218,12 @@ class SASIModel:
 						# Distribute the effort's swept area proportionally to the habitat type's area as a fraction of the total relevant area.
 						swept_area_per_habitat_type = effort.swept_area * (self.c_ht_f[c]['ht'][ht]['area']/relevant_habitats_area)
 
-						# Get feature categories.
-						# @TODO: get categories from config or VA.
-						feature_categories = ['2']
-
 						# Distribute swept area equally across feature categories.
 						# @TODO: maybe weight this? rather than just num categories?
-						#swept_area_per_feature_category = swept_area_per_habitat/len(feature_categories)
-						swept_area_per_feature_category = swept_area_per_habitat_type/2
+						swept_area_per_feature_category = swept_area_per_habitat_type/len(self.feature_categories)
 
 						# For each feature category...
-						for fc in feature_categories:
+						for fc in self.feature_categories:
 
 							# Get the features for which the gear can be applied. 
 							relevant_features = []
@@ -225,7 +250,7 @@ class SASIModel:
 
 									# Add the resulting contact-adjusted
 									# swept area to the A table.
-									self.results['A'][index_key] = self.results['A'].get(index_key,0.0) + swept_area_per_feature
+									self.results[c][t]['A'][index_key] = self.results[c][t]['A'].get(index_key,0.0) + swept_area_per_feature
 
 									# Get vulnerability assessment for the effort.
 									vulnerability_assessment = self.va.get_assessment(
@@ -242,12 +267,12 @@ class SASIModel:
 									adverse_effect_swept_area = swept_area_per_feature * omega
 
 									# Add to adverse effect table.
-									self.results['Y'][index_key] = self.results['Y'].get(index_key,0.0) + adverse_effect_swept_area
+									self.results[c][t]['Y'][index_key] = self.results[c][t]['Y'].get(index_key,0.0) + adverse_effect_swept_area
 
 									# Calculate recovery per timestep.
 									recovery_per_dt = adverse_effect_swept_area/tau
 
-									# Add recover to future recovery table entries.
+									# Add recovery to future recovery table entries.
 									for future_t in range(t + 1, t + tau + 1, self.dt):
 										if future_t <= self.tf:
 											future_key = self.get_index_key(
@@ -257,24 +282,30 @@ class SASIModel:
 													gear = effort.gear,
 													feature = f
 													)
-											self.results['X'][future_key] = self.results['X'].get(future_key, 0.0) + recovery_per_dt 
+											self.results[c][t]['X'][future_key] = self.results[c][t]['X'].get(future_key, 0.0) + recovery_per_dt 
 
-									# Add to modified swept area for the timestep.
-									self.results['Z'][index_key] = self.results['Z'].get(index_key, 0.0) + self.results['X'].get(index_key, 0.0) - self.results['Y'][index_key]
+			# Get keys which were affected during this timestep.
+			affected_keys = set(self.results[c][t]['X'].keys() + self.results[c][t]['Y'].keys())
 
-									# Add to cumulative (assumes previous timesteps have been run).
-									if t > self.t0:
-										past_key = self.get_index_key(
-												time = t - self.dt,
-												cell = c,
-												habitat_type = ht,
-												gear = effort.gear,
-												feature = f
-												)
-										self.results['ZZ'][index_key] = self.results['ZZ'].get(index_key, 0.0) + self.results['ZZ'].get(past_key,0.0) + self.results['Z'][index_key]
-									else:
-										self.results['ZZ'][index_key] = self.results['ZZ'].get(index_key, 0.0) + self.results['Z'][index_key]
+			# For each affected key...
+			for k in affected_keys:
+				# Calculate Z.
+				self.results[c][t]['Z'][k] = self.results[c][t]['X'].get(k, 0.0) - self.results[c][t]['Y'].get(k, 0.0)
 
+			# If first time step, set ZZ = Z.
+			if t == self.t0:
+				self.results[c][t]['ZZ'] = self.results[c][t]['Z']
+			# Otherwise, if a later timestep...
+			else:
+				# Get keys which had ZZ or Z for the previous timestep.
+				z_zz_keys = set(self.results[c][t - self.dt]['Z'].keys() + self.results[c][t - self.dt]['ZZ'].keys())
+
+				# For each key...
+				for k in z_zz_keys:
+
+					# Set ZZ for current timestep as previous ZZ + current Z.
+					self.results[c][t]['ZZ'][k] = self.results[c][t - self.dt]['ZZ'].get(k, 0.0) + self.results[c][t]['Z'].get(k, 0.0)
+	
 
 	# Format index key from key components.
 	def get_index_key(self, time=None, cell=None, habitat_type=None, gear=None, feature=None):
