@@ -63,13 +63,13 @@ class SASIModel:
 		self.setup()
 
 	def setup(self):
-		# Get habitat types, grouped by gears that can be applied to those
+		# Get habitat types, grouped by gear categories that can be applied to those
 		# habitat types. 
-		self.h_by_g = self.va.get_habitats_by_gears()
+		self.h_by_gcat = self.va.get_habitats_by_gear_categories()
 
-		# Get feature codes, grouped by gears that can be applied to those
+		# Get feature codes, grouped by gear categories that can be applied to those
 		# feature types.
-		self.f_by_g = self.va.get_features_by_gears()
+		self.f_by_gcat = self.va.get_features_by_gear_categories()
 
 		# Get features grouped by category, keyed by habitat types.
 		self.f_by_h = self.va.get_features_by_habitats()
@@ -174,7 +174,7 @@ class SASIModel:
 				# Get cell's habitat types which are relevant to the effort.
 				relevant_habitat_types = []
 				for ht in self.c_ht_f[c]['ht'].keys():
-					if ht.id in self.h_by_g[effort.gear.id]: relevant_habitat_types.append(ht)
+					if ht.id in self.h_by_gcat[effort.gear.category]: relevant_habitat_types.append(ht)
 
 				# If there were relevant habitat types...
 				if relevant_habitat_types:
@@ -203,7 +203,7 @@ class SASIModel:
 							# Get the features for which the gear can be applied. 
 							relevant_features = []
 							for f in self.c_ht_f[c]['ht'][ht]['f'].get(fc,[]):
-								if f.id in self.f_by_g[effort.gear.id]: relevant_features.append(f)
+								if f.id in self.f_by_gcat[effort.gear.category]: relevant_features.append(f)
 
 							# If there were relevant features...
 							if relevant_features:
@@ -229,7 +229,7 @@ class SASIModel:
 
 									# Get vulnerability assessment for the effort.
 									vulnerability_assessment = self.va.get_assessment(
-										gear_code = effort.gear.id,
+										gear_category = effort.gear.category,
 										habitat_key = ht.id,
 										feature_code = f.id,
 										)

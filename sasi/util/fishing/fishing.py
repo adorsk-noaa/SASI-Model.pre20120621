@@ -1,5 +1,6 @@
 from sasi.fishing.gear import Gear
 import sasi.conf.conf as conf
+import sasi.conf.fishing as fishing_conf
 import sasi.util.registry as util_registry
 from sasi.fishing.effort import Effort
 from sasi.fishing.effort_set import Effort_Set
@@ -10,13 +11,13 @@ generated_gears = {}
 
 def generate_gears():
 
+	# Create gear object for each gear definition in fishing_conf.
 	gears = []
-
-	for i in range(1,6+1):
-
+	for gear_definition in fishing_conf.gear_definitions:
 		o = Gear(
-				id = "G%s" % i,
-				name = "Gear %s" % i
+				id = gear_definition['id'],
+				name = gear_definition['name'],
+				category = gear_definition['category']
 				)
 
 		gears.append(util_registry.get_or_register_object(o))

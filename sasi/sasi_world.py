@@ -4,7 +4,9 @@ from sasi.dao.habitat.sa_cell_dao import SA_Cell_DAO
 from sasi.dao.habitat.sa_feature_dao import SA_Feature_DAO
 from sasi.dao.va.csv_va_dao import CSV_VA_DAO
 from sasi.dao.results.sa_result_dao import SA_Result_DAO
+from sasi.dao.fishing.sa_effort_dao import SA_Effort_DAO
 from sasi.fishing.nominal_effort_per_gear_model import NominalEffortPerGearModel
+from sasi.fishing.dao_effort_model import DAO_Effort_Model
 from sasi.fishing.gear import Gear
 
 from sasi.sasi_model import SASIModel
@@ -30,9 +32,12 @@ if __name__ == '__main__':
 
 	result_dao = SA_Result_DAO(session=db_session)
 
-	t0 = 1
-	tf = 6
+	effort_dao = SA_Effort_DAO(session=db_session)
+
+	t0 = 1998	
+	tf = 2002
 	dt = 1
+	times = range(t0,tf+1,dt)
 
 	# Get or create persistent result set to hold results.
 	# Will overwrite an existing set of the same name.
@@ -47,7 +52,7 @@ if __name__ == '__main__':
 	result_set.results = []
 
 	#grid_model = StaticGridModel(cell_dao=Test_Cell_DAO(), default_filters={'type': 'km100'}) 
-	grid_model = StaticGridModel(cell_dao=SA_Cell_DAO(session=db_session), default_filters=[{'attr': 'type','value': ['km100'] }, {'attr': 'type_id', 'value': ['0']}]) 
+	grid_model = StaticGridModel(cell_dao=SA_Cell_DAO(session=db_session), default_filters=[{'attr': 'type','value': ['km100'] }, {'attr': 'type_id', 'value': ['4979']}]) 
 	#grid_model = StaticGridModel(cell_dao=SA_Cell_DAO(session=db_session), default_filters=[{'attr': 'type','value': ['km100'] }]) 
 
 	# Filter domain for cells w/ depth less than 138 (for G3).
@@ -68,8 +73,13 @@ if __name__ == '__main__':
 				)
 		gears.append(db_session.merge(gear))
 
-	times = range(t0,tf+1,dt)
-	effort_model = NominalEffortPerGearModel(grid_model=grid_model, gears=gears, times=times)
+
+	#effort_model = NominalEffortPerGearModel(grid_model=grid_model, gears=gears, times=times)
+	effort_model = DAO_Effort_Model(effort_dao = effort_dao, default_filters=[{
+		'attr': 'effort_set_id',
+		'op': '==',
+		'value': "legacy_realized_a"
+		}])
 
 	taus = {
 			'0': 1,
@@ -103,7 +113,7 @@ if __name__ == '__main__':
 		model.iterate(n)
 	
 	# Print results as csv.
-	sasi_model_util.results_to_csv_buffer(results=model.results, buffer=sys.stdout)
+	#sasi_model_util.results_to_csv_buffer(results=model.results, buffer=sys.stdout)
 
 	# Add raw results to results collection.
 	tmp_result_set = sasi_model_util.results_to_result_set(

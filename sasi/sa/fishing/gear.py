@@ -8,6 +8,7 @@ metadata = sa_metadata.metadata
 table = Table('gear', metadata,
 		Column('id', String, primary_key=True),
 		Column('name', String),
+		Column('category', String),
 		)
 		
 mapper(Gear, table)

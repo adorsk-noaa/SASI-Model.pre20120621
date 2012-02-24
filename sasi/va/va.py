@@ -5,18 +5,18 @@ class VulnerabilityAssessment(object):
 		self.assessments = self.make_assessments_from_rows(rows)
 	
 	def make_assessments_from_rows(self, rows):
-		# Save rows, keyed by (GEAR_CODE, SUBSTRATE_CODE, FEATURE_CODE,ENERGY)
+		# Save rows, keyed by (GEAR_CATEGORY, SUBSTRATE_CODE, FEATURE_CODE,ENERGY)
 		assessments = {}
 		for r in rows:
 
-			key = (r['GEAR_CODE'], r['SUBSTRATE_CODE'], r['FEATURE_CODE'], r['ENERGY'])
+			key = (r['GEAR_CATEGORY'], r['SUBSTRATE_CODE'], r['FEATURE_CODE'], r['ENERGY'])
 			assessments[key] = r
 
 		return assessments
 
-	def get_assessment(self, habitat_key='', gear_code='', feature_code=''):
+	def get_assessment(self, habitat_key='', gear_category='', feature_code=''):
 		(substrate_code,energy) = self.get_hab_key_parts(habitat_key=habitat_key)
-		key = (gear_code, substrate_code, feature_code, energy)
+		key = (gear_category, substrate_code, feature_code, energy)
 		return self.assessments.get(key, None)
 
 	def get_susceptibility(self, **kwopts):
@@ -64,52 +64,51 @@ class VulnerabilityAssessment(object):
 	def get_hab_key_parts(self, habitat_key=None):
 		return habitat_key.split(',')
 
-	def get_gears_by_habitats(self):
-		g_by_h = {}
+	def get_gear_categories_by_habitats(self):
+		gear_category_by_h = {}
 		for key, assessment in self.assessments.items():
 			hab_key = self.get_hab_key(assessment=assessment)
-			gears_for_hab = g_by_h.setdefault(hab_key,set())
-			gears_for_hab.add(assessment['GEAR_CODE'])
-		return g_by_h
+			gear_categorys_for_hab = gear_category_by_h.setdefault(hab_key,set())
+			gear_categorys_for_hab.add(assessment['GEAR_CATEGORY'])
+		return gear_category_by_h
 	
-	def get_habitats_by_gears(self):
-		h_by_g = {}
+	def get_habitats_by_gear_categories(self):
+		h_by_gear_category = {}
 		for key, assessment in self.assessments.items():
 			hab_key = self.get_hab_key(assessment=assessment)
-			habs_for_gears= h_by_g.setdefault(assessment['GEAR_CODE'], set())
-			habs_for_gears.add(hab_key)
-		return h_by_g
+			habs_for_gear_category = h_by_gear_category.setdefault(assessment['GEAR_CATEGORY'], set())
+			habs_for_gear_category.add(hab_key)
+		return h_by_gear_category
 
-	def get_features_by_gears(self):
+	def get_features_by_gear_categories(self):
 		f_by_g = {}
 		for key, assessment in self.assessments.items():
-			features_for_gears = f_by_g.setdefault(assessment['GEAR_CODE'], set())
+			features_for_gears = f_by_g.setdefault(assessment['GEAR_CATEGORY'], set())
 			features_for_gears.add(assessment['FEATURE_CODE'])
 		return f_by_g
 
-	def get_habitats_for_gear(self, gear_code):
+	def get_habitats_for_gear_category(self, gear_category):
 		habitats = set()
 		for key, assessment in self.assessments.items():
-			if assessment['GEAR_CODE'] == gear_code:
+			if assessment['GEAR_CATEGORY'] == gear_category:
 				hab_key = self.get_hab_key(assessment=assessment)
 				habitats.add(hab_key)
 		return habitats
 
-	def get_features_for_gear(self, gear_code):
+	def get_features_for_gear_category(self, gear_category):
 		features = set()
 		for key, assessment in self.assessments.items():
-			if assessment['GEAR_CODE'] == gear_code:
+			if assessment['GEAR_CATEGORY'] == gear_category:
 				features.add(assessment['FEATURE_CODE'])
 		return features
 
-	def get_gears(self):
-		gears = {} 
+	def get_gear_categories(self):
+		gear_categories = {} 
 		for key, assessment in self.assessments.items():
-			gears[assessment['GEAR_CODE']] = {
-					'GEAR_CODE': assessment['GEAR_CODE'],
-					'GEAR': assessment['GEAR']
+			gear_categories[assessment['GEAR_CATEGORY']] = {
+					'GEAR_CATEGORY': assessment['GEAR_CATEGORY'],
 					}
-		return gears
+		return gear_categories
 
 	def get_habitats(self):
 		habitats = set()

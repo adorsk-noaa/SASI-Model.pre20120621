@@ -7,9 +7,15 @@ import sasi.sa.fishing.effort_set as sa_effort_set
 def create_schema():
 	
 	session = sa_session.get_session()
-	sa_gear.table.create(session.bind)
-	sa_effort.table.create(session.bind)
-	sa_effort_set.effort_set_table.create(session.bind)
-	sa_effort_set.effort_set_effort_table.create(session.bind)
+
+	tables = [
+			sa_gear.table,
+			sa_effort.table,
+			sa_effort_set.effort_set_table,
+			sa_effort_set.effort_set_effort_table
+			]
+
+	for t in tables:
+		t.create(session.bind)
 
 
