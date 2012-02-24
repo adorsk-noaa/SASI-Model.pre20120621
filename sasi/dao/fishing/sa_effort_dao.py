@@ -84,11 +84,23 @@ class SA_Effort_DAO(object):
 					join_code = "join(Cell)"
 					value_code = "[c.id for c in f['value']]"
 
+				# Handle cell ids.
+				elif f['attr'] == 'cell_id':
+					attr_code = "Cell.id"
+					join_code = "join(Cell)"
+					value_code = "f['value']"
+
 				# Handle gears.
 				elif f['attr'] == 'gears':
 					attr_code = "Gear.id"
 					join_code = "join(Gear)"
 					value_code = "[g.id for g in f['value']]"
+
+				# Handle gear ids.
+				elif f['attr'] == 'gear_id':
+					attr_code = "Gear.id"
+					join_code = "join(Gear)"
+					value_code = "f['value']"
 
 				# Handle all other attrs.
 				else: 
