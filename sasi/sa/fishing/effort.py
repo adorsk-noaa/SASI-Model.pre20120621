@@ -27,8 +27,8 @@ mapper(
 		Effort, 
 		table,
 		properties = {
-			'cell': relationship(Cell),
-			'gear': relationship(Gear),
+			'cell': relationship(Cell, lazy='joined'),
+			'gear': relationship(Gear, lazy='joined'),
 			}
 	)
 
