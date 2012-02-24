@@ -29,10 +29,9 @@ def main():
 	for c in cells: cells_by_100km_id[c.type_id] = c
 
 	# Make gears lookup.
-	gears_by_dry_code = {}
-	for wet_code, dry_code in gear_code_mappings.wet_to_dry.items():
-		 gear = db_session.query(Gear).filter(Gear.id == dry_code).one()
-		 gears_by_dry_code[dry_code] = gear
+	gears_by_id = {}
+	for gear in db_session.query(Gear).all():
+		gears_by_id[gear.id] = gear
 
 	# Create efforts from csv rows.
 	efforts = []
@@ -48,9 +47,8 @@ def main():
 		cell = cells_by_100km_id[r['id_100']]
 
 		# Get gear.
-		wet_code = "GC%s" % r['gear_code']
-		dry_code = gear_code_mappings.wet_to_dry[wet_code]
-		gear = gears_by_dry_code[dry_code]
+		gear_id = "GC%s" % r['gear_code']
+		gear = gears_by_id[gear_id]
 
 		# Create effort.
 		efforts.append(Effort(
