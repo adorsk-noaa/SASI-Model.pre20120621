@@ -15,7 +15,7 @@ def result_key_to_simid(result_key):
 
 	# Generic simid parts to be formatted.
 	simid_parts = {
-			'cell_id': 0,
+			'cell_type_id': 0,
 			'substrate': 0,
 			'feature': 0,
 			'gear_dry_code': 0
@@ -32,7 +32,7 @@ def result_key_to_simid(result_key):
 	if result_key_dict['energy'] == 'High': simid_parts['energy'] = 1.0
 
 	# Generate legacy key from parts.
-	simid = simid_parts['cell_id'] * 1000000000
+	simid = simid_parts['cell_type_id'] * 1000000000
 	simid += simid_parts['gear_dry_code'] * 100000
 	simid += simid_parts['substrate'] * 1000
 	simid += simid_parts['energy'] * 100
@@ -70,16 +70,19 @@ def results_to_csv_buffer(results=None, buffer=None):
 			for result_field in results[c][t].keys():
 				field_results = results[c][t][result_field]
 
-				for result_key, value in field_results.items():
+				for index_key, value in field_results.items():
+
+					# Create result key from cell, time, and index_key
+					result_key = (t, c) + index_key
 
 					# Get simid.
 					simid = result_key_to_simid(result_key)
 
 					row = result_rows.setdefault(simid, {})
-					t = result_key[0]
+					result_t = result_key[0]
 
 					# Format the field for this result.
-					field_time = "%s_%s" % (result_field, t)
+					field_time = "%s_%s" % (result_field, result_t)
 					row[field_time] = value
 					fields.add(field_time)
 

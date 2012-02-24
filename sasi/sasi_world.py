@@ -118,7 +118,7 @@ if __name__ == '__main__':
 			omegas=omegas
 			)
 
-	for n in range(t0, tf + dt, dt):
+	for n in times:
 		print >> sys.stderr, "iteration: %s" % n
 		print >> sys.stderr, datetime.now()
 		model.iterate(n)

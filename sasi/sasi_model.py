@@ -239,14 +239,8 @@ class SASIModel:
 								# For each feature...
 								for f in relevant_features:
 
-									# Generate an index key for the results.
-									index_key = self.get_index_key(
-											time = t,
-											cell = c,
-											habitat_type = ht,
-											gear = effort.gear,
-											feature = f
-											)
+									# Generate an index key for the identifing the results by habitat type, gear, and feature.
+									index_key = (ht, effort.gear, f)
 
 									# Add the resulting contact-adjusted
 									# swept area to the A table.
@@ -275,21 +269,13 @@ class SASIModel:
 									# Add recovery to future recovery table entries.
 									for future_t in range(t + 1, t + tau + 1, self.dt):
 										if future_t <= self.tf:
-											future_key = self.get_index_key(
-													time = future_t,
-													cell = c,
-													habitat_type = ht,
-													gear = effort.gear,
-													feature = f
-													)
-											self.results[c][t]['X'][future_key] = self.results[c][t]['X'].get(future_key, 0.0) + recovery_per_dt 
+											self.results[c][future_t]['X'][index_key] = self.results[c][future_t]['X'].get(index_key, 0.0) + recovery_per_dt 
 
 			# Get keys which were affected during this timestep.
 			affected_keys = set(self.results[c][t]['X'].keys() + self.results[c][t]['Y'].keys())
 
-			# For each affected key...
-			for k in affected_keys:
-				# Calculate Z.
+			# Calculate Z or each affected key.
+			for k in affected_keys: 
 				self.results[c][t]['Z'][k] = self.results[c][t]['X'].get(k, 0.0) - self.results[c][t]['Y'].get(k, 0.0)
 
 			# If first time step, set ZZ = Z.
@@ -297,8 +283,8 @@ class SASIModel:
 				self.results[c][t]['ZZ'] = self.results[c][t]['Z']
 			# Otherwise, if a later timestep...
 			else:
-				# Get keys which had ZZ or Z for the previous timestep.
-				z_zz_keys = set(self.results[c][t - self.dt]['Z'].keys() + self.results[c][t - self.dt]['ZZ'].keys())
+				# Get keys which had ZZ for the previous timestep, or Z for the current timestep.
+				z_zz_keys = set(self.results[c][t - self.dt]['ZZ'].keys() + self.results[c][t]['Z'].keys())
 
 				# For each key...
 				for k in z_zz_keys:
