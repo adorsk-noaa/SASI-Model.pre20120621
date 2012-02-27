@@ -8,7 +8,6 @@ from sasi.habitat.habitat_type import Habitat_Type
 from sasi.fishing.gear import Gear
 
 from sasi.results.result import Result
-from sasi.results.result_set import Result_Set
 
 # Converts a result key to a legacy-style simid key
 def result_key_to_simid(result_key):
@@ -114,8 +113,8 @@ def results_to_csv_buffer(results=None, buffer=None):
 		print >> buffer, ','.join(["%s" % row.get(f,'') for f in fields])
 	
 
-# Create Result Set from results.
-def results_to_result_set(results=None):
+# Create list of result objects from results.
+def results_to_result_objs(results=None, tag=''):
 
 	result_objects = []
 
@@ -141,11 +140,12 @@ def results_to_result_set(results=None):
 							gear = result_key[3],
 							feature = result_key[4],
 							field = result_field,
-							value = field_value
+							tag = tag,
+							value = field_value,
 							)
 					result_objects.append(result_object)
 			
-	return Result_Set(results = result_objects)
+	return result_objects
 
 
 

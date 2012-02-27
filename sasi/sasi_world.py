@@ -41,9 +41,8 @@ if __name__ == '__main__':
 	dt = 1
 	times = range(t0,tf+1,dt)
 
-	#grid_model = StaticGridModel(cell_dao=Test_Cell_DAO(), default_filters={'type': 'km100'}) 
-	grid_model = StaticGridModel(cell_dao=SA_Cell_DAO(session=db_session), default_filters=[{'attr': 'type','value': ['km100'] }, {'attr': 'type_id', 'value': ['817']}]) 
-	#grid_model = StaticGridModel(cell_dao=SA_Cell_DAO(session=db_session), default_filters=[{'attr': 'type','value': ['km100'] } ])
+	#grid_model = StaticGridModel(cell_dao=SA_Cell_DAO(session=db_session), default_filters=[{'attr': 'type','value': ['km100'] }, {'attr': 'type_id', 'value': ['817']}]) 
+	grid_model = StaticGridModel(cell_dao=SA_Cell_DAO(session=db_session), default_filters=[{'attr': 'type','value': ['km100'] } ])
 
 	# Filter domain for cells w/ depth less than 138 (for G3).
 	#grid_model = StaticGridModel(cell_dao=SA_Cell_DAO(session=db_session), default_filters=[{'attr': 'type','value': ['km100'] }, {'attr': 'depth', 'op': '>=', 'value': -138}]) 
@@ -105,13 +104,14 @@ if __name__ == '__main__':
 		model.iterate(n)
 	
 	# Print results as csv.
-	sasi_model_util.results_to_csv_buffer(results=model.results, buffer=sys.stdout)
+	#sasi_model_util.results_to_csv_buffer(results=model.results, buffer=sys.stdout)
 
-	# Add raw results to results collection.
-	#tmp_result_set = sasi_model_util.results_to_result_set(
-			#results = model.results 
-			#)
-	#result_set.results.extend(tmp_result_set.results)
+	# Generate result objects from results.
+	results = sasi_model_util.results_to_result_objs(
+			results = model.results,
+			tag = 'gc30_all'
+			)
 
-	# Save the collection.
-	#result_dao.save_result_sets(result_sets=[result_set])
+	# Save the results.
+	if conf.conf['verbose']: print >> sys.stderr, "%s results total." % len(results)
+	result_dao.save_results(results)
