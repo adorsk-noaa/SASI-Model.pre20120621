@@ -10,7 +10,7 @@ generated_results = {}
 generated_result_sets = {}
 
 # Generate Results.
-def generate_results(n=10):
+def generate_results(n=10, tags=["a", "b"]):
 
 	results = []
 
@@ -34,25 +34,11 @@ def generate_results(n=10):
 				gear = gear_i,
 				feature = feature_i,
 				field = "field_%s" % i,
+				tag = tags[i % len(tags)],
 				value = i
 				)
 
 		results.append(util_registry.get_or_register_object(o,id_func=lambda obj: id(obj)))
 
 	return results
-
-# Generate Result Sets.
-def generate_result_sets(n=1, results_per_set=10):
-	result_sets = []
-
-	for i in range(n):
-		results = generate_results(results_per_set)
-		o = Result_Set(
-				id = "result_set_%s" % i,
-				results = results
-				)
-
-		result_sets.append(util_registry.get_or_register_object(o))
-
-	return result_sets
 

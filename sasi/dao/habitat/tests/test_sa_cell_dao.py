@@ -11,10 +11,6 @@ class SA_Cell_DAO_Test(BaseTest):
 				'attr': 'type',
 				'value': ['km100'],
 				},
-			#{
-				#'attr': 'id',
-				#'value': [1]
-				#},
 			{
 				'attr': 'depth',
 				'op': '>=',

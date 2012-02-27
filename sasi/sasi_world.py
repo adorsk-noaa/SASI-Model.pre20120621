@@ -30,7 +30,7 @@ if __name__ == '__main__':
 
 	db_session = sa_session.get_session()
 
-	#if conf.conf['verbose']: db_session.bind.echo = True
+	#db_session.bind.echo = True
 
 	result_dao = SA_Result_DAO(session=db_session)
 
@@ -41,21 +41,9 @@ if __name__ == '__main__':
 	dt = 1
 	times = range(t0,tf+1,dt)
 
-	# Get or create persistent result set to hold results.
-	# Will overwrite an existing set of the same name.
-	#result_set_id = 'realized_gc30'
-	result_set_id = 'tmp' 
-	result_set = None
-	fetched_sets = result_dao.get_result_sets(filters=[{'attr': 'id', 'op': 'in', 'value': [result_set_id]}])
-	if not fetched_sets:
-		result_set = Result_Set(id=result_set_id)
-	else: 
-		result_set = fetched_sets[0]
-	result_set.results = []
-
 	#grid_model = StaticGridModel(cell_dao=Test_Cell_DAO(), default_filters={'type': 'km100'}) 
 	grid_model = StaticGridModel(cell_dao=SA_Cell_DAO(session=db_session), default_filters=[{'attr': 'type','value': ['km100'] }, {'attr': 'type_id', 'value': ['817']}]) 
-	#grid_model = StaticGridModel(cell_dao=SA_Cell_DAO(session=db_session), default_filters=[{'attr': 'type','value': ['km100'] }]) 
+	#grid_model = StaticGridModel(cell_dao=SA_Cell_DAO(session=db_session), default_filters=[{'attr': 'type','value': ['km100'] } ])
 
 	# Filter domain for cells w/ depth less than 138 (for G3).
 	#grid_model = StaticGridModel(cell_dao=SA_Cell_DAO(session=db_session), default_filters=[{'attr': 'type','value': ['km100'] }, {'attr': 'depth', 'op': '>=', 'value': -138}]) 
@@ -65,31 +53,24 @@ if __name__ == '__main__':
 
 	features_model = Features_Model(feature_dao=SA_Feature_DAO(session=db_session))
 
-	gears = []
-	#for i in range(1,6+1):
-	for i in [3]:
-		gear_code = "GC%s" % i
-		gears.append(db_session.query(Gear).filter(Gear.id == gear_code).one())
+	#gears = []
+	#for i in [3]:
+		#gear_code = "GC%s" % i
+		#gears.append(db_session.query(Gear).filter(Gear.id == gear_code).one())
 
 
 	#effort_model = NominalEffortPerGearModel(grid_model=grid_model, gears=gears, times=times)
 	effort_model = DAO_Effort_Model(effort_dao = effort_dao, default_filters=[
 		{
-			'attr': 'effort_set_id',
+			'attr': 'tag',
 			'op': '==',
-			'value': "legacy_realized_a"
+			'value': "legacy_realized_efforts"
 			},
 		{
 			'attr': 'Gear.id',
 			'op': '==',
 			'value': 'GC30'
 			},
-
-		{
-			'attr': 'Cell.type_id',
-			'op': '==',
-			'value': '817'
-			}
 		])
 
 	taus = {

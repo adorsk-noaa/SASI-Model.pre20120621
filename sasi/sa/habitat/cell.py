@@ -12,9 +12,8 @@ import sasi.sa.metadata as sa_metadata
 metadata = sa_metadata.metadata
 
 cell_table = Table('cell', metadata,
-		Column('id', Integer, primary_key=True),
-		Column('type', String),
-		Column('type_id', String),
+		Column('type', String, primary_key=True),
+		Column('type_id', String, primary_key=True),
 		Column('area', Float),
 		Column('depth', Float),
 		GeometryExtensionColumn('geom', MultiPolygon(2)),
@@ -23,9 +22,10 @@ cell_table = Table('cell', metadata,
 GeometryDDL(cell_table)
 
 cell_habitat_table = Table('cell_habitat', metadata,
-		Column('cell_id', Integer, primary_key=True),
+		Column('cell_type', String, primary_key=True),
+		Column('cell_type_id', String, primary_key=True),
 		Column('habitat_id', Integer, primary_key=True),
-		ForeignKeyConstraint(['cell_id'], [cell_table.c.id], deferrable=True),
+		ForeignKeyConstraint(['cell_type', 'cell_type_id'], [cell_table.c.type, cell_table.c.type_id], deferrable=True),
 		ForeignKeyConstraint(['habitat_id'], [sa_habitat.table.c.id], deferrable=True),
 		)
 

@@ -16,7 +16,7 @@ def main():
 		print >> sys.stderr, "Must provide csv file and id of effort set to be created in db."
 		exit(1)
 	csv_file = sys.argv[1]
-	effort_set_id = sys.argv[2]
+	tag = sys.argv[2]
 
 	# Setup DAOs.
 	db_session = sa_session.get_session()
@@ -55,14 +55,12 @@ def main():
 			cell = cell,
 			time = r['year'],
 			gear = gear,
+			tag = tag,
 			swept_area = float(r['A']),
 			hours_fished = float(r['hours_fished'])
 			))
 	
-	# Create effort set from efforts.
-	effort_set = Effort_Set(id=effort_set_id, efforts=efforts)
-
-	# Save effort set.
-	effort_dao.save_effort_sets(effort_sets=[effort_set])
+	# Save efforts.
+	effort_dao.save_efforts(efforts)
 
 if __name__ == '__main__': main()

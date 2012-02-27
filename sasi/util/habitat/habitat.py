@@ -94,7 +94,7 @@ def generate_habitats(n, default_area = lambda: 1.0, habitat_types=None):
 	return habitats
 
 
-def generate_cells(n, default_area = lambda: 1.0, habitats=None, habitats_per_cell=2):
+def generate_cells(n, type='km100', default_area = lambda: 1.0, habitats=None, habitats_per_cell=2):
 
 	cells = []
 
@@ -108,7 +108,8 @@ def generate_cells(n, default_area = lambda: 1.0, habitats=None, habitats_per_ce
 		cell_habitats = [habitats.pop() for i in range(habitats_per_cell)]
 
 		o = Cell(
-				id = i,
+				type = type,
+				type_id = "%s" % i,
 				area = default_area(),
 				geom = geo_util.generate_multipolygon(),
 				habitats = cell_habitats

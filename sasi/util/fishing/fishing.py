@@ -25,7 +25,7 @@ def generate_gears():
 	return gears
 
 # Generate Efforts.
-def generate_efforts(n=10, times=[1,2], default_swept_area=lambda: 1, default_hours_fished=lambda: 1):
+def generate_efforts(n=10, tags=["a","b"], times=[1,2], default_swept_area=lambda: 1, default_hours_fished=lambda: 1):
 
 	efforts = []
 
@@ -43,6 +43,7 @@ def generate_efforts(n=10, times=[1,2], default_swept_area=lambda: 1, default_ho
 				cell = cell_i,
 				time = time,
 				gear = gear_i,
+				tag = tags[i % len(tags)],
 				swept_area = default_swept_area(),
 				hours_fished = default_hours_fished() 
 				)
@@ -50,19 +51,4 @@ def generate_efforts(n=10, times=[1,2], default_swept_area=lambda: 1, default_ho
 		efforts.append(util_registry.get_or_register_object(o,id_func=lambda obj: id(obj)))
 
 	return efforts
-
-# Generate Effort Sets.
-def generate_effort_sets(n=1, efforts_per_set=10):
-	effort_sets = []
-
-	for i in range(n):
-		efforts = generate_efforts(efforts_per_set)
-		o = Effort_Set(
-				id = "effort_set_%s" % i,
-				efforts = efforts
-				)
-
-		effort_sets.append(util_registry.get_or_register_object(o))
-
-	return effort_sets
 

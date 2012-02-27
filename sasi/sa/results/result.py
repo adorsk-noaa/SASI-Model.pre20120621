@@ -17,15 +17,19 @@ import sasi.sa.fishing.gear as sa_gear
 metadata = sa_metadata.metadata
 
 table = Table('result', metadata,
-		Column('id', Integer, primary_key=True),
-		Column('time', Integer),
-		Column('cell_id', Integer),
-		Column('habitat_type_id', String, ForeignKey(sa_habitat_type.table.c.id)),
-		Column('gear_id', String, ForeignKey(sa_gear.table.c.id)),
-		Column('feature_id', String, ForeignKey(sa_feature.table.c.id)),
-		Column('field', String),
+		Column('time', Integer, primary_key=True),
+		Column('cell_type', String, primary_key=True),
+		Column('cell_type_id', String, primary_key=True),
+		Column('habitat_type_id', String, primary_key=True),
+		Column('gear_id', String, primary_key=True),
+		Column('feature_id', String, primary_key=True),
+		Column('tag', String, primary_key=True),
+		Column('field', String, primary_key=True),
 		Column('value', Float),
-		ForeignKeyConstraint(['cell_id'], [sa_cell.cell_table.c.id], deferrable=True),
+		ForeignKeyConstraint(['cell_type', 'cell_type_id'], [sa_cell.cell_table.c.type, sa_cell.cell_table.c.type_id], deferrable=True),
+		ForeignKeyConstraint(['habitat_type_id'], [sa_habitat_type.table.c.id], deferrable=True),
+		ForeignKeyConstraint(['gear_id'], [sa_gear.table.c.id], deferrable=True),
+		ForeignKeyConstraint(['feature_id'], [sa_feature.table.c.id], deferrable=True),
 		)
 
 mapper(
@@ -33,7 +37,7 @@ mapper(
 		table,
 		properties = {
 			'cell': relationship(Cell),
-			'habitat_type': relationship(Habitat_Type,),
+			'habitat_type': relationship(Habitat_Type),
 			'gear': relationship(Gear),
 			'feature': relationship(Feature),
 			}

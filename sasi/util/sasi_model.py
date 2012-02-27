@@ -44,7 +44,6 @@ def result_key_to_dict(result_key):
 
 	result_key_dict = {
 			'time': result_key[0],
-			'cell_id': result_key[1].id,
 			'cell_type': result_key[1].type,
 			'cell_type_id': result_key[1].type_id,
 			'substrate': result_key[2].substrate.id,
