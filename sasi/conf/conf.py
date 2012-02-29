@@ -1,3 +1,4 @@
+import sasi.conf.secrets as secrets
 
 conf = {
 		'db_uri' : 'postgresql://sasi:sasi@localhost/dev_sasi',
@@ -8,3 +9,5 @@ conf = {
 		'output_dir': '/home/adorsk/projects/sasi/sasi_model/outputs'
 		}
 
+# Add in secrets.
+conf.update(secrets.secrets)
