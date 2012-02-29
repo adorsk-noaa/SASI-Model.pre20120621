@@ -36,13 +36,19 @@ def main():
 	# Clear habitat_type tables
 	for t in [sa_habitat.table]:
 		session.execute(t.delete())
-	session.commit()
 
 	# Load shapefile
 	sf = ogr.Open(conf.conf['sasi_habitat_file'])
 	
 	# Get feature layer.
 	layer = sf.GetLayer(0)
+
+	# Get layer srs.
+	layer_srs = layer.GetSpatialRef()
+
+	# Set target srs to 4326 (default used by most GIS software).
+	target_srs = ogr.osr.SpatialReference()
+	target_srs.ImportFromEPSG(4326)
 
 	# Get fields.
 	layer_def = layer.GetLayerDefn()
@@ -68,9 +74,16 @@ def main():
 		# Skip blank rows.
 		if (not f_attributes['SOURCE']): continue
 
-		# Get feature geometry. We convert each feature into a multipolygon, since
+		# Get feature geometry. 
+		ogr_g = f.GetGeometryRef()
+
+		# Transform to target_srs.
+		ogr_g = f.GetGeometryRef()
+		ogr_g.TransformTo(target_srs)
+
+		# We convert each feature into a multipolygon, since
 		# we may have a mix of normal polygons and multipolygons.
-		geom = wkb.loads(f.GetGeometryRef().ExportToWkb())
+		geom = wkb.loads(ogr_g.ExportToWkb())
 		if geom.geom_type =='Polygon':
 			geom = MultiPolygon([(geom.exterior.coords, geom.interiors )])
 
