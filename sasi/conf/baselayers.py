@@ -1,11 +1,14 @@
 """
 Layer definitions for map base layers.
 """
+data_dir = "/home/adorsk/projects/sasi/data/gis/baselayers"
+
 coastline = """
+	# Start Coastline.
     LAYER
         NAME "Coastline"
         TYPE POLYGON
-        DATA !!!!
+        DATA %s/%s
 		STATUS DEFAULT
 
 		PROJECTION
@@ -20,16 +23,18 @@ coastline = """
 			STYLE
 				OUTLINECOLOR 32 32 32
 				COLOR 232 232 232
-				LINEWIDTH
 			END
 		END
-	"""
+	END
+	# End Coastline.
+	""" % (data_dir, "simple_east_coast")
 
 state_boundaries = """
+	# Start State Boundaries.
     LAYER
         NAME "State Boundaries"
-        TYPE POLYGON
-        DATA !!!!
+        TYPE LINE
+		DATA %s/%s
 		STATUS DEFAULT
 
 		PROJECTION
@@ -42,16 +47,19 @@ state_boundaries = """
 		CLASS
 			NAME "State Boundaries"
 			STYLE
-				OUTLINECOLOR 32 32 32
-				COLOR 232 232 232
+				COLOR 32 32 32
 			END
 		END
-	"""
+	END
+	# End State Boundaries.
+	""" % (data_dir, "state_bounds")
+
 eez = """
+	# Start EEZ.
     LAYER
         NAME "EEZ"
-        TYPE POLYGON
-        DATA !!!!
+        TYPE LINE
+        DATA %s/%s
 		STATUS DEFAULT
 
 		PROJECTION
@@ -64,17 +72,18 @@ eez = """
 		CLASS
 			NAME "EEZ"
 			STYLE
-				OUTLINECOLOR 32 32 32
 				COLOR 232 232 232
 			END
 		END
-	"""
+	END
+	# End EEZ.
+	""" % (data_dir, "useez")
 
 sasi_domain_boundary = """
     LAYER
         NAME "SASI Domain Outline"
         TYPE POLYGON
-        DATA !!!!
+        DATA %s/%s
 		STATUS DEFAULT
 
 		PROJECTION
@@ -91,7 +100,7 @@ sasi_domain_boundary = """
 				COLOR 232 232 232
 			END
 		END
-
-    END # SASI Domain Outline 
-"""
+    END
+	# End SASI Domain Outline 
+	""" % (data_dir, "sasi_domain_outline")
 
