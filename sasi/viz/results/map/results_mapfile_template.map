@@ -1,7 +1,7 @@
 MAP
     NAME "SASI Results Map"
     STATUS ON
-    SIZE 600 400
+    SIZE {{img_width}} {{img_height}} 
 
 	# SASI Model Domain, extended to account for rotation by -38d.
     EXTENT -82.16 30.0638 -62.0380 46.1056
@@ -13,7 +13,6 @@ MAP
 		"datum=NAD83"
 		"no_defs"
     END
-	  
 	
 	OUTPUTFORMAT
 	  NAME "png"
@@ -26,159 +25,40 @@ MAP
     #
     # Start of layer definitions
     #
+	{% for base_layer in base_layers %}
+		{{base_layer}}
 
-	# Coastline.
-    LAYER
-        NAME "Coastline"
-        TYPE POLYGON
-        DATA !!!!
-		STATUS DEFAULT
-
-		PROJECTION
-			"proj=longlat"
-			"ellps=GRS80"
-			"datum=NAD83"
-			"no_defs"
-		END
-
-		CLASS
-			NAME "Coastline"
-			STYLE
-				OUTLINECOLOR 32 32 32
-				COLOR 232 232 232
-				LINEWIDTH
-			END
-		END
-
-    END # Coastline.
-
-
-	# State boundaries.
-    LAYER
-        NAME "State Boundaries"
-        TYPE POLYGON
-        DATA !!!!
-		STATUS DEFAULT
-
-		PROJECTION
-			"proj=longlat"
-			"ellps=GRS80"
-			"datum=NAD83"
-			"no_defs"
-		END
-
-		CLASS
-			NAME "State Boundaries"
-			STYLE
-				OUTLINECOLOR 32 32 32
-				COLOR 232 232 232
-			END
-		END
-
-    END # State boundaries. 
-
-
-	# EEZ.
-    LAYER
-        NAME "EEZ"
-        TYPE POLYGON
-        DATA !!!!
-		STATUS DEFAULT
-
-		PROJECTION
-			"proj=longlat"
-			"ellps=GRS80"
-			"datum=NAD83"
-			"no_defs"
-		END
-
-		CLASS
-			NAME "EEZ"
-			STYLE
-				OUTLINECOLOR 32 32 32
-				COLOR 232 232 232
-			END
-		END
-
-    END # EEZ. 
-
-
-	# SASI Domain Outline.
-    LAYER
-        NAME "SASI Domain Outline"
-        TYPE POLYGON
-        DATA !!!!
-		STATUS DEFAULT
-
-		PROJECTION
-			"proj=longlat"
-			"ellps=GRS80"
-			"datum=NAD83"
-			"no_defs"
-		END
-
-		CLASS
-			NAME "Domain Outline"
-			STYLE
-				OUTLINECOLOR 32 32 32
-				COLOR 232 232 232
-			END
-		END
-
-    END # SASI Domain Outline 
-
-	# Grid.
-    #LAYER
-    #    NAME 'grid'
-	#	TYPE LINE
-	#	STATUS DEFAULT
-
-	#	PROJECTION
-	#		"proj=longlat"
-	#		"ellps=GRS80"
-	#		"datum=NAD83"
-	#		"no_defs"
-	#	END
-	#	CLASS
-	#		COLOR 255 0 255
-	#		LABEL
-	#			TYPE BITMAP
-	#			SIZE MEDIUM
-	#			COLOR 255 128 89
-	#		END
-	#	END
-	#	GRID
-	#		LABELFORMAT "DD"
-	#		MINARCS 1
-	#		MAXARCS 2
-	#	END
-	#END # Grid.
-
+    {% endfor %}
 	
-	# Data .
-	#LAYER
-    #    NAME "data"
-	#	TYPE POLYGON
-    #    DATA "g3_full"
-	#	STATUS DEFAULT
+	# Start results data.
+	LAYER
+    	NAME "Results Data: {{field}}"
+		TYPE POLYGON
+		DATA {{field_data_source}}
+		STATUS DEFAULT
 
-	#	PROJECTION
-	#		"proj=utm"
-	#		"ellps=GRS80"
-	#		"datum=NAD83"
-	#		"no_defs"
-	#		"units=m"
-	#		"zone=19"
-	#	END
+		PROJECTION
+			"proj=utm"
+			"ellps=GRS80"
+			"datum=NAD83"
+			"no_defs"
+			"units=m"
+			"zone=19"
+		END
 
-	#	CLASS
-	#		NAME "foo"
-	#		STYLE
-	#			COLORRANGE 0 0 0 0 255 0
-	#			DATARANGE -0.60 -0.47 
-	#			RANGEITEM "ZZ"
-	#		END
-	#	END
-	#END # Data .
+		# Start data classes.
+		{% for clazz in classes %}
+		CLASS
+			NAME "{{clazz.name}}"
+			EXPRESSION ({% for crit in clazz.criteria%} ("{{field}}" {{crit.op}} {{crit.value}}) {% endfor %})
+			STYLE
+				COLOR {{crit.red}} {{crit.green}} {{crit.blue}}
+			END
+		END
+		{% endfor %}
+		# End data classes.
+
+	END
+	# End results data.
 
 END # MAP
