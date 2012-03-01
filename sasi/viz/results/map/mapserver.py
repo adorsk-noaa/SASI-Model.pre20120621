@@ -20,6 +20,7 @@ def get_results_map():
 	base_layers = [getattr(baselayers_conf,layer) for layer in ["coastline", "state_boundaries", "eez", "sasi_domain_boundary"]]
 
 	field = 'ZZ'
+	attr_name = 'field_value'
 
 	# Get DB connection string.
 
@@ -28,17 +29,17 @@ def get_results_map():
 	# Generate color classes for field.
 	color_classes = []
 	num_classes = 10
-	field_min = 100
-	field_max = 200
+	field_min = -10.0
+	field_max = 0.0
 	field_range = field_max - field_min
 
 	# Define generic color map.
-	start_hsv = (0,100,0)
-	end_hsv = (0,100,100)
+	start_hsv = (0.0,0.0,0.0)
+	end_hsv = (0.0,0.0,255.0)
 	generic_cm = {'p': [0], 'v': [start_hsv]}
 	for n in range(1, num_classes):
 		position = 1.0 * n/num_classes
-		value = transition3(position, 1.0, start_hsv, end_hsv)
+		value = interpolate_ntuple(0.0, 1.0, start_hsv, end_hsv, position, 3)
 		generic_cm['p'].append(position)
 		generic_cm['v'].append(value)
 
@@ -53,34 +54,32 @@ def get_results_map():
 		field_cm['v'].append(field_value)
 
 	# Create the first color class.	
-	color_classes.append(get_color_class(field=field, cmax=field_cm['p'][0], hsv=field_cm['v'][0]))
+	color_classes.append(get_color_class(attr=attr_name, cmax=field_cm['p'][0], hsv=field_cm['v'][0]))
 
 	# Create the middle color classes.
 	for i in range(1, len(field_cm['p']) - 1):
-		color_classes.append(get_color_class(field=field, cmin=field_cm['p'][i], cmax=field_cm['p'][i+1], hsv=field_cm['v'][i+1]))
+		color_classes.append(get_color_class(attr=attr_name, cmin=field_cm['p'][i], cmax=field_cm['p'][i+1], hsv=field_cm['v'][i+1]))
 
 	# Create the last color class.
-	color_classes.append(get_color_class(field=field, cmin=field_cm['p'][-1], hsv=field_cm['v'][-1]))
-
-	print color_classes
+	color_classes.append(get_color_class(attr_name, cmin=field_cm['p'][-1], hsv=field_cm['v'][-1]))
 
 	# Process mapfile template.
 	field_data_source = """
 	CONNECTIONTYPE POSTGIS
 	CONNECTION "host=localhost dbname=dev_sasi user=sasi password=sasi port=5432"
-	DATA "geom from (select c.geom, c.id as cell_id, sum(r.value) as value from public.result r JOIN public.cell c ON c.id = r.cell_id WHERE r.time = 2009 AND r.tag = 'gc30_all' GROUP BY c.id, r.tag, r.time, c.geom) AS subquery USING UNIQUE cell_id USING srid=4326"
-	"""
+	DATA "geom from (select c.geom, c.id as cell_id, sum(r.value) as %s from public.result r JOIN public.cell c ON c.id = r.cell_id WHERE r.field = '%s' AND r.time = 2010 AND r.tag = 'gc30_all' GROUP BY c.id, r.tag, r.time, c.geom) AS subquery USING UNIQUE cell_id USING srid=4326"
+	""" % (attr_name, field)
 
 	mapfile_template = env.get_template('results.mapfile.tpl')
 	mapfile_content = mapfile_template.render(
 		img_width = 800,
 		img_height = 800,
 		base_layers = base_layers,
-		field = "da_field",
+		field = field,
 		field_data_source = field_data_source,
-		color_classes = []
+		color_classes = color_classes
 	)
-	#print mapfile_content
+	print mapfile_content
 
 
 	# Write processed template to a tmp mapfile.
@@ -93,12 +92,12 @@ def get_results_map():
 
 	# Return image.
 
-def get_color_class(field=None, cmin=None, cmax=None, hsv=None):
+def get_color_class(attr=None, cmin=None, cmax=None, hsv=None):
 
 	# Create criteria strings.
 	criteria = []
-	if cmin: criteria.append({'field': field, 'op': '>=', 'value': cmin})
-	if cmax: criteria.append({'field': field, 'op': '<', 'value': cmax})
+	if cmin: criteria.append({'attr': attr, 'op': '>=', 'value': cmin})
+	if cmax: criteria.append({'attr': attr, 'op': '<', 'value': cmax})
 	criteria_strings = [env.get_template('criterion.tpl').render(criterion=criterion) for criterion in criteria]
 
 	# Set rgb value.
@@ -112,14 +111,12 @@ def get_color_class(field=None, cmin=None, cmax=None, hsv=None):
 		'b': rgb[2]
 	}
 
-def transition(value, maximum, start_point, end_point):
-	return start_point + (end_point - start_point)*value/maximum
+def interpolate(start_x, end_x, start_y, end_y, x):
+	x_range = end_x - start_x
+	y_range = end_y - start_y
+	return start_y + (x - start_x)/x_range * y_range
 
-def transition3(value, maximum, (s1, s2, s3), (e1, e2, e3)):
-	r1= transition(value, maximum, s1, e1)
-	r2= transition(value, maximum, s2, e2)
-	r3= transition(value, maximum, s3, e3)
-	return (r1, r2, r3)
-
+def interpolate_ntuple(start_x, end_x, start_y, end_y, x, n):
+	return tuple([interpolate(start_x, end_x, start_y[i], end_y[i], x)  for i in range(n)])
 
 if __name__ == '__main__': main()

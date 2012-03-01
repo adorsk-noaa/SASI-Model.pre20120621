@@ -41,10 +41,9 @@ MAP
 		# Start data color classes.
 		{% for color_class in color_classes %}
 		CLASS
-			NAME "{{color_class.name}}"
-			EXPRESSION ({{ color_class.criteria | join(' AND ')}})
+			EXPRESSION ({{ color_class['criteria'] | join(' AND ')}})
 			STYLE
-				COLOR {{color_class.red}} {{color_class.green}} {{color_class.blue}}
+				COLOR {{color_class['r']}} {{color_class['g']}} {{color_class['b']}}
 			END
 		END
 		{% endfor %}

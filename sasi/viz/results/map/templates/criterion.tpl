@@ -1,1 +1,1 @@
-("{{criterion['field']}}" {{criterion['op']}} {{criterion['value']}})
+[{{criterion['attr']}}] {{criterion['op']}} {{criterion['value']}}
