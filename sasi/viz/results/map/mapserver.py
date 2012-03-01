@@ -20,9 +20,19 @@ def get_results_map():
 	base_layers = [getattr(baselayers_conf,layer) for layer in ["coastline", "state_boundaries", "eez", "sasi_domain_boundary"]]
 
 	field = 'ZZ'
-	attr_name = 'field_value'
+	attr_name = 'value_sum'
+
+	
+	#data_str = "geom from (select c.geom, c.id as cell_id, sum(r.value) as %s from public.result r JOIN public.cell c ON c.id = r.cell_id WHERE r.field = '%s' AND r.time = 2010 AND r.tag = 'gc30_all' GROUP BY c.id, r.tag, r.time, c.geom) AS subquery USING UNIQUE cell_id USING srid=4327"
+	data_str = "geom from (SELECT sum(anon_1.value) AS value_sum, ST_AsBinary(cell.geom) AS geom, cell.id AS geom_id FROM (SELECT result.time AS time, result.cell_id AS cell_id, result.habitat_type_id AS habitat_type_id, result.gear_id AS gear_id, result.feature_id AS feature_id, result.tag AS tag, result.field AS field, result.value AS value FROM result JOIN cell ON cell.id = result.cell_id JOIN feature ON feature.id = result.feature_id JOIN habitat_type ON habitat_type.id = result.habitat_type_id JOIN substrate ON substrate.id = habitat_type.substrate_id WHERE result.tag = 'gc30_all' AND result.time = 1999 AND cell.type_id = 4119 AND feature.category = '2' AND substrate.id = 'S2' AND field = 'ZZ') AS anon_1 JOIN cell ON cell.id = anon_1.cell_id GROUP BY cell.id) AS subquery USING UNIQUE geom_id USING srid=4326"
 
 	# Get DB connection string.
+	field_data_source = """
+	CONNECTIONTYPE POSTGIS
+	CONNECTION "host=localhost dbname=dev_sasi user=sasi password=sasi port=5432"
+	DATA "%s"
+	""" % (data_str)
+
 
 	# Get raw SQL query for results.
 
@@ -64,12 +74,6 @@ def get_results_map():
 	color_classes.append(get_color_class(attr_name, cmin=field_cm['p'][-1], hsv=field_cm['v'][-1]))
 
 	# Process mapfile template.
-	field_data_source = """
-	CONNECTIONTYPE POSTGIS
-	CONNECTION "host=localhost dbname=dev_sasi user=sasi password=sasi port=5432"
-	DATA "geom from (select c.geom, c.id as cell_id, sum(r.value) as %s from public.result r JOIN public.cell c ON c.id = r.cell_id WHERE r.field = '%s' AND r.time = 2010 AND r.tag = 'gc30_all' GROUP BY c.id, r.tag, r.time, c.geom) AS subquery USING UNIQUE cell_id USING srid=4326"
-	""" % (attr_name, field)
-
 	mapfile_template = env.get_template('results.mapfile.tpl')
 	mapfile_content = mapfile_template.render(
 		img_width = 800,
