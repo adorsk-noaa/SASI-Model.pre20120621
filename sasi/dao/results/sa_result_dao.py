@@ -28,8 +28,7 @@ class SA_Result_DAO(object):
 			for r in results:
 				mapped_results.append({
 					'time': r.time,
-					'cell_type': r.cell.type,
-					'cell_type_id': r.cell.type_id,
+					'cell_id': r.cell.id,
 					'habitat_type_id': r.habitat_type.id,
 					'gear_id': r.gear.id,
 					'feature_id': r.feature.id,

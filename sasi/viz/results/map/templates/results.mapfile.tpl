@@ -31,34 +31,34 @@ MAP
     {% endfor %}
 	
 	# Start results data.
-	#LAYER
-    #	NAME "Results Data: {{field}}"
-	#	TYPE POLYGON
-	#	DATA {{field_data_source}}
-	#	STATUS DEFAULT
+	LAYER
+    	NAME "Results Data: {{field}}"
+		TYPE POLYGON
+		{{field_data_source}}
+		STATUS DEFAULT
 
-	#	PROJECTION
-	#		"proj=utm"
-	#		"ellps=GRS80"
-	#		"datum=NAD83"
-	#		"no_defs"
-	#		"units=m"
-	#		"zone=19"
-	#	END
+		PROJECTION
+			"proj=utm"
+			"ellps=GRS80"
+			"datum=NAD83"
+			"no_defs"
+			"units=m"
+			"zone=19"
+		END
 
-	#	# Start data color classes.
-	#	{% for color_class in color_classes %}
-	#	CLASS
-	#		NAME "{{color_class.name}}"
-	#		EXPRESSION ({% for crit in color_class.criteria%} ("{{field}}" {{crit.op}} {{crit.value}}) {% endfor %})
-	#		STYLE
-	#			COLOR {{crit.red}} {{crit.green}} {{crit.blue}}
-	#		END
-	#	END
-	#	{% endfor %}
-	#	# End data classes.
+		# Start data color classes.
+		{% for color_class in color_classes %}
+		CLASS
+			NAME "{{color_class.name}}"
+			EXPRESSION ({% for crit in color_class.criteria%} ("{{field}}" {{crit.op}} {{crit.value}}) {% endfor %})
+			STYLE
+				COLOR {{crit.red}} {{crit.green}} {{crit.blue}}
+			END
+		END
+		{% endfor %}
+		# End data classes.
 
-	#END
+	END
 	## End results data.
 
 END # MAP

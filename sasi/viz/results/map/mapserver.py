@@ -21,6 +21,17 @@ def get_results_map():
 	# Generate color map.
 
 	# Process mapfile template.
+	field_data_source = """
+CONNECTIONTYPE POSTGIS
+CONNECTION "host=localhost dbname=dev_sasi user=sasi password=sasi port=5432"
+DATA "geom from 
+(
+select c.geom, c.type_id, sum(r.value) as value
+from public.result r JOIN public.cell c ON c.type_id = r.cell_type_id AND c.type = r.cell_type
+WHERE c.type = 'km100' AND r.time = 5 
+GROUP BY c.type_id, r.time
+) AS subquery USING UNIQUE type_id"
+	"""
 
 	mapfile_template = env.get_template('results.mapfile.tpl')
 	mapfile_content = mapfile_template.render(
@@ -28,7 +39,7 @@ def get_results_map():
 		img_height = 200,
 		base_layers = base_layers,
 		field = "da_field",
-		field_data_source = "da field datasource",
+		field_data_source = field_data_source,
 		color_classes = []
 	)
 	print mapfile_content

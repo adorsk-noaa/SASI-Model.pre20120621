@@ -13,14 +13,13 @@ import sasi.sa.fishing.gear as sa_gear
 metadata = sa_metadata.metadata
 
 table = Table('effort', metadata,
-		Column('cell_type', String, primary_key=True),
-		Column('cell_type_id', String, primary_key=True),
+		Column('cell_id', Integer, primary_key=True),
 		Column('time', Integer,primary_key=True),
 		Column('gear_id', String,primary_key=True),
 		Column('tag', String,primary_key=True),
 		Column('swept_area', Float),
 		Column('hours_fished', Float),
-		ForeignKeyConstraint(['cell_type', 'cell_type_id'], [sa_cell.cell_table.c.type, sa_cell.cell_table.c.type_id], deferrable=True),
+		ForeignKeyConstraint(['cell_id'], [sa_cell.cell_table.c.id], deferrable=True),
 		ForeignKeyConstraint(['gear_id'],[sa_gear.table.c.id], deferrable=True),
 		)
 

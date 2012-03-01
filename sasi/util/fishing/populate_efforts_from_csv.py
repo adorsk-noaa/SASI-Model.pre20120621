@@ -44,7 +44,7 @@ def main():
 			print >> sys.stderr, r_counter
 
 		# Get cell.
-		cell = cells_by_100km_id[r['id_100']]
+		cell = cells_by_100km_id[int(r['id_100'])]
 
 		# Get gear.
 		gear_id = "GC%s" % r['gear_code']
