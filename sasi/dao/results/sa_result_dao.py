@@ -1,6 +1,10 @@
 import sasi.conf.conf as conf
 import sasi.sa.results.result as sa_result
 from sasi.habitat.cell import Cell
+from sasi.habitat.feature import Feature
+from sasi.habitat.habitat_type import Habitat_Type
+from sasi.habitat.substrate import Substrate
+from sasi.fishing.gear import Gear
 from sasi.results.result import Result
 
 from sqlalchemy import func
@@ -14,7 +18,7 @@ class SA_Result_DAO(object):
 		self.session = session
 
 	def get_results(self, filters=None):
-		q = self.get_filtered_results_query(filters=filters)
+		q = self.get_results_query(filters=filters)
 		return q.all()
 
 	def save_results(self, results, batch_insert=True, batch_size = 10000, commit=True):
@@ -68,12 +72,14 @@ class SA_Result_DAO(object):
 			if conf.conf['verbose']: print >> sys.stderr, "Saved %s results." % len(results)
 
 	def delete_results(self, filters=None):
-		q = self.get_filtered_results_query(filters=filters)
+		q = self.get_results_query(query_opts=query_opts)
 		q.delete()
 		self.session.commit()
 	
-	def get_filtered_results_query(self, filters=None):
+	def get_results_query(self, filters=None):
 		q = self.session.query(Result)
+
+		# Handle filters.
 		if filters:
 			for f in filters:
 
@@ -93,9 +99,15 @@ class SA_Result_DAO(object):
 
 				# Handle attributes on related objects.
 				if '.' in f['attr']:
-					(obj_class, obj_attr) = f['attr'].split('.')
-					attr_code = "%s.%s" % (obj_class, obj_attr)
-					join_code = "join(%s)" % obj_class
+
+					# Split into parts.
+					parts = f['attr'].split('.')
+
+					# Join on classes.
+					join_code = '.'.join(["join(%s)" % clazz for clazz in parts[:-1]])
+
+					# Add filter for attr on last class.
+					attr_code = "%s.%s" % (parts[-2], parts[-1])
 					value_code = "f['value']"
 
 				# Handle all other attrs.
@@ -122,7 +134,7 @@ class SA_Result_DAO(object):
 		t_c_f = {}
 
 		# Get aliased subquery for selecting filtered results.
-		sub_q = self.get_filtered_results_query(filters=filters).subquery()
+		sub_q = self.get_results_query(filters=filters).subquery()
 		alias = aliased(Result, sub_q)
 
 		# Get field values, grouped by cell, time and field.		
