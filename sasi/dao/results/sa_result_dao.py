@@ -100,7 +100,7 @@ class SA_Result_DAO(object):
 
 				# Handle all other attrs.
 				else: 
-					attr_code = "getattr(Effort, f['attr'])"
+					attr_code = "getattr(Result, f['attr'])"
 					value_code = "f['value']"
 
 				# Assemble filter.
