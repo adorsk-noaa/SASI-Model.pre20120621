@@ -151,6 +151,65 @@ class SA_Result_DAO(object):
 
 		return t_c_f
 
+	# Get field value stats.
+	def get_field_stats(self, filters=None, group_by=[{'attr': 'Cell.type_id'}, {'attr': 'time','name': 'time'}]):
+
+		# Get aliased subquery for selecting filtered results.
+		bq = aliased(Result, self.get_results_query(filters=filters).subquery())
+
+		# Initialize list of query fields to select, and tables to join on.
+		fields = []
+		joins = []
+		group_bys = {}
+
+		# Process group_by parameters.
+		if group_by:
+			for gb in group_by:
+				
+				# Handle attributes on related objects.
+				if '.' in gb['attr']:
+
+					# Split into parts.
+					parts = gb['attr'].split('.')
+
+					# Add classes to joins.
+					joins.extend([clazz for clazz in parts[:-1]])
+
+					# Simplify attr to final part.
+					gb['attr'] = "%s.%s" % (parts[-2], parts[-1])
+
+				# Handle simple attributes from the base query.
+				else: gb['attr'] = "bq.%s" % gb['attr']
+
+				# Set label code.
+				label_code = ""
+				if gb.has_key('name'): label_code = ".label('%s')" % gb['name']
+				
+				# Add to set of group_bys.
+				exec compile("group_bys['%s'] = %s%s" % (gb['attr'], gb['attr'], label_code), '<stats>', 'exec')
+
+		# Define stats we want.
+		stat_fields = ['min', 'max', 'avg', 'sum', 'count']
+
+		# Add stat fields to query fields.
+		for stat_field in stat_fields:
+			exec compile("fields.append(func.%s(bq.value).label('value_%s'))" % (stat_field, stat_field), '<stats>', 'exec')
+
+		# Initialize query w/ fields and group_by fields.
+		q = self.session.query(*(fields + group_bys.values()))
+
+		# Add group by clauses.
+		for gb in group_bys.values():
+			q = q.group_by(gb)
+
+		# Add join clauses, if any.
+		for j in joins:
+			exec compile("q = q.join(%s)" % j, '<stats>', 'exec')
+
+		# Return results.
+		return q.all()
+
+
 	# Get mapserver connection string.
 	def get_mapserver_connection_string(self):
 
