@@ -8,10 +8,7 @@ MAP
 	ANGLE -38.0
 
 	PROJECTION
-		"proj=longlat"
-		"ellps=GRS80"
-		"datum=NAD83"
-		"no_defs"
+		"init=epsg:4326"
     END
 	
 	OUTPUTFORMAT
@@ -38,21 +35,16 @@ MAP
 		STATUS DEFAULT
 
 		PROJECTION
-			"proj=utm"
-			"ellps=GRS80"
-			"datum=NAD83"
-			"no_defs"
-			"units=m"
-			"zone=19"
+			"init=epsg:4326"
 		END
 
 		# Start data color classes.
 		{% for color_class in color_classes %}
 		CLASS
 			NAME "{{color_class.name}}"
-			EXPRESSION ({% for crit in color_class.criteria%} ("{{field}}" {{crit.op}} {{crit.value}}) {% endfor %})
+			EXPRESSION ({{ color_class.criteria | join(' AND ')}})
 			STYLE
-				COLOR {{crit.red}} {{crit.green}} {{crit.blue}}
+				COLOR {{color_class.red}} {{color_class.green}} {{color_class.blue}}
 			END
 		END
 		{% endfor %}
