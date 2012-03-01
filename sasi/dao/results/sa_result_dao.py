@@ -1,5 +1,6 @@
 import sasi.conf.conf as conf
 import sasi.sa.results.result as sa_result
+import sasi.sa.compile as sa_compile
 from sasi.habitat.cell import Cell
 from sasi.habitat.feature import Feature
 from sasi.habitat.habitat_type import Habitat_Type
@@ -134,14 +135,13 @@ class SA_Result_DAO(object):
 		t_c_f = {}
 
 		# Get aliased subquery for selecting filtered results.
-		sub_q = self.get_results_query(filters=filters).subquery()
-		alias = aliased(Result, sub_q)
+		bq = aliased(Result, self.get_results_query(filters=filters).subquery())
 
 		# Get field values, grouped by cell, time and field.		
-		value_sum = func.sum(alias.value).label('value_sum')
-		q = self.session.query(alias.time, alias.field, Cell, value_sum)
+		value_sum = func.sum(bq.value).label('value_sum')
+		q = self.session.query(bq.time, bq.field, Cell, value_sum)
 		q = q.join(Cell)
-		q = q.group_by(alias.time).group_by(alias.field).group_by(Cell)
+		q = q.group_by(bq.time).group_by(bq.field).group_by(Cell)
 
 		# Assemble results into c_t dictionary.
 		for row in q.all():
@@ -150,4 +150,34 @@ class SA_Result_DAO(object):
 			t_c_f[row.time][row.Cell][row.field] = row.value_sum
 
 		return t_c_f
+
+	# Get a mapserver data query string.
+	def get_mapserver_data_string(self, filters=None, srid=4326):
+
+		# Get base query as subquery.
+		bq = aliased(Result, self.get_results_query(filters=filters).subquery())
+
+		# Define labeled query components.
+		# NOTE: select geometry as 'RAW' in order to override default 'AsBinary'.
+		value_sum = func.sum(bq.value).label('value_sum')
+		geom = Cell.geom.RAW.label('geom')
+		geom_id = Cell.id.label('geom_id')
+
+		# Get value_sum, cell id, cell geometry, grouped by cell.
+		q = self.session.query(value_sum, geom, geom_id).join(Cell)
+		q = q.group_by(geom_id)
+
+		# Get raw sql for query.
+		q_raw_sql = sa_compile.query_to_raw_sql(q)
+
+		# Add query into mapserver data string.
+		mapserver_data_str = "geom from (%s) AS subquery USING UNIQUE geom_id USING srid=%s" % (q_raw_sql, srid)
+
+		return mapserver_data_str
+
+		
+
+
+		
+
 
