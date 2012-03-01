@@ -29,12 +29,13 @@ class SA_Result_Set_Test(BaseTest):
 				if not o_key[0] in ['Result']:
 					s.add(o)
 			except: pass
+		s.commit()
 
 		# Test DAO operations.
 		dao.save_results(results)
 		fetched_results = dao.get_results()
 		values_by_t_c_f = dao.get_values_by_t_c_f()
-
+		dao.get_mapserver_data_string()
 		self.failUnless(True)
 
 if __name__ == '__main__':
