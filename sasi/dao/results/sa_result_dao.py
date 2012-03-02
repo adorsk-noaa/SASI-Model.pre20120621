@@ -152,7 +152,7 @@ class SA_Result_DAO(object):
 		return t_c_f
 
 	# Get field value stats.
-	def get_field_stats(self, filters=None, group_by=[{'attr': 'Cell.type_id'}, {'attr': 'time','name': 'time'}]):
+	def get_field_stats(self, filters=None, group_by=[]):
 
 		# Get aliased subquery for selecting filtered results.
 		bq = aliased(Result, self.get_results_query(filters=filters).subquery())

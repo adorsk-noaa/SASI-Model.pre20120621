@@ -13,7 +13,6 @@ def query_to_raw_sql(q):
 			v = v.encode(enc)
 		if isinstance(v, str):
 			v = comp.render_literal_value(v, str)
-			print v
 		params[k] = v
 
 	raw_sql = (comp.string.encode(enc) % params).decode(enc)
