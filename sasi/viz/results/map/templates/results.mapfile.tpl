@@ -29,7 +29,7 @@ MAP
 	
 	# Start results data.
 	LAYER
-    	NAME "Results Data: {{field}}"
+    	NAME "Results Data"
 		TYPE POLYGON
 		{{field_data_source}}
 		STATUS DEFAULT
