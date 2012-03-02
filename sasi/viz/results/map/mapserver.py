@@ -10,6 +10,10 @@ from sasi.dao.results.sa_result_dao import SA_Result_DAO
 from jinja2 import Environment, PackageLoader
 import colorsys
 import bisect
+import os
+from PIL import Image
+from cStringIO import StringIO
+import mapscript
 
 env = Environment(loader=PackageLoader('sasi.viz.results.map', 'templates'))
 
@@ -99,18 +103,27 @@ def get_results_map(result_dao=None, filters=None, colormap=None):
 		field_data_source = field_data_source,
 		color_classes = color_classes
 	)
-	print mapfile_content
-
 
 	# Write processed template to a tmp mapfile.
+	tmp_file_path = "/tmp/%s.map" % os.getpid()
+	tmp_file = open(tmp_file_path, 'wb')
+	tmp_file.write(mapfile_content)
+	tmp_file.close()
 
 	# Create map image from template.
+	ms_map = mapscript.mapObj(tmp_file_path)
+	map_img = ms_map.draw()
 
 	# Remove tmp mapfile.
+	os.remove(tmp_file_path)
 
-	# Crop map image.
+	# Crop map image via PIL.
+	im = Image.open(StringIO(map_img.getBytes()))
+	(w,h) = im.size
+	cropped_im = im.crop(tuple([int(d) for d in [w * .33, 0, w * .70, h]]))
 
 	# Return image.
+	cropped_im.show()
 
 def get_color_class(attr=None, cmin=None, cmax=None, hsv=None):
 
