@@ -63,7 +63,7 @@ if __name__ == '__main__':
 		{
 			'attr': 'tag',
 			'op': '==',
-			'value': "legacy_realized_efforts"
+			'value': "legacy_realized_a"
 			},
 		{
 			'attr': 'Gear.id',

@@ -7,6 +7,9 @@ MAP
     EXTENT -82.16 30.0638 -62.0380 46.1056
 	ANGLE -38.0
 
+	# Background color (water).
+	IMAGECOLOR 229 237 255
+
 	PROJECTION
 		"init=epsg:4326"
     END

@@ -12,17 +12,15 @@ coastline = """
 		STATUS DEFAULT
 
 		PROJECTION
-			"proj=longlat"
-			"ellps=GRS80"
-			"datum=NAD83"
-			"no_defs"
+			"init=epsg:4326"
 		END
 
 		CLASS
 			NAME "Coastline"
 			STYLE
-				OUTLINECOLOR 32 32 32
-				COLOR 232 232 232
+				OUTLINECOLOR 51 51 51
+				WIDTH .3
+				COLOR 199 215 158
 			END
 		END
 	END
@@ -47,7 +45,8 @@ state_boundaries = """
 		CLASS
 			NAME "State Boundaries"
 			STYLE
-				COLOR 32 32 32
+				COLOR 108 131 61
+				WIDTH .5
 			END
 		END
 	END
@@ -63,16 +62,15 @@ eez = """
 		STATUS DEFAULT
 
 		PROJECTION
-			"proj=longlat"
-			"ellps=GRS80"
-			"datum=NAD83"
-			"no_defs"
+			"init=epsg:4326"
 		END
 
 		CLASS
 			NAME "EEZ"
 			STYLE
-				COLOR 232 232 232
+				COLOR 51 51 51
+				WIDTH .5
+				PATTERN 5 5 END
 			END
 		END
 	END
@@ -96,8 +94,8 @@ sasi_domain_boundary = """
 		CLASS
 			NAME "Domain Outline"
 			STYLE
-				OUTLINECOLOR 32 32 32
-				COLOR 232 232 232
+				OUTLINECOLOR 51 51 51
+				WIDTH 1
 			END
 		END
     END

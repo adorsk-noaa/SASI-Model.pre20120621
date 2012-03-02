@@ -35,7 +35,7 @@ def get_results_map(result_dao=None, filters=None, colormap=None):
 	global env
 
 	# Get baselayers.
-	base_layers = [getattr(baselayers_conf,layer) for layer in ["coastline", "state_boundaries", "eez", "sasi_domain_boundary"]]
+	base_layers = [getattr(baselayers_conf,layer) for layer in ["coastline", "state_boundaries", "eez"]]
 
 
 	# Get DB connection strings.
@@ -120,7 +120,7 @@ def get_results_map(result_dao=None, filters=None, colormap=None):
 	# Crop map image via PIL.
 	im = Image.open(StringIO(map_img.getBytes()))
 	(w,h) = im.size
-	cropped_im = im.crop(tuple([int(d) for d in [w * .33, 0, w * .70, h]]))
+	cropped_im = im.crop(tuple([int(d) for d in [w * .33, 0, w * .70, h*.88]]))
 
 	# Return image.
 	cropped_im.show()
