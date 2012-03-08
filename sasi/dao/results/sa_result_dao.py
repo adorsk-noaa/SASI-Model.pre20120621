@@ -8,8 +8,11 @@ from sasi.habitat.substrate import Substrate
 from sasi.fishing.gear import Gear
 from sasi.results.result import Result
 
+import sasi.dao.sa as sa_dao
+
 from sqlalchemy import func
 from sqlalchemy.orm import aliased
+
 
 import sys
 
@@ -210,29 +213,8 @@ class SA_Result_DAO(object):
 		return q.all()
 
 
-	# Get mapserver connection string.
 	def get_mapserver_connection_string(self):
-
-		# Get engine associated with the session.
-		engine = self.session.bind.engine
-
-		# Map mapserver connection parts to SA's url elements.
-		mapserver_to_sa = {
-				"host": "host",
-				"dbname" : "database",
-				"user": "username",
-				"password": "password",
-				"port": "port"
-				}
-
-		# Add connection parts if present.
-		connection_parts = []
-		for ms_name, sa_name in mapserver_to_sa.items():
-			sa_value = getattr(engine.url, sa_name)
-			if sa_value: connection_parts.append("%s=%s" % (ms_name, sa_value))
-
-		# Return the combined connection string.
-		return " ".join(connection_parts)
+		return sa_dao.get_mapserver_connection_string(self)
 
 	# Get a mapserver data query string.
 	def get_mapserver_data_string(self, filters=None, srid=4326):
