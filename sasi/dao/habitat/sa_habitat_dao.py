@@ -1,30 +1,25 @@
 import sasi.sa.session as sa_session
 import sasi.sa.habitat.habitat as sa_habitat
+import sasi.dao.sa as sa_dao
+import sasi.sa.compile as sa_compile
 from sasi.dao.habitat.habitat_dao import Habitat_DAO
 from sasi.habitat.habitat import Habitat
+from sasi.habitat.habitat_type import Habitat_Type
+
+from sqlalchemy.orm import aliased
 
 
 class SA_Habitat_DAO(Habitat_DAO):
 
-	def __init__(self): pass
+	def __init__(self, session=None):
+		self.session = session
 
-	def get_session(self):
-		return sa_session.get_session()
+	def get_habitats(self, filters=None):
 
-	def load_habitats(self, ids=None):
-		session = self.get_session()
+		# Get query for filters.
+		q = self.get_query(filters)
 
-		habitats = []
-
-		# If ids were given, filter by ids.
-		if ids:
-			habitats = session.query(Habitat).filter(Habitat.id.in_(ids)).all()
-
-		# Otherwise load all habitats
-		else:
-			habitats = session.query(Habitat).all()
-
-		return habitats
+		return q.all()
 
 	# Get query for habitats.
 	def get_query(self, filters=None):
@@ -92,14 +87,16 @@ class SA_Habitat_DAO(Habitat_DAO):
 
 		# Define labeled query components.
 		# NOTE: select geometry as 'RAW' in order to override default 'AsBinary'.
-		geom = Habitat.geom.RAW.label('geom')
-		geom_id = Habitat.id.label('geom_id')
+		geom = bq.geom.RAW.label('geom')
+		geom_id = bq.id.label('geom_id')
+		substrate_id = Habitat_Type.substrate_id.label('substrate_id')
+		energy = Habitat_Type.energy.label('energy')
 
-		# Get habitat id, geometry.
-		q = self.session.query(bq, geom, geom_id)
+		# Get habitat id, geometry, substrate type, and energy.
+		q = self.session.query(bq, geom, geom_id, substrate_id, energy).join(Habitat_Type)
 
 		# Get raw sql for query.
-		q_raw_sql = sa_compile.query_to_raw_sql(q)
+		q_raw_sql = sa_compile.query_to_raw_sql(q.with_labels())
 
 		# Add query into mapserver data string.
 		mapserver_data_str = "geom from (%s) AS subquery USING UNIQUE geom_id USING srid=%s" % (q_raw_sql, srid)
