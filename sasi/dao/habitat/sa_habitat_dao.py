@@ -4,6 +4,8 @@ import sasi.dao.sa as sa_dao
 import sasi.sa.compile as sa_compile
 from sasi.dao.habitat.habitat_dao import Habitat_DAO
 from sasi.habitat.habitat import Habitat
+from sasi.habitat.substrate import Substrate
+from sasi.habitat.feature import Feature
 from sasi.habitat.habitat_type import Habitat_Type
 
 from sqlalchemy.orm import aliased

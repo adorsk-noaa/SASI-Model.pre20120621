@@ -13,7 +13,7 @@ def get_map_image_from_wms(wms_parameters=None, habitat_dao=None, filters=None):
 
 	# Build WMS request from parameters.
 	wms_request = mapscript.OWSRequest()
-	for k, v in wms_parameters.items():
+	for k, v in wms_parameters:
 		wms_request.setParameter(k,v)
 
 	# Load the parameters into the map.
