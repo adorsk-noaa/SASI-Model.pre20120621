@@ -7,6 +7,7 @@ from sasi.habitat.habitat import Habitat
 from sasi.habitat.habitat_type import Habitat_Type
 
 from sqlalchemy.orm import aliased
+from sqlalchemy.sql import func
 
 
 class SA_Habitat_DAO(Habitat_DAO):
@@ -86,19 +87,20 @@ class SA_Habitat_DAO(Habitat_DAO):
 		bq = aliased(Habitat, self.get_query(filters=filters).subquery())
 
 		# Define labeled query components.
-		# NOTE: select geometry as 'RAW' in order to override default 'AsBinary'.
-		geom = bq.geom.RAW.label('geom')
+		# NOTE: for compatibility w/ PostGIS+Mapserver, select geometry as 'RAW' and explicitly specify SRID 4326.
+		geom = func.ST_SetSRID(bq.geom.RAW, 4326).label('hab_geom')
 		geom_id = bq.id.label('geom_id')
 		substrate_id = Habitat_Type.substrate_id.label('substrate_id')
 		energy = Habitat_Type.energy.label('energy')
 
 		# Get habitat id, geometry, substrate type, and energy.
-		q = self.session.query(bq, geom, geom_id, substrate_id, energy).join(Habitat_Type)
+		q = self.session.query(geom, geom_id, substrate_id, energy).join(Habitat_Type)
 
 		# Get raw sql for query.
-		q_raw_sql = sa_compile.query_to_raw_sql(q.with_labels())
+		#q_raw_sql = sa_compile.query_to_raw_sql(q.with_labels())
+		q_raw_sql = sa_compile.query_to_raw_sql(q)
 
 		# Add query into mapserver data string.
-		mapserver_data_str = "geom from (%s) AS subquery USING UNIQUE geom_id USING srid=%s" % (q_raw_sql, srid)
+		mapserver_data_str = "hab_geom from (%s) AS subquery USING UNIQUE geom_id USING srid=%s" % (q_raw_sql, srid)
 
 		return mapserver_data_str
