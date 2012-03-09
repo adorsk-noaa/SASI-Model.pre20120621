@@ -78,6 +78,39 @@ class SA_Habitat_DAO(Habitat_DAO):
 		# Return query.
 		return q
 
+	# Get substrates for given habitats.
+	def get_substrates_for_habitats(self, filters=None):
+
+		# Get base query as subquery.
+		bq = self.get_query(filters=filters).subquery()
+
+		# Select related substrates.
+		q = self.session.query(Substrate).join(Habitat_Type).join(bq)
+
+		return q.all()
+
+	# Get energies for given habitats.
+	def get_energys_for_habitats(self, filters=None):
+
+		# Get base query as subquery.
+		bq = self.get_query(filters=filters).subquery()
+
+		# Select energy from subquery.
+		q = self.session.query(Habitat_Type.energy).join(bq).group_by(Habitat_Type.energy)
+
+		return q.all()
+	
+	# Get habitat types for given habitats.
+	def get_habitat_types_for_habitats(self, filters=None):
+
+		# Get base query as subquery.
+		bq = self.get_query(filters=filters).subquery()
+
+		# Select related habitat tpyes.
+		q = self.session.query(Habitat_Type).join(bq)
+
+		return q.all()
+
 	# Get a mapserver connection string.
 	def get_mapserver_connection_string(self):
 		return sa_dao.get_mapserver_connection_string(self)

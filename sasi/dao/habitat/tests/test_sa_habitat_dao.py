@@ -10,6 +10,9 @@ class SA_Habitat_DAOTest(BaseTest):
 		habitats = habitat_dao.get_habitats()
 		connection_str = habitat_dao.get_mapserver_connection_string()
 		data_str = habitat_dao.get_mapserver_data_string()
+		substrates = habitat_dao.get_substrates_for_habitats()
+		energies = habitat_dao.get_energys_for_habitats()
+		habitat_types = habitat_dao.get_habitat_types_for_habitats()
 
 	def get_session(self):
 		return self.session
