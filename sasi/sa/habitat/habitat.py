@@ -19,7 +19,7 @@ table = Table('habitat', metadata,
 		Column('z', Float),
 		Column('area', Float),
 		GeometryExtensionColumn('geom', MultiPolygon(2)),
-		ForeignKeyConstraint(['habitat_type_id'],[sa_habitat_type.table.c.id], deferrable=True),
+		ForeignKeyConstraint(['habitat_type_id'],[sa_habitat_type.habitat_type_table.c.id], deferrable=True),
 		)
 
 GeometryDDL(table)
