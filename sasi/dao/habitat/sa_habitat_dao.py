@@ -1,8 +1,8 @@
+from sasi.dao.habitat.habitat_dao import Habitat_DAO
 import sasi.sa.session as sa_session
-import sasi.sa.habitat.habitat as sa_habitat
 import sasi.dao.sa as sa_dao
 import sasi.sa.compile as sa_compile
-from sasi.dao.habitat.habitat_dao import Habitat_DAO
+import sasi.sa.habitat.habitat_type as sa_habitat_type
 from sasi.habitat.habitat import Habitat
 from sasi.habitat.substrate import Substrate
 from sasi.habitat.feature import Feature
@@ -19,19 +19,26 @@ class SA_Habitat_DAO(Habitat_DAO):
 
 	def get_habitats(self, filters=None):
 
-		# Get query for filters.
-		q = self.get_query(filters)
+		# Get filtered query.
+		q = self.get_filtered_query(filters=filters)
 
 		return q.all()
 
-	# Get query for habitats.
-	def get_query(self, filters=None):
+	# Get filtered query for habitats.
+	def get_filtered_query(self, q=None, filters=None):
 
 		# Initialize base query.
-		q = self.session.query(Habitat)
+		if not q:
+			q = self.session.query(Habitat)
 
 		# Handle filters.
 		if filters:
+
+			# Initialize alias registry and joins list.
+			alias_registry = {}
+			joins_registry = {}
+			ordered_joins = []
+
 			for f in filters:
 
 				# Default operator is 'in'.
@@ -48,32 +55,51 @@ class SA_Habitat_DAO(Habitat_DAO):
 				else:
 					op_code = " %s " % f['op']
 
-				# Handle attributes on related objects.
-				if '.' in f['attr']:
+				# Handle plain attributes.
+				if '.' not in f['attr']:
+					f['attr'] = "Habitat." + f['attr']
 
-					# Split into parts.
-					parts = f['attr'].split('.')
+				# Split into parts.
+				parts = f['attr'].split('.')
 
-					# Join on classes.
-					join_code = '.'.join(["join(%s)" % clazz for clazz in parts[:-1]])
+				# Register aliases for classes.
 
-					# Add filter for attr on last class.
-					attr_code = "%s.%s" % (parts[-2], parts[-1])
-					value_code = "f['value']"
+				for i in range(len(parts) - 1):
 
-				# Handle all other attrs.
-				else: 
-					attr_code = "getattr(Habitat, f['attr'])"
-					value_code = "f['value']"
+					p = parts[i]
+
+					# 'Habitat_Type.Feature' attribute gets special handling for join,
+					# since many-to-many relationships must use explicit joins.
+					if p == 'Feature' and i > 0 and parts[i-1] == 'Habitat_Type':
+						alias_registry['Feature'] = Feature
+						ht_clazz = alias_registry['Habitat_Type']
+						if not joins_registry.has_key(ht_clazz.features):
+							joins_registry[ht_clazz.features] = ht_clazz.features
+							ordered_joins.append(ht_clazz.features)
+					else:
+						# Get class for the part.
+						# This will set a variable 'clazz'.
+						exec compile("clazz = eval(p)", '<query>', 'exec')
+						if not alias_registry.has_key(p):
+							alias_registry[p] = aliased(clazz)
+							joins_registry[p] = alias_registry[p]
+							ordered_joins.append(alias_registry[p])
+
+				# Add filter for attr on last class.
+				attr_code = "alias_registry['%s'].%s" % (parts[-2], parts[-1])
+				value_code = "f['value']"
 
 				# Assemble filter.
 				filter_code = "q = q.filter(%s%s(%s))" % (attr_code, op_code, value_code)
-				if join_code: filter_code += ".%s" % join_code
 
-				
 				# Compile and execute filter code to create filter.
 				compiled_filter_code = compile(filter_code, '<query>', 'exec')
 				exec compiled_filter_code
+
+			# Add joins for filters.
+			for j in ordered_joins:
+				q = q.join(j)
+
 
 		# Return query.
 		return q
@@ -81,44 +107,44 @@ class SA_Habitat_DAO(Habitat_DAO):
 	# Get substrates for given habitats.
 	def get_substrates_for_habitats(self, filters=None):
 
-		# Get base query as subquery.
-		bq = self.get_query(filters=filters).subquery()
+		# Define filtered base query.
+		bq = self.get_filtered_query(q=self.session.query(Habitat_Type.substrate).join(Habitat, aliased=True), filters=filters)
 
-		# Select related substrates.
-		q = self.session.query(Substrate).join(Habitat_Type).join(bq)
+		# Define base query.
+		q = self.session.query(Substrate).join(bq.subquery(), aliased=True).group_by(Substrate)
 
 		return q.all()
 
 	# Get energies for given habitats.
 	def get_energys_for_habitats(self, filters=None):
 
-		# Get base query as subquery.
-		bq = self.get_query(filters=filters).subquery()
+		# Define base query.
+		q = self.session.query(Habitat_Type.energy).join(Habitat).group_by(Habitat_Type.energy)
 
-		# Select energy from subquery.
-		q = self.session.query(Habitat_Type.energy).join(bq).group_by(Habitat_Type.energy)
+		# Apply filters.
+		q = self.get_filtered_query(q=q, filters=filters)
 
 		return q.all()
 	
 	# Get habitat types for given habitats.
 	def get_habitat_types_for_habitats(self, filters=None):
 
-		# Get base query as subquery.
-		bq = self.get_query(filters=filters).subquery()
+		# Define base query.
+		q = self.session.query(Habitat_Type).join(Habitat).group_by(Habitat_Type)
 
-		# Select related habitat tpyes.
-		q = self.session.query(Habitat_Type).join(bq)
+		# Apply filters.
+		q = self.get_filtered_query(q=q, filters=filters)
 
 		return q.all()
 
 	# Get features for given habitats.
 	def get_features_for_habitats(self, filters=None):
 
-		# Get base query as subquery.
-		bq = self.get_query(filters=filters).subquery()
+		# Define filtered base query.
+		bq = self.get_filtered_query(q=self.session.query(Habitat_Type.id).join(Habitat), filters=filters)
 
-		# Select related features.
-		q = self.session.query(Feature).join(Habitat_Type).join(bq)
+		# Define base query.
+		q = self.session.query(Feature).join(Habitat_Type.features, bq.subquery()).group_by(Feature)
 
 		return q.all()
 
@@ -129,21 +155,20 @@ class SA_Habitat_DAO(Habitat_DAO):
 	# Get a mapserver data query string.
 	def get_mapserver_data_string(self, filters=None, srid=4326):
 
-		# Get base query as subquery.
-		bq = aliased(Habitat, self.get_query(filters=filters).subquery())
-
 		# Define labeled query components.
 		# NOTE: for compatibility w/ PostGIS+Mapserver, select geometry as 'RAW' and explicitly specify SRID 4326.
-		geom = func.ST_SetSRID(bq.geom.RAW, 4326).label('hab_geom')
-		geom_id = bq.id.label('geom_id')
+		geom = func.ST_SetSRID(Habitat.geom.RAW, 4326).label('hab_geom')
+		geom_id = Habitat.id.label('geom_id')
 		substrate_id = Habitat_Type.substrate_id.label('substrate_id')
 		energy = Habitat_Type.energy.label('energy')
 
-		# Get habitat id, geometry, substrate type, and energy.
-		q = self.session.query(geom, geom_id, substrate_id, energy).join(Habitat_Type)
+		# Define base query.
+		q = self.session.query(geom, geom_id, substrate_id, energy).select_from(Habitat).join(Habitat_Type)
+
+		# Apply filters.
+		q = self.get_filtered_query(q=q, filters=filters)
 
 		# Get raw sql for query.
-		#q_raw_sql = sa_compile.query_to_raw_sql(q.with_labels())
 		q_raw_sql = sa_compile.query_to_raw_sql(q)
 
 		# Add query into mapserver data string.

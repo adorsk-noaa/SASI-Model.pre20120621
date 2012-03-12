@@ -30,7 +30,7 @@ mapper(
 		Habitat_Type,
 		habitat_type_table,
 		properties = {
-		'substrate': relationship(Substrate, lazy='joined'),
-		'features': relationship(Feature, secondary=habitat_type_feature_table, lazy='subquery')
+		'substrate': relationship(Substrate),
+		'features': relationship(Feature, secondary=habitat_type_feature_table)
 		})
 
