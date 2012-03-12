@@ -111,6 +111,17 @@ class SA_Habitat_DAO(Habitat_DAO):
 
 		return q.all()
 
+	# Get features for given habitats.
+	def get_features_for_habitats(self, filters=None):
+
+		# Get base query as subquery.
+		bq = self.get_query(filters=filters).subquery()
+
+		# Select related features.
+		q = self.session.query(Feature).join(Habitat_Type).join(bq)
+
+		return q.all()
+
 	# Get a mapserver connection string.
 	def get_mapserver_connection_string(self):
 		return sa_dao.get_mapserver_connection_string(self)
