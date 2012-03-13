@@ -2,7 +2,7 @@ from sasi.dao.habitat.habitat_dao import Habitat_DAO
 import sasi.sa.session as sa_session
 import sasi.dao.sa as sa_dao
 import sasi.sa.compile as sa_compile
-import sasi.sa.habitat.habitat_type as sa_habitat_type
+import sasi.sa.habitat.habitat_metadata as sa_habitat_metadata
 from sasi.habitat.habitat import Habitat
 from sasi.habitat.substrate import Substrate
 from sasi.habitat.feature import Feature
