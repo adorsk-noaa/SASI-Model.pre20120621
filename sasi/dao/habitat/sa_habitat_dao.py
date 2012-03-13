@@ -81,9 +81,16 @@ class SA_Habitat_DAO(Habitat_DAO):
 						# This will set a variable 'clazz'.
 						exec compile("clazz = eval(p)", '<query>', 'exec')
 						if not alias_registry.has_key(p):
-							alias_registry[p] = aliased(clazz)
-							joins_registry[p] = alias_registry[p]
-							ordered_joins.append(alias_registry[p])
+
+							# Register aliases for non-Habitat classes.
+							if not p == 'Habitat':
+								alias_registry[p] = aliased(clazz)
+								joins_registry[p] = alias_registry[p]
+								ordered_joins.append(alias_registry[p])
+							# For Habitat, use the class itelf. Otherwise the habitat table will appear twice,
+							# once in the base query, and once in the filters.
+							else:
+								alias_registry[p] = Habitat
 
 				# Add filter for attr on last class.
 				attr_code = "alias_registry['%s'].%s" % (parts[-2], parts[-1])
