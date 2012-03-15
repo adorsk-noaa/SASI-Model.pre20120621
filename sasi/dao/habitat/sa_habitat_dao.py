@@ -139,3 +139,6 @@ class SA_Habitat_DAO(Habitat_DAO, SA_DAO):
 		else:
 			return super(SA_Habitat_DAO, self).query_add_class(q, clazz)
 
+
+
+
