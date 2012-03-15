@@ -26,7 +26,7 @@ table = Table('result', metadata,
 		Column('field', String, primary_key=True),
 		Column('value', Float),
 		ForeignKeyConstraint(['cell_id'], [sa_cell.cell_table.c.id], deferrable=True),
-		ForeignKeyConstraint(['habitat_type_id'], [sa_habitat_type.table.c.id], deferrable=True),
+		ForeignKeyConstraint(['habitat_type_id'], [sa_habitat_type.habitat_type_table.c.id], deferrable=True),
 		ForeignKeyConstraint(['gear_id'], [sa_gear.table.c.id], deferrable=True),
 		ForeignKeyConstraint(['feature_id'], [sa_feature.table.c.id], deferrable=True),
 		)
