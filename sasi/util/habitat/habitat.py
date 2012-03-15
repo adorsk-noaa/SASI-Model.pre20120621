@@ -23,7 +23,7 @@ def generate_substrates(n):
 	return substrates
 
 
-def generate_features(n):
+def generate_features(n=10):
 
 	features = []
 
@@ -65,6 +65,7 @@ def generate_habitat_types():
 		o = Habitat_Type(
 				energy = energy,
 				substrate = substrate,
+				features = generate_features()
 				)
 
 		habitat_types.append(util_registry.get_or_register_object(o))

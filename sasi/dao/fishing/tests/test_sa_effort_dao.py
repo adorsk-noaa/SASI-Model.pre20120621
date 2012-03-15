@@ -31,8 +31,9 @@ class SA_Effort_Set_Test(BaseTest):
 			except: pass
 
 		# Test DAO operations.
+		tag_filter = {'attr': 'Effort.tag', 'op': '==', 'value': 'a'}
 		dao.save_efforts(efforts)
-		fetched_efforts = dao.get_efforts()
+		fetched_efforts = dao.get_efforts(filters=[tag_filter])
 
 		self.failUnless(True)
 

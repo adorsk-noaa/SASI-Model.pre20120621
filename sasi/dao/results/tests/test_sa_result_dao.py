@@ -33,10 +33,16 @@ class SA_Result_Set_Test(BaseTest):
 
 		# Test DAO operations.
 		dao.save_results(results)
-		fetched_results = dao.get_results()
+		fetched_results = dao.get_results(filters=[
+			{
+				'attr': 'Result.tag',
+				'op': '==',
+				'value': 'a'
+				}
+			])
 		values_by_t_c_f = dao.get_values_by_t_c_f()
 		dao.get_mapserver_data_string()
-		fstats = dao.get_field_stats(group_by=[{'attr': 'Cell.type_id'}, {'attr': 'time'}, {'attr': 'field', 'name': 'field'}])
+		#fstats = dao.get_field_stats(group_by=[{'attr': 'Cell.type_id'}, {'attr': 'time'}, {'attr': 'field', 'name': 'field'}])
 		self.failUnless(True)
 
 if __name__ == '__main__':

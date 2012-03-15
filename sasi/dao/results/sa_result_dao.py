@@ -1,4 +1,5 @@
 import sasi.conf.conf as conf
+from sasi.dao.sa_dao import SA_DAO
 import sasi.sa.results.result as sa_result
 import sasi.sa.compile as sa_compile
 from sasi.habitat.cell import Cell
@@ -16,13 +17,19 @@ from sqlalchemy.orm import aliased
 
 import sys
 
-class SA_Result_DAO(object):
+class SA_Result_DAO(SA_DAO):
 
 	def __init__(self, session=None):
-		self.session = session
+
+		# Create class registry for SA_DAO parent class.
+		class_registry = {}
+		for clazz in [Cell, Feature, Habitat_Type, Substrate, Gear, Result]:
+			class_registry[clazz.__name__] = clazz
+
+		SA_DAO.__init__(self, session, primary_class=Result, class_registry=class_registry)
 
 	def get_results(self, filters=None):
-		q = self.get_results_query(filters=filters)
+		q = self.get_filtered_query(filters=filters)
 		return q.all()
 
 	def save_results(self, results, batch_insert=True, batch_size = 10000, commit=True):
@@ -76,61 +83,10 @@ class SA_Result_DAO(object):
 			if conf.conf['verbose']: print >> sys.stderr, "Saved %s results." % len(results)
 
 	def delete_results(self, filters=None):
-		q = self.get_results_query(query_opts=query_opts)
+		q = self.get_filtered_query(filters=filters)
 		q.delete()
 		self.session.commit()
 	
-	def get_results_query(self, filters=None):
-		q = self.session.query(Result)
-
-		# Handle filters.
-		if filters:
-			for f in filters:
-
-				# Default operator is 'in'.
-				if not f.has_key('op'): f['op'] = 'in'
-
-				attr_code = ""
-				join_code = ""
-				op_code = ""
-				value_code = ""
-
-				# Handle operators.
-				if f['op'] == 'in':
-					op_code = '.in_'
-				else:
-					op_code = " %s " % f['op']
-
-				# Handle attributes on related objects.
-				if '.' in f['attr']:
-
-					# Split into parts.
-					parts = f['attr'].split('.')
-
-					# Join on classes.
-					join_code = '.'.join(["join(%s)" % clazz for clazz in parts[:-1]])
-
-					# Add filter for attr on last class.
-					attr_code = "%s.%s" % (parts[-2], parts[-1])
-					value_code = "f['value']"
-
-				# Handle all other attrs.
-				else: 
-					attr_code = "getattr(Result, f['attr'])"
-					value_code = "f['value']"
-
-				# Assemble filter.
-				filter_code = "q = q.filter(%s%s(%s))" % (attr_code, op_code, value_code)
-				if join_code: filter_code += ".%s" % join_code
-
-				
-				# Compile and execute filter code to create filter.
-				compiled_filter_code = compile(filter_code, '<query>', 'exec')
-				exec compiled_filter_code
-
-		# Return query.
-		return q
-
 	# Get field values by cell, time, and field.
 	def get_values_by_t_c_f(self, filters=None):
 
@@ -138,7 +94,7 @@ class SA_Result_DAO(object):
 		t_c_f = {}
 
 		# Get aliased subquery for selecting filtered results.
-		bq = aliased(Result, self.get_results_query(filters=filters).subquery())
+		bq = aliased(Result, self.get_filtered_query(filters=filters).subquery())
 
 		# Get field values, grouped by cell, time and field.		
 		value_sum = func.sum(bq.value).label('value_sum')
@@ -213,14 +169,11 @@ class SA_Result_DAO(object):
 		return q.all()
 
 
-	def get_mapserver_connection_string(self):
-		return sa_dao.get_mapserver_connection_string(self)
-
 	# Get a mapserver data query string.
 	def get_mapserver_data_string(self, filters=None, srid=4326):
 
 		# Get base query as subquery.
-		bq = aliased(Result, self.get_results_query(filters=filters).subquery())
+		bq = aliased(Result, self.get_filtered_query(filters=filters).subquery())
 
 		# Define labeled query components.
 		# NOTE: select geometry as 'RAW' in order to override default 'AsBinary'.
