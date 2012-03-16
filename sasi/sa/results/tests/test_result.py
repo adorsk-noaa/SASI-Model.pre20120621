@@ -5,7 +5,6 @@ import sasi.sa.all_metadata
 import sasi.util.results.results as results_util
 
 from sasi.results.result import Result
-from sasi.results.result_set import Result_Set
 
 class SA_Result_Test(BaseTest):
 
