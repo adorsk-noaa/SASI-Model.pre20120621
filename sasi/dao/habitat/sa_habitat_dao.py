@@ -30,59 +30,31 @@ class SA_Habitat_DAO(Habitat_DAO, SA_DAO):
 	# Get substrates for given habitats.
 	def get_substrates_for_habitats(self, filters=None):
 
-		substrates = self.get_aggregates(grouping_fields=['habitat_type.substrate'])
-		print substrates
+		bq = self.get_aggregates_query(fields=['habitat_type.substrate.id'], grouping_fields=['habitat_type.substrate.id'], filters=filters).subquery()
+		substrate_alias = aliased(Substrate)
+		q = self.session.query(substrate_alias).join(bq, substrate_alias.id == bq.c.id)
+		return q.all()
 
 	# Get energys for given habitats.
 	def get_energys_for_habitats(self, filters=None):
 
-		# Define minimal base query.
-		bq = self.get_filtered_query(filters=filters)
-		bq = self.query_add_class(bq, Habitat_Type)
-		bq_ht_alias = self.get_class_alias(bq, Habitat_Type)
-		bq = bq.with_entities(bq_ht_alias.id.label('id')).subquery()
-
-		# Get necessary aliases.
-		ht_alias = aliased(Habitat_Type)
-
-		# Select related habitat type energys.
-		q = self.session.query(ht_alias.energy).join(bq, bq.c.id == ht_alias.id).group_by(ht_alias.energy)
-
-		return q.all()
+		q = self.get_aggregates_query(fields=['habitat_type.energy'], grouping_fields=['habitat_type.energy'], filters=filters)
+		return [row[0] for row in q.all()]
 	
 	# Get habitat types for given habitats.
 	def get_habitat_types_for_habitats(self, filters=None):
 
-		# Define minimal base query.
-		bq = self.get_filtered_query(filters=filters)
-		bq = self.query_add_class(bq, Habitat_Type)
-		bq_ht_alias = self.get_class_alias(bq, Habitat_Type)
-		bq = bq.with_entities(bq_ht_alias.id.label('id')).subquery()
-
-		# Get necessary aliases.
+		bq = self.get_aggregates_query(fields=['habitat_type.id'], grouping_fields=['habitat_type.id'], filters=filters).subquery()
 		ht_alias = aliased(Habitat_Type)
-
-		# Select related habitat types.
-		q = self.session.query(ht_alias).join(bq, bq.c.id == ht_alias.id).group_by(ht_alias)
-
+		q = self.session.query(ht_alias).join(bq, ht_alias.id == bq.c.id)
 		return q.all()
 
 	# Get features for given habitats.
 	def get_features_for_habitats(self, filters=None):
 
-		# Define minimal base query.
-		bq = self.get_filtered_query(filters=filters)
-		bq = self.query_add_class(bq, Habitat_Type)
-		bq_ht_alias = self.get_class_alias(bq, Habitat_Type)
-		bq = bq.with_entities(bq_ht_alias.id.label('id')).subquery()
-
-		# Get necessary aliases.
-		ht_alias = aliased(Habitat_Type)
+		bq = self.get_aggregates_query(fields=['habitat_type.features.id'], grouping_fields=['habitat_type.features.id'], filters=filters).subquery()
 		feature_alias = aliased(Feature)
-
-		# Select related features.
-		q = self.session.query(feature_alias).join(ht_alias.features, feature_alias).join(bq, bq.c.id == ht_alias.id).group_by(feature_alias)
-
+		q = self.session.query(feature_alias).join(bq, feature_alias.id == bq.c.id)
 		return q.all()
 
 	# Get a mapserver data query string.

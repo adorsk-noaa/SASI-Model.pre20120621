@@ -82,9 +82,9 @@ class SA_DAO(object):
 		return " ".join(connection_parts)
 
 	
-	# Get aggregates.
+	# Get aggregates query.
 	# Note: this assumes that the primary_class has a single 'id' field for joining.
-	def get_aggregates(self, fields=[], grouping_fields=[], filters=None, aggregate_funcs = []):
+	def get_aggregates_query(self, fields=[], grouping_fields=[], filters=None, aggregate_funcs = []):
 
 		# Get base query as subquery, and select only the primary class id.
 		bq_primary_alias = aliased(self.primary_class)
@@ -125,8 +125,10 @@ class SA_DAO(object):
 		# Only select required entities.
 		q = q.with_entities(*q_entities)
 
-		print sa_compile.query_to_raw_sql(q)
-		#return q.all()
+		return q
+
+	def get_aggregates(self, **kwargs):
+		return self.get_aggregates_query(**kwargs).all()
 
 
 	def register_field_dependencies(self, q, registry, field_str):

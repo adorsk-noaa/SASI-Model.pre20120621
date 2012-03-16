@@ -15,9 +15,9 @@ class SA_Habitat_DAOTest(BaseTest):
 
 		filters = [
 				hab_id_filter,
-				feature_id_filter,
-				substrate_id_filter,
-				energy_filter
+				#feature_id_filter,
+				#substrate_id_filter,
+				#energy_filter
 				]
 
 		#habitats = habitat_dao.get_habitats()
@@ -27,7 +27,6 @@ class SA_Habitat_DAOTest(BaseTest):
 		data_str = habitat_dao.get_mapserver_data_string(filters=filters)
 		#print data_str
 		substrates = habitat_dao.get_substrates_for_habitats(filters=filters)
-		exit()
 		#print substrates
 		energies = habitat_dao.get_energys_for_habitats(filters=filters)
 		#print energies
@@ -38,10 +37,10 @@ class SA_Habitat_DAOTest(BaseTest):
 		#print features
 
 		fields = [
-				"Habitat.area"
+				"area"
 				]
 		grouping_fields = [
-				"Habitat_Type.Substrate.id"
+				"habitat_type.substrate.id"
 				]
 		filters = [
 				#energy_filter
