@@ -8,10 +8,10 @@ class SA_Habitat_DAOTest(BaseTest):
 	def test(self):
 		habitat_dao = SA_Habitat_DAO(session=self.session)
 
-		hab_id_filter = {'attr': 'Habitat.id', 'op': 'in', 'value': [2]}
-		feature_id_filter = {'attr': 'Habitat_Type.Feature.id', 'op': '==', 'value': 'B06'}
-		substrate_id_filter = {'attr': 'Habitat_Type.Substrate.id', 'op': '==', 'value': 'S1'}
-		energy_filter = {'attr': 'Habitat_Type.energy', 'op': '==', 'value': 'Low'}
+		hab_id_filter = {'field': 'id', 'op': 'in', 'value': [2]}
+		feature_id_filter = {'field': 'habitat_type.features.id', 'op': '==', 'value': 'B06'}
+		substrate_id_filter = {'field': 'habitat_type.substrate.id', 'op': '==', 'value': 'S1'}
+		energy_filter = {'field': 'habitat_type.energy', 'op': '==', 'value': 'Low'}
 
 		filters = [
 				hab_id_filter,
@@ -27,6 +27,7 @@ class SA_Habitat_DAOTest(BaseTest):
 		data_str = habitat_dao.get_mapserver_data_string(filters=filters)
 		#print data_str
 		substrates = habitat_dao.get_substrates_for_habitats(filters=filters)
+		exit()
 		#print substrates
 		energies = habitat_dao.get_energys_for_habitats(filters=filters)
 		#print energies
@@ -46,7 +47,7 @@ class SA_Habitat_DAOTest(BaseTest):
 				#energy_filter
 				hab_id_filter
 				]
-		habitat_dao.get_stats(fields=fields, grouping_fields=grouping_fields, filters=filters)
+		habitat_dao.get_aggregates(fields=fields, grouping_fields=grouping_fields, filters=filters)
 
 	def get_session(self):
 		return self.session

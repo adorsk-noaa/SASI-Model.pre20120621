@@ -30,21 +30,8 @@ class SA_Habitat_DAO(Habitat_DAO, SA_DAO):
 	# Get substrates for given habitats.
 	def get_substrates_for_habitats(self, filters=None):
 
-		# Define minimal base query.
-		bq = self.get_filtered_query(filters=filters)
-		bq = self.query_add_class(bq, Habitat_Type)
-		bq_ht_alias = self.get_class_alias(bq, Habitat_Type)
-		bq = bq.with_entities(bq_ht_alias.id.label('id')).subquery()
-
-		# Get necessary aliases.
-		ht_alias = aliased(Habitat_Type)
-		substrate_alias = aliased(Substrate)
-
-		# Select related substrates.
-		q = self.session.query(substrate_alias).join(ht_alias).join(bq, bq.c.id == ht_alias.id).group_by(substrate_alias)
-
-		return q.all()
-
+		substrates = self.get_aggregates(grouping_fields=['habitat_type.substrate'])
+		print substrates
 
 	# Get energys for given habitats.
 	def get_energys_for_habitats(self, filters=None):
@@ -101,18 +88,33 @@ class SA_Habitat_DAO(Habitat_DAO, SA_DAO):
 	# Get a mapserver data query string.
 	def get_mapserver_data_string(self, filters=None, srid=4326):
 
-		q = self.get_filtered_query(filters=filters)
+		# Get base query as subquery, and select only the primary class id.
+		bq_primary_alias = aliased(self.primary_class)
+		bq = self.get_filtered_query(primary_alias=bq_primary_alias, filters=filters).with_entities(bq_primary_alias.id)
+		bq = bq.subquery()
 
-		# Add necessary classes.
-		for clazz in [Habitat_Type]: q = self.query_add_class(q, clazz) 
+		# Initialize primary class alias and registry for main query.
+		q_primary_alias = aliased(self.primary_class)
+		q_registry = {self.primary_class.__name__: q_primary_alias}
 
-		# Get aliases.
-		ht_alias = self.get_class_alias(q, Habitat_Type)
+		# Initialize list of entities for the main query.
+		q_entities = set()
+
+		# Create the main query, and join the basequery on the primary class id.
+		q = self.session.query(q_primary_alias).join(bq, q_primary_alias.id == bq.c.id)
+
+		# Register the necssary entity dependencies.
+		for field in ['habitat_type.energy', 'habitat_type.substrate.id']:
+			q = self.register_field_dependencies(q, q_registry, field)
+
+		# Get specific entity aliases.
+		ht_parent_str = self.get_field_parent_str('habitat_type.energy')	
+		ht_alias = q_registry[ht_parent_str]
 
 		# Define labeled query components.
 		# NOTE: for compatibility w/ PostGIS+Mapserver, select geometry as 'RAW' and explicitly specify SRID 4326.
-		geom = func.ST_SetSRID(Habitat.geom.RAW, 4326).label('hab_geom')
-		geom_id = Habitat.id.label('geom_id')
+		geom = func.ST_SetSRID(q_primary_alias.geom.RAW, 4326).label('hab_geom')
+		geom_id = q_primary_alias.id.label('geom_id')
 		substrate_id = ht_alias.substrate_id.label('substrate_id')
 		energy = ht_alias.energy.label('energy')
 
@@ -126,19 +128,5 @@ class SA_Habitat_DAO(Habitat_DAO, SA_DAO):
 		mapserver_data_str = "hab_geom from (%s) AS subquery USING UNIQUE geom_id USING srid=%s" % (q_raw_sql, srid)
 
 		return mapserver_data_str
-
-	# @OVERRIDE SA_DAO.
-	# Custom handling for Feature attrs, due to many-to-many joins on Habitat Types.
-	def query_add_class(self, q, clazz):
-
-		if clazz == Feature:
-			self.query_add_class(q, Habitat_Type)
-			ht_alias = self.get_class_alias(q, Habitat_Type)
-			q = q.join(ht_alias.features)
-			return super(SA_Habitat_DAO, self).query_add_class(q, Feature)
-		else:
-			return super(SA_Habitat_DAO, self).query_add_class(q, clazz)
-
-
 
 
