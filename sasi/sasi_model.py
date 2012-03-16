@@ -143,7 +143,6 @@ class SASIModel:
 				c_ht_f[c]['ht'][ht]['f'] = {}
 				for feature_category, feature_ids in self.f_by_h[ht.id].items():
 					features = [self.features[f_id] for f_id in feature_ids]
-					#features = self.features_model.get_features(filters={'id': feature_ids})
 					c_ht_f[c]['ht'][ht]['f'][feature_category] = features 
 
 		return c_ht_f
@@ -156,10 +155,10 @@ class SASIModel:
 		# For each effort in the model's time range...
 		effort_counter = 0
 		for e in self.effort_model.get_efforts(filters=[
-			{'attr': 'time', 'op': '>=', 'value': self.t0},
-			{'attr': 'time', 'op': '<=', 'value': self.tf},
+			{'field': 'time', 'op': '>=', 'value': self.t0},
+			{'field': 'time', 'op': '<=', 'value': self.tf},
 			]):
-
+			
 			effort_counter += 1
 			if conf.conf['verbose']: 
 				if (effort_counter % 1000) == 0: print >> sys.stderr, "effort: %s" % effort_counter

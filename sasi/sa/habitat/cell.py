@@ -34,7 +34,7 @@ mapper(
 		cell_table,
 		properties = {
 			'geom': GeometryColumn(cell_table.c.geom, comparator=PGComparator),
-			'habitats': relationship(Habitat, secondary=cell_habitat_table, lazy='subquery')
+			'habitats': relationship(Habitat, secondary=cell_habitat_table)
 			}
 	)
 
