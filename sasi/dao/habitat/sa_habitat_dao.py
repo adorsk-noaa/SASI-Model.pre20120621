@@ -27,36 +27,6 @@ class SA_Habitat_DAO(Habitat_DAO, SA_DAO):
 		q = self.get_filtered_query(filters=filters)
 		return q.all()
 
-	# Get substrates for given habitats.
-	def get_substrates_for_habitats(self, filters=None):
-
-		bq = self.get_aggregates_query(fields=['habitat_type.substrate.id'], grouping_fields=['habitat_type.substrate.id'], filters=filters).subquery()
-		substrate_alias = aliased(Substrate)
-		q = self.session.query(substrate_alias).join(bq, substrate_alias.id == bq.c.id)
-		return q.all()
-
-	# Get energys for given habitats.
-	def get_energys_for_habitats(self, filters=None):
-
-		q = self.get_aggregates_query(fields=['habitat_type.energy'], grouping_fields=['habitat_type.energy'], filters=filters)
-		return [row[0] for row in q.all()]
-	
-	# Get habitat types for given habitats.
-	def get_habitat_types_for_habitats(self, filters=None):
-
-		bq = self.get_aggregates_query(fields=['habitat_type.id'], grouping_fields=['habitat_type.id'], filters=filters).subquery()
-		ht_alias = aliased(Habitat_Type)
-		q = self.session.query(ht_alias).join(bq, ht_alias.id == bq.c.id)
-		return q.all()
-
-	# Get features for given habitats.
-	def get_features_for_habitats(self, filters=None):
-
-		bq = self.get_aggregates_query(fields=['habitat_type.features.id'], grouping_fields=['habitat_type.features.id'], filters=filters).subquery()
-		feature_alias = aliased(Feature)
-		q = self.session.query(feature_alias).join(bq, feature_alias.id == bq.c.id)
-		return q.all()
-
 	# Get a mapserver data query string.
 	def get_mapserver_data_string(self, filters=None, srid=4326):
 

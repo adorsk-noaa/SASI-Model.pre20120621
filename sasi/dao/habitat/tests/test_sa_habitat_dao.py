@@ -26,27 +26,19 @@ class SA_Habitat_DAOTest(BaseTest):
 		#print connection_str
 		data_str = habitat_dao.get_mapserver_data_string(filters=filters)
 		#print data_str
-		substrates = habitat_dao.get_substrates_for_habitats(filters=filters)
-		#print substrates
-		energies = habitat_dao.get_energys_for_habitats(filters=filters)
-		#print energies
-		habitat_types = habitat_dao.get_habitat_types_for_habitats(filters=filters)
-		#print habitat_types
-
-		features = habitat_dao.get_features_for_habitats(filters = filters)
-		#print features
 
 		fields = [
-				"area"
+				{'id': "area", 'label': 'area_label'}
 				]
 		grouping_fields = [
-				"habitat_type.substrate.id"
+				{'id': "habitat_type.substrate.id", 'label': 'substrate_id'}
 				]
 		filters = [
 				#energy_filter
 				hab_id_filter
 				]
-		habitat_dao.get_aggregates(fields=fields, grouping_fields=grouping_fields, filters=filters)
+		aggregates = habitat_dao.get_aggregates(fields=fields, grouping_fields=grouping_fields, filters=filters)
+		#for a in aggregates: print a.keys(), a
 
 	def get_session(self):
 		return self.session

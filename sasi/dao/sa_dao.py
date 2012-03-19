@@ -46,7 +46,7 @@ class SA_DAO(object):
 				q = self.register_field_dependencies(q, q_registry, f['field'])
 
 				# Get field's entity.
-				field = self.get_field_entity(q_registry, f['field'])
+				field = self.get_field_entity(q_registry, {'id': f['field']})
 
 				# Get operator function.
 				op = getattr(field, self.comparators.get(f['op']))
@@ -84,7 +84,7 @@ class SA_DAO(object):
 	
 	# Get aggregates query.
 	# Note: this assumes that the primary_class has a single 'id' field for joining.
-	def get_aggregates_query(self, fields=[], grouping_fields=[], filters=None, aggregate_funcs = []):
+	def get_aggregates_query(self, fields=[], grouping_fields=[], filters=None, aggregate_funcs = ['sum']):
 
 		# Get base query as subquery, and select only the primary class id.
 		bq_primary_alias = aliased(self.primary_class)
@@ -103,9 +103,9 @@ class SA_DAO(object):
 
 		# Register fields and grouping fields.
 		for field in fields + grouping_fields:
-			q = self.register_field_dependencies(q, q_registry, field)
+			q = self.register_field_dependencies(q, q_registry, field['id'])
 
-		# Add stat fields to query entities.
+		# Add labeled stat fields to query entities.
 		for field in fields:
 
 			field_entity = self.get_field_entity(q_registry, field)
@@ -113,7 +113,10 @@ class SA_DAO(object):
 			# Make individual entities for each aggregate function.
 			for func_name in aggregate_funcs:
 				aggregate_func = getattr(func, func_name)
-				aggregate_entity = aggregate_func(field_entity).label("%s--%s" % (field, func_name))
+				aggregate_entity = aggregate_func(field_entity)
+				if field.has_key('label'): label = field['label']
+				else: label = field['id']
+				aggregate_entity = aggregate_entity.label("%s--%s" % (label, func_name))
 				q_entities.add(aggregate_entity)
 
 		# Add grouping fields to query entities, and to group by.
@@ -131,10 +134,10 @@ class SA_DAO(object):
 		return self.get_aggregates_query(**kwargs).all()
 
 
-	def register_field_dependencies(self, q, registry, field_str):
+	def register_field_dependencies(self, q, registry, field_id):
 
 		# Process field dependencies, from left to right.
-		parts = field_str.split('.')
+		parts = field_id.split('.')
 		for i in range(len(parts) - 1):
 			parent_str = self.get_field_parent_str('.'.join(parts[:i+1]))
 			dependency_str = '.'.join([parent_str, parts[i]])
@@ -159,7 +162,10 @@ class SA_DAO(object):
 		else: 
 			return '.'.join([self.primary_class.__name__] + parts[:-1])
 
-	def get_field_entity(self, registry, field_str):
-		parent = registry.get(self.get_field_parent_str(field_str))
-		parts = field_str.split('.')
-		return getattr(parent, parts[-1])
+	def get_field_entity(self, registry, field):
+		parent = registry.get(self.get_field_parent_str(field['id']))
+		parts = field['id'].split('.')
+		field_entity = getattr(parent,parts[-1])
+		if field.has_key('label'):
+			return field_entity.label(field['label'])
+		else: return field_entity
