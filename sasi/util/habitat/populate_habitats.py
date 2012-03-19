@@ -116,7 +116,7 @@ def main():
 	session.commit()
 
 	print >> sys.stderr, "Calculating areas for habitats."
-	habitat_area = geo_func.area(Habitat.geom).label('habitat_area')
+	habitat_area = geo_func.area(func.geography(Habitat.geom)).label('habitat_area')
 	habitat_infos = session.query(Habitat, habitat_area).all()
 	for (habitat, habitat_area) in habitat_infos:
 		habitat.area = habitat_area

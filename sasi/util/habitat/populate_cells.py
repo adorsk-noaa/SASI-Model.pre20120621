@@ -35,7 +35,7 @@ def main():
 
 		# Get cell ids
 		cell_id_attr = getattr(Habitat, "id_%s" % cell_size)
-		cell_area = func.sum(geo_func.area(Habitat.geom)).label('cell_area')
+		cell_area = func.sum(geo_func.area(func.geography(Habitat.geom))).label('cell_area')
 		cell_depth = func.avg(Habitat.z).label('cell_depth')
 		cell_geom_wkb = geo_func.wkb(func.st_union(Habitat.geom).label('cell_geom'))
 		cell_infos = session.query(cell_id_attr, cell_area, cell_depth, cell_geom_wkb).group_by(cell_id_attr).all()

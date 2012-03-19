@@ -6,5 +6,7 @@ def create_schema():
 
 	s = sa_session.get_session()
 	sa_metadata.metadata.drop_all(s.bind)
+	s.commit()
 	sa_metadata.metadata.create_all(s.bind)
+	s.commit()
 
