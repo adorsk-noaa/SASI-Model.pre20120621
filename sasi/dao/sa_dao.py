@@ -130,8 +130,11 @@ class SA_DAO(object):
 
 		return q
 
-	def get_aggregates(self, **kwargs):
-		return self.get_aggregates_query(**kwargs).all()
+	def get_aggregates(self, as_dicts=True, **kwargs):
+		rows = self.get_aggregates_query(**kwargs).all()
+		if as_dicts:
+			return [dict(zip(row.keys(), row)) for row in rows]
+		else: return rows
 
 
 	def register_field_dependencies(self, q, registry, field_id):
