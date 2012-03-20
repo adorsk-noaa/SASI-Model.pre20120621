@@ -14,9 +14,10 @@ class Habitat_Mapserver_Test(BaseTest):
 				'SERVICE': 'WMS' ,
 				'VERSION': '1.1.0', 
 				'REQUEST': 'GetMap', 
-				'LAYERS': 'habitat',
+				'LAYERS': 'data',
 				'SRS':'EPSG:4326',
-				'BBOX':'-180.0,-90.0,180.0,90.0',
+				#'BBOX':'-180.0,-90.0,180.0,90.0',
+				'BBOX': '-80,31,-65,45',
 				'FORMAT':'image/gif',
 				'WIDTH':'640',
 				'HEIGHT':'640'

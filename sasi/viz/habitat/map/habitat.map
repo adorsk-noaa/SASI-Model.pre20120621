@@ -3,7 +3,7 @@ MAP
     NAME "SASI Habitat"
     STATUS ON
     EXTENT -97.238976 41.619778 -82.122902 49.385620
-    IMAGECOLOR 128 128 128
+    IMAGECOLOR 63 72 128
 
 	PROJECTION
 		"init=epsg:4326"
@@ -13,30 +13,34 @@ MAP
 	  NAME "gif"
 	  DRIVER GD/GIF
 	  MIMETYPE "image/gif"
-	  IMAGEMODE PC256
+	  IMAGEMODE RGBA
 	  EXTENSION "gif"
+	  TRANSPARENT ON
 	END
 
     #
     # Start of layer definitions
     #
-    LAYER
-        NAME habitat
-        TYPE POLYGON
-		STATUS DEFAULT
+    #LAYER
+    #    NAME habitat
+    #    TYPE POLYGON
+	#	STATUS DEFAULT
 
-		PROJECTION
-			"init=epsg:4326"
-		END
+	#	PROJECTION
+	#		"init=epsg:4326"
+	#	END
 
-		CLASS
-			NAME "habitat"
-			STYLE
-				OUTLINECOLOR 32 32 32
-				COLOR 232 232 232
-			END
-		END # CLASS
+	#		
+	#	MAXFEATURES 1000
 
-    END # LAYER
+	#	CLASS
+	#		NAME "habitat"
+	#		STYLE
+	#			OUTLINECOLOR 32 32 32
+	#			COLOR 232 232 232
+	#		END
+	#	END # CLASS
+
+    #END # LAYER
 
 END # MAP
