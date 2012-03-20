@@ -39,4 +39,3 @@ def get_map_image_from_wms(wms_parameters=None, habitat_dao=None, filters=None):
 	# Return the raw image.
 	return ms_image.getBytes()
 
-

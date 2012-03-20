@@ -1,0 +1,121 @@
+# TEMPLATE MAPFILE FOR SASI BASELAYERS.
+MAP
+    NAME "SASI Baselayers"
+    STATUS ON
+    EXTENT -97.238976 41.619778 -82.122902 49.385620
+    IMAGECOLOR 128 128 128
+
+	PROJECTION
+		"init=epsg:4326"
+    END
+
+	OUTPUTFORMAT
+	  NAME "gif"
+	  DRIVER GD/GIF
+	  MIMETYPE "image/gif"
+	  IMAGEMODE PC256
+	  EXTENSION "gif"
+	END
+
+	SHAPEPATH "/home/adorsk/projects/sasi/data/gis/baselayers"
+
+    #
+    # Start of layer definitions
+    #
+
+	# Coastline
+    LAYER
+        NAME "coastline"
+        TYPE POLYGON
+        DATA simple_east_coast
+		STATUS DEFAULT
+
+		PROJECTION
+			"init=epsg:4326"
+		END
+
+		CLASS
+			NAME "Coastline"
+			STYLE
+				OUTLINECOLOR 51 51 51
+				WIDTH .3
+				COLOR 199 215 158
+			END
+		END
+	END
+	# End Coastline.
+
+
+	# State Boundaries
+    LAYER
+        NAME "state_bounds"
+        TYPE LINE
+		DATA state_bounds
+		STATUS DEFAULT
+
+		PROJECTION
+			"proj=longlat"
+			"ellps=GRS80"
+			"datum=NAD83"
+			"no_defs"
+		END
+
+		CLASS
+			NAME "State Boundaries"
+			STYLE
+				COLOR 108 131 61
+				WIDTH .5
+			END
+		END
+	END
+	# End State Boundaries.
+
+
+	# EEZ.
+    LAYER
+        NAME "eez"
+        TYPE LINE
+        DATA useez
+		STATUS DEFAULT
+
+		PROJECTION
+			"init=epsg:4326"
+		END
+
+		CLASS
+			NAME "EEZ"
+			STYLE
+				COLOR 51 51 51
+				WIDTH .5
+				PATTERN 5 5 END
+			END
+		END
+	END
+	# End EEZ.
+
+	# SASI Domain
+    LAYER
+        NAME "sasi_domain"
+        TYPE POLYGON
+        DATA sasi_domain_outline
+		STATUS DEFAULT
+
+		PROJECTION
+			"proj=longlat"
+			"ellps=GRS80"
+			"datum=NAD83"
+			"no_defs"
+		END
+
+		CLASS
+			NAME "Domain Outline"
+			STYLE
+				OUTLINECOLOR 51 51 51
+				WIDTH 1
+			END
+		END
+    END
+	# End SASI Domain Outline 
+
+
+END # MAP
