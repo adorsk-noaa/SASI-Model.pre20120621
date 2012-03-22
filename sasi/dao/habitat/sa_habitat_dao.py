@@ -10,6 +10,7 @@ from sasi.habitat.habitat_type import Habitat_Type
 
 from sqlalchemy.sql import func
 from sqlalchemy.orm import aliased
+from sqlalchemy.sql.expression import desc
 
 
 class SA_Habitat_DAO(Habitat_DAO, SA_DAO):
@@ -59,9 +60,10 @@ class SA_Habitat_DAO(Habitat_DAO, SA_DAO):
 		geom_id = q_primary_alias.id.label('geom_id')
 		substrate_id = ht_alias.substrate_id.label('substrate_id')
 		energy = ht_alias.energy.label('energy')
+		area = ht_alias.energy.label('area')
 
 		# Select only the labeleld components defined above.
-		q = q.with_entities(geom, geom_id, substrate_id, energy)
+		q = q.with_entities(geom, geom_id, substrate_id, energy).order_by(desc(area))
 
 		# Get raw sql for query.
 		q_raw_sql = sa_compile.query_to_raw_sql(q)
