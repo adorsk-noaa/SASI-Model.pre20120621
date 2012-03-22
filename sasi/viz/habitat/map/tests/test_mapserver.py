@@ -23,7 +23,8 @@ class Habitat_Mapserver_Test(BaseTest):
 				'HEIGHT':'640'
 				}
 		
-		img = habitat_ms.get_map_image_from_wms(wms_parameters=wms_parameters, habitat_dao=habitat_dao)
+		img = habitat_ms.get_map_image_from_wms(wms_parameters=wms_parameters.items(), habitat_dao=habitat_dao)
+		#print img
 
 		self.failUnless(True)
 
