@@ -3,7 +3,7 @@ MAP
     NAME "SASI Baselayers"
     STATUS ON
     EXTENT -97.238976 41.619778 -82.122902 49.385620
-    IMAGECOLOR 229 237 255 
+    IMAGECOLOR 222 245 255
 
 	PROJECTION
 		"init=epsg:4326"
@@ -98,7 +98,7 @@ MAP
         NAME "sasi_domain"
         TYPE POLYGON
         DATA sasi_domain_outline
-		STATUS DEFAULT
+		STATUS OFF
 
 		PROJECTION
 			"proj=longlat"
