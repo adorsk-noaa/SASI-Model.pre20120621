@@ -143,6 +143,74 @@ class SA_DAO(object):
 		else: return rows
 
 
+	# Get histogram.
+	# Note: this assumes that the primary_class has a single 'id' field for joining.
+	def get_histogram(self, bucket_field=None, num_buckets=10, grouping_fields=[], filters=None):
+
+		# Set label on bucket field if not set.
+		if not bucket_field.has_key('label'): bucket_field['label'] = bucket_field['id']
+
+		# Get min and max for bucket field.
+		aggregates = self.get_aggregates(fields=[bucket_field], aggregate_funcs=['min','max'], filters=filters).pop()
+		field_max = float(aggregates["%s--max" % bucket_field['label']])
+		field_min = float(aggregates["%s--min" % bucket_field['label']])
+
+		# Get base query as subquery, and select only the primary class id.
+		bq_primary_alias = aliased(self.primary_class)
+		bq = self.get_filtered_query(primary_alias=bq_primary_alias, filters=filters).with_entities(bq_primary_alias.id)
+		bq = bq.subquery()
+
+		# Initialize primary class alias and registry for main query.
+		q_primary_alias = aliased(self.primary_class)
+		q_registry = {self.primary_class.__name__: q_primary_alias}
+
+		# Initialize list of entities for the main query.
+		q_entities = set()
+
+		# Create the main query, and join the basequery on the primary class id.
+		q = self.session.query(q_primary_alias).join(bq, q_primary_alias.id == bq.c.id)
+
+		# Register fields and grouping fields.
+		for field in [bucket_field] + grouping_fields:
+			q = self.register_field_dependencies(q, q_registry, field['id'])
+
+		# Add labeled count field to query entities.
+		count_entity = func.count(q_primary_alias.id).label('bucket_count')
+		q_entities.add(count_entity)
+
+		# Create bucket entity.
+		bucket_field_entity = self.get_field_entity(q_registry, bucket_field)
+		bucket_entity = func.width_bucket(bucket_field_entity, field_min, field_max, num_buckets).label('bucket')
+		q_entities.add(bucket_entity)
+		q = q.group_by(bucket_entity)
+
+		# Add grouping fields to query entities, and to group by.
+		for field in grouping_fields:
+			field_entity = self.get_field_entity(q_registry, field)
+			q_entities.add(field_entity)
+			q = q.group_by(field_entity)
+
+		# Only select required entities.
+		q = q.with_entities(*q_entities)
+
+		# Calculate bucket width.
+		bucket_width = (field_max - field_min)/num_buckets
+
+		# Format results.
+		buckets = []
+		rows = q.all()
+		row_dicts = [dict(zip(row.keys(), row)) for row in rows]
+		for r in row_dicts:
+			buckets.append({
+				'min': field_min + (r['bucket'] - 1) * bucket_width,
+				'max': field_min + (r['bucket']) * bucket_width,
+				'count': r['bucket_count']
+				})
+		buckets.sort(key=lambda b: b['min'])
+
+		return buckets
+ 
+
 	def register_field_dependencies(self, q, registry, field_id):
 
 		# Process field dependencies, from left to right.

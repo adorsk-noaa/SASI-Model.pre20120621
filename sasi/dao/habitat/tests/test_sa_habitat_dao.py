@@ -35,10 +35,14 @@ class SA_Habitat_DAOTest(BaseTest):
 				]
 		filters = [
 				#energy_filter
-				hab_id_filter
+				#hab_id_filter
 				]
 		aggregates = habitat_dao.get_aggregates(fields=fields, grouping_fields=grouping_fields, filters=filters)
 		#for a in aggregates: print a.keys(), a
+
+		histogram = habitat_dao.get_histogram(bucket_field={'id': 'z', 'label': 'depth', 'transform': "-1 * {field}"}, filters=filters)
+		#for b in histogram: print b
+
 
 	def get_session(self):
 		return self.session
