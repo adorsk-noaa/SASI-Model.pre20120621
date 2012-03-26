@@ -175,6 +175,11 @@ class SA_DAO(object):
 		parent = registry.get(self.get_field_parent_str(field['id']))
 		parts = field['id'].split('.')
 		field_entity = getattr(parent,parts[-1])
+
+		if field.has_key('transform'):
+			transform_code = field['transform'].format(field = 'field_entity')
+			exec compile("field_entity = {0}".format(transform_code), '<field_entity>', 'exec')
+
 		if field.has_key('label'):
 			return field_entity.label(field['label'])
 		else: return field_entity
