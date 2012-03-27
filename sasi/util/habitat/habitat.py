@@ -72,7 +72,7 @@ def generate_habitat_types():
 
 	return habitat_types
 
-def generate_habitats(n, default_area = lambda: 1.0, habitat_types=None):
+def generate_habitats(n, default_area = lambda: 1.0, habitat_types=None, geom_wkb=False):
 
 	habitats= []
 
@@ -80,14 +80,17 @@ def generate_habitats(n, default_area = lambda: 1.0, habitat_types=None):
 	if not habitat_types:
 		habitat_types = generate_habitat_types()
 
+	
 	for i in range(n):
 		habitat_type = habitat_types[i % len(habitat_types)]
+		geom = geo_util.generate_multipolygon(wkb=geom_wkb)
+			 
 		o = Habitat(
 				id = i,
 				habitat_type = habitat_type,
 				z = i * 100,
 				area = default_area(),
-				geom = geo_util.generate_multipolygon(),
+				geom = geom
 				)
 
 		habitats.append(util_registry.get_or_register_object(o))
