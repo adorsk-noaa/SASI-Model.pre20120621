@@ -145,15 +145,16 @@ class SA_DAO(object):
 
 	# Get histogram.
 	# Note: this assumes that the primary_class has a single 'id' field for joining.
-	def get_histogram(self, bucket_field=None, num_buckets=10, grouping_fields=[], filters=None):
+	def get_histogram(self, bucket_field=None, field_min=None, field_max=None, num_buckets=10, grouping_fields=[], filters=None):
 
 		# Set label on bucket field if not set.
 		if not bucket_field.has_key('label'): bucket_field['label'] = bucket_field['id']
 
-		# Get min and max for bucket field.
-		aggregates = self.get_aggregates(fields=[bucket_field], aggregate_funcs=['min','max'], filters=filters).pop()
-		field_max = float(aggregates["%s--max" % bucket_field['label']])
-		field_min = float(aggregates["%s--min" % bucket_field['label']])
+		# If min and max were not given, get them.
+		if not field_min or not field_max:
+			aggregates = self.get_aggregates(fields=[bucket_field], aggregate_funcs=['min','max'], filters=filters).pop()
+			field_max = float(aggregates["%s--max" % bucket_field['label']])
+			field_min = float(aggregates["%s--min" % bucket_field['label']])
 
 		# Get base query as subquery, and select only the primary class id.
 		bq_primary_alias = aliased(self.primary_class)
