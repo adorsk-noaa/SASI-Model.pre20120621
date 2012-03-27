@@ -7,7 +7,7 @@ class CsvTest(unittest.TestCase):
 	def test(self):
 		exporter = csv_exporter.CsvExporter()
 
-		habitats = habitat_util.generate_habitats(n=10)
+		habitats = habitat_util.generate_habitats(n=10, geom_wkb=True)
 
 		csv_export = exporter.export(habitats)
 		#print csv_export
