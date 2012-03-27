@@ -16,6 +16,7 @@ class CsvExporter(habitat_exporter.Exporter):
 				'substrate_name',
 				'substrate_id',
 				'energy',
+				'features',
 				'depth_meters',
 				'area_meters2',
 				'geom_wkt',

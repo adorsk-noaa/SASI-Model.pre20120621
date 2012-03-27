@@ -10,7 +10,7 @@ class CsvTest(unittest.TestCase):
 		habitats = habitat_util.generate_habitats(n=10)
 
 		csv_export = exporter.export(habitats)
-		print csv_export
+		#print csv_export
 
 		self.failUnless(True)
 
