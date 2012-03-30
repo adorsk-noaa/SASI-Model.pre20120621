@@ -1,5 +1,4 @@
 import exporter as habitat_exporter
-from cStringIO import StringIO
 import csv
 
 class CsvExporter(habitat_exporter.Exporter):
@@ -8,8 +7,12 @@ class CsvExporter(habitat_exporter.Exporter):
 		habitat_exporter.Exporter.__init__(self)
 	
 	def export(self, habitats=[]):
-		csv_buffer = StringIO()
-		writer = csv.writer(csv_buffer)
+
+		# Make tmpdir to hold export.
+		tmp_dir = self.mkdtemp()
+
+		csv_file_h = open("{}/habitats.csv".format(tmp_dir), "w")
+		writer = csv.writer(csv_file_h)
 
 		fields = [
 				'id',
@@ -27,5 +30,10 @@ class CsvExporter(habitat_exporter.Exporter):
 		for h in habitats:
 			writer.writerow([self.get_field(h,field) for field in fields])
 
-		return csv_buffer.getvalue()
+		csv_file_h.close()
+
+		# Package the export.
+		package_file = self.make_package(export_dir=tmp_dir)
+
+		return package_file
 
