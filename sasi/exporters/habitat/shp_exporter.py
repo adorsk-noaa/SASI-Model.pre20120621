@@ -35,8 +35,8 @@ class ShpExporter(habitat_exporter.Exporter):
 					'sstrt_id': 'str',
 					'energy': 'str',
 					'features': 'str',
-					'depth': 'float',
-					'area': 'float',
+					'depth_m': 'float',
+					'area_m2': 'float',
 					}
 				}
 
