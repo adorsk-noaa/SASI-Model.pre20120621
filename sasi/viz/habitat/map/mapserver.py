@@ -11,8 +11,7 @@ def get_map_image_from_wms(wms_parameters=None, habitat_dao=None, filters=None):
 	ms_map = mapscript.mapObj(mapfile)
 
 	layer = mapscript.layerObj()
-	layer.name = "data" 
-	layer.group = 'data'
+	layer.name = "habitat" 
 
 	layer.setProjection('init=epsg:4326')
 	layer.status = mapscript.MS_DEFAULT
