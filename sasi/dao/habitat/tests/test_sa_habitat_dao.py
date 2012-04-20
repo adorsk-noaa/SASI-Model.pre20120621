@@ -12,6 +12,7 @@ class SA_Habitat_DAOTest(BaseTest):
 		feature_id_filter = {'field': 'habitat_type.features.id', 'op': '==', 'value': 'B06'}
 		substrate_id_filter = {'field': 'habitat_type.substrate.id', 'op': '==', 'value': 'S1'}
 		energy_filter = {'field': 'habitat_type.energy', 'op': '==', 'value': 'Low'}
+		feature_id_filter2 = {'field': 'habitat_type.features.id', 'op': 'in', 'value': ['B02','B03']}
 
 		filters = [
 				hab_id_filter,

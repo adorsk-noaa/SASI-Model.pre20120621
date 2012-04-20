@@ -34,7 +34,7 @@ class SA_DAO(object):
 
 		# Initialize registry and query.
 		q_registry = {self.primary_class.__name__: primary_alias}
-		q = self.session.query(primary_alias)
+		q = self.session.query(primary_alias).distinct(primary_alias.id)
 
 		# Handle filters.
 		if filters:
@@ -94,7 +94,7 @@ class SA_DAO(object):
 
 		# Get base query as subquery, and select only the primary class id.
 		bq_primary_alias = aliased(self.primary_class)
-		bq = self.get_filtered_query(primary_alias=bq_primary_alias, filters=filters).with_entities(bq_primary_alias.id).distinct(bq_primary_alias.id)
+		bq = self.get_filtered_query(primary_alias=bq_primary_alias, filters=filters).with_entities(bq_primary_alias.id)
 		bq = bq.subquery()
 
 		# Initialize primary class alias and registry for main query.
