@@ -171,25 +171,36 @@ class SA_DAO(object):
 		# Create the main query, and join the basequery on the primary class id.
 		q = self.session.query(q_primary_alias).join(bq, q_primary_alias.id == bq.c.id)
 
+
 		# Register fields and grouping fields.
 		for field in [bucket_field] + grouping_fields:
 			q = self.register_field_dependencies(q, q_registry, field['id'])
-
-		# Add labeled count field to query entities.
-		count_entity = func.count(q_primary_alias.id).label('bucket_count')
-		q_entities.add(count_entity)
-
-		# Create bucket entity.
-		bucket_field_entity = self.get_field_entity(q_registry, bucket_field)
-		bucket_entity = func.width_bucket(bucket_field_entity, field_min, field_max, num_buckets).label('bucket')
-		q_entities.add(bucket_entity)
-		q = q.group_by(bucket_entity)
 
 		# Add grouping fields to query entities, and to group by.
 		for field in grouping_fields:
 			field_entity = self.get_field_entity(q_registry, field)
 			q_entities.add(field_entity)
 			q = q.group_by(field_entity)
+
+		# Create bucket field entity.
+		bucket_field_entity = self.get_field_entity(q_registry, bucket_field)
+
+		# Explicitly count values which == field_max.
+		num_max_values = 0
+		max_count_entity = func.count(q_primary_alias.id).label('max_count')
+		max_count_q_entities = list(q_entities) + [max_count_entity]
+		max_count = q.filter(bucket_field_entity == field_max).with_entities(*max_count_q_entities).one()[0]
+
+		# Create bucket entity.
+		bucket_entity = func.width_bucket(bucket_field_entity, field_min, field_max, num_buckets).label('bucket')
+		q_entities.add(bucket_entity)
+
+		# Add labeled count field to query entities.
+		count_entity = func.count(q_primary_alias.id).label('bucket_count')
+		q_entities.add(count_entity)
+
+		# Add bucket entity to group by.
+		q = q.group_by(bucket_entity)
 
 		# Only select required entities.
 		q = q.with_entities(*q_entities)
@@ -208,6 +219,13 @@ class SA_DAO(object):
 				'count': r['bucket_count']
 				})
 		buckets.sort(key=lambda b: b['min'])
+
+		# Last bucket is values >= field_max.  We want the values that == field_max to go in the 2nd to last bucket.
+		if len(buckets) >= 2:
+			buckets[-2]['count'] += max_count
+
+		# Remove the last bucket.
+		buckets.pop()
 
 		return buckets
  
