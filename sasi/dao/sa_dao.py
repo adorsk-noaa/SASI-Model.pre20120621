@@ -90,7 +90,7 @@ class SA_DAO(object):
 	
 	# Get aggregates query.
 	# Note: this assumes that the primary_class has a single 'id' field for joining.
-	def get_aggregates_query(self, fields=[], grouping_fields=[], filters=None, aggregate_funcs = ['sum']):
+	def get_aggregates_query(self, fields=[], grouping_fields=[], filters=None):
 
 		# Get base query as subquery, and select only the primary class id.
 		bq_primary_alias = aliased(self.primary_class)
@@ -116,13 +116,17 @@ class SA_DAO(object):
 
 			field_entity = self.get_field_entity(q_registry, field)
 
+			# Set default aggregate functions.
+			field.setdefault('aggregate_funcs', ['sum'])
+
 			# Make individual entities for each aggregate function.
-			for func_name in aggregate_funcs:
+			for func_name in field['aggregate_funcs']:
 				aggregate_func = getattr(func, func_name)
 				aggregate_entity = aggregate_func(field_entity)
 				if field.has_key('label'): label = field['label']
 				else: label = field['id']
-				aggregate_entity = aggregate_entity.label("%s--%s" % (label, func_name))
+				aggregate_label = self.get_aggregate_label(field['label'], func_name)
+				aggregate_entity = aggregate_entity.label(aggregate_label)
 				q_entities.add(aggregate_entity)
 
 		# Add grouping fields to query entities, and to group by.
@@ -136,11 +140,71 @@ class SA_DAO(object):
 
 		return q
 
-	def get_aggregates(self, as_dicts=True, **kwargs):
-		rows = self.get_aggregates_query(**kwargs).all()
-		if as_dicts:
-			return [dict(zip(row.keys(), row)) for row in rows]
-		else: return rows
+	# Helper function for creating aggregate field labels.
+	def get_aggregate_label(self, field_label, func_name):
+		return "{}--{}".format(field_label, func_name)
+
+	def get_aggregates(self, as_dicts=True, fields=[], grouping_fields=[], **kwargs):
+		# Set default aggregate functions on fields.
+		for field in fields:
+			field.setdefault('aggregate_funcs', ['sum'])
+	
+		# Generate result templates for grouping fields which are configured to
+		# include all values.
+		result_templates = {}
+		for grouping_field in grouping_fields:
+			if grouping_field.get('all_values', False):
+				result_templates[grouping_field['id']] = self.get_field_values(grouping_field)
+
+		# Get aggregate results as dictionaries.
+		rows = self.get_aggregates_query(fields=fields, grouping_fields=grouping_fields, **kwargs).all()
+		aggregates = [dict(zip(row.keys(), row)) for row in rows]
+
+		# Make list of value fields (per aggregate query convention).
+
+		# Initialize result tree with aggregates.
+		result_tree = {}
+		for aggregate in aggregates:
+			current_node = result_tree
+			for grouping_field in grouping_fields:
+
+				# Initialize children if not yet set.
+				if not current_node.has_key('children'):
+					current_node['children'] = {}
+					for value in result_templates.get(grouping_field['id'], []):
+						current_node['children'][value] = {}
+
+				# Set current node to next tree node (initializing if not yet set).
+				current_node = current_node['children'].setdefault(aggregate[grouping_field['label']], {})
+
+			# We should now be at a leaf. Set leaf's data.
+			current_node['data'] = {}
+			for field in fields:
+				for func_name in field['aggregate_funcs']:
+					aggregate_label = self.get_aggregate_label(field['label'], func_name)
+					current_node['data'][aggregate_label] = aggregate[aggregate_label]
+
+
+		# Set default values for unvisited leafs.
+		default_value = {}
+		for field in fields: 
+			for func_name in field['aggregate_funcs']:
+				aggregate_label = self.get_aggregate_label(field['label'], func_name)
+				default_value[aggregate_label] = 0
+
+		# Process tree recursively to set values on unvisited leafs and calculate branch values.
+		self._process_aggregates_tree(result_tree, default_value)
+
+		return result_tree
+
+	# Helper function to recursively process aggregates result tree.
+	def _process_aggregates_tree(self, node, default_value=None):
+		if node.has_key('children'):
+			for child in node['children'].values():
+				self._process_aggregates_tree(child, default_value)
+		else:
+			# Set default value on node if it's blank.
+			if not node.has_key('data'): node['data'] = default_value
 
 
 	# Get histogram.
@@ -214,9 +278,10 @@ class SA_DAO(object):
 		row_dicts = [dict(zip(row.keys(), row)) for row in rows]
 		for r in row_dicts:
 			buckets.append({
+				'bucket': r['bucket'],
 				'min': field_min + (r['bucket'] - 1) * bucket_width,
 				'max': field_min + (r['bucket']) * bucket_width,
-				'count': r['bucket_count']
+				'count': r['bucket_count'],
 				})
 		buckets.sort(key=lambda b: b['min'])
 
@@ -270,3 +335,28 @@ class SA_DAO(object):
 		if field.has_key('label'):
 			return field_entity.label(field['label'])
 		else: return field_entity
+	
+
+	# Select values for a given field.
+	def get_field_values(self, field):
+
+		# Initialize registry and query.
+		primary_alias = aliased(self.primary_class)
+		q_registry = {self.primary_class.__name__: primary_alias}
+		q = self.session.query(primary_alias)
+
+		# Register field dependencies.
+		q = self.register_field_dependencies(q, q_registry, field['id'])
+
+		# Get field's entity.
+		field_entity = self.get_field_entity(q_registry, field)
+
+		# Select only the field entity.
+		q = q.group_by(field_entity).with_entities(field_entity)
+
+		# Return field values
+		return [r[0] for r in q.all()]
+
+
+
+
