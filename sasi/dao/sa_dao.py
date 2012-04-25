@@ -144,7 +144,7 @@ class SA_DAO(object):
 	def get_aggregate_label(self, field_label, func_name):
 		return "{}--{}".format(field_label, func_name)
 
-	def get_aggregates(self, as_dicts=True, fields=[], grouping_fields=[], **kwargs):
+	def get_aggregates(self, fields=[], grouping_fields=[], **kwargs):
 		# Set default aggregate functions on fields.
 		for field in fields:
 			field.setdefault('aggregate_funcs', ['sum'])
@@ -160,10 +160,8 @@ class SA_DAO(object):
 		rows = self.get_aggregates_query(fields=fields, grouping_fields=grouping_fields, **kwargs).all()
 		aggregates = [dict(zip(row.keys(), row)) for row in rows]
 
-		# Make list of value fields (per aggregate query convention).
-
 		# Initialize result tree with aggregates.
-		result_tree = {}
+		result_tree = {'name': 'root'}
 		for aggregate in aggregates:
 			current_node = result_tree
 			for grouping_field in grouping_fields:
@@ -176,6 +174,7 @@ class SA_DAO(object):
 
 				# Set current node to next tree node (initializing if not yet set).
 				current_node = current_node['children'].setdefault(aggregate[grouping_field['label']], {})
+				current_node['name'] = grouping_field['id']
 
 			# We should now be at a leaf. Set leaf's data.
 			current_node['data'] = {}
@@ -195,6 +194,11 @@ class SA_DAO(object):
 		# Process tree recursively to set values on unvisited leafs and calculate branch values.
 		self._process_aggregates_tree(result_tree, default_value)
 
+		# Merge in aggregates for higher grouping levels (if any).
+		if len(grouping_fields) > 0:
+			parent_tree = self.get_aggregates(fields=fields, grouping_fields=grouping_fields[:-1], **kwargs)
+			self._merge_aggregates_trees(parent_tree, result_tree)
+
 		return result_tree
 
 	# Helper function to recursively process aggregates result tree.
@@ -205,7 +209,14 @@ class SA_DAO(object):
 		else:
 			# Set default value on node if it's blank.
 			if not node.has_key('data'): node['data'] = default_value
-
+	
+	# Helper function to recursively merge tree1 into tree2.
+	# Modifies tree2 in-place.
+	def _merge_aggregates_trees(self, node1, node2):
+		if node1.has_key('children'):
+			for child_key in node1['children'].keys():
+				self._merge_aggregates_trees(node1['children'][child_key], node2.setdefault('children',{}).setdefault(child_key,{}))
+		node2['data'] = node1['data']
 
 	# Get histogram.
 	# Note: this assumes that the primary_class has a single 'id' field for joining.
@@ -216,9 +227,11 @@ class SA_DAO(object):
 
 		# If min and max were not given, get them.
 		if not field_min or not field_max:
-			aggregates = self.get_aggregates(fields=[bucket_field], aggregate_funcs=['min','max'], filters=filters).pop()
-			field_max = float(aggregates["%s--max" % bucket_field['label']])
-			field_min = float(aggregates["%s--min" % bucket_field['label']])
+			aggregate_field = bucket_field.copy()
+			aggregate_field['aggregate_funcs'] = ['min', 'max']
+			aggregates = self.get_aggregates(fields=[aggregate_field], filters=filters)
+			field_max = float(aggregates['data']["%s--max" % bucket_field['label']])
+			field_min = float(aggregates['data']["%s--min" % bucket_field['label']])
 
 		# Get base query as subquery, and select only the primary class id.
 		bq_primary_alias = aliased(self.primary_class)
@@ -234,7 +247,6 @@ class SA_DAO(object):
 
 		# Create the main query, and join the basequery on the primary class id.
 		q = self.session.query(q_primary_alias).join(bq, q_primary_alias.id == bq.c.id)
-
 
 		# Register fields and grouping fields.
 		for field in [bucket_field] + grouping_fields:
@@ -356,7 +368,5 @@ class SA_DAO(object):
 
 		# Return field values
 		return [r[0] for r in q.all()]
-
-
 
 

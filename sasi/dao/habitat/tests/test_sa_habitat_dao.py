@@ -32,18 +32,18 @@ class SA_Habitat_DAOTest(BaseTest):
 				{'id': "area", 'label': 'area_label'}
 				]
 		grouping_fields = [
-				{'id': "habitat_type.substrate.id", 'label': 'substrate_id'}
+				#{'id': "habitat_type.substrate.id", 'label': 'substrate_id', 'all_values': True},
+				#{'id': "habitat_type.energy", 'label': 'energy', 'all_values': True},
+				{'id': "habitat_type.features.id", 'label': 'feature_id', 'all_values': True},
 				]
 		filters = [
 				#energy_filter
 				#hab_id_filter
 				]
 		aggregates = habitat_dao.get_aggregates(fields=fields, grouping_fields=grouping_fields, filters=filters)
-		#for a in aggregates: print a.keys(), a
 
 		histogram = habitat_dao.get_histogram(bucket_field={'id': 'z', 'label': 'depth', 'transform': "-1 * {field}"}, filters=filters)
-		#for b in histogram: print b
-
+		#print histogram
 
 	def get_session(self):
 		return self.session
