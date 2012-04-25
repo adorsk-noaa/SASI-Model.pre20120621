@@ -191,6 +191,7 @@ class SA_DAO(object):
 
 				# Set current node to next tree node (initializing if not yet set).
 				current_node = current_node['children'].setdefault(aggregate[grouping_field['label']], {})
+				current_node['id'] = aggregate[grouping_field['label']]
 				current_node['label'] = aggregate[grouping_field['label_field']['label']]
 
 			# We should now be at a leaf. Set leaf's data.
