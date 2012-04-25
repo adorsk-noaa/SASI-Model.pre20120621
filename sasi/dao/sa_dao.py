@@ -161,7 +161,7 @@ class SA_DAO(object):
 		aggregates = [dict(zip(row.keys(), row)) for row in rows]
 
 		# Initialize result tree with aggregates.
-		result_tree = {'name': 'root'}
+		result_tree = {}
 		for aggregate in aggregates:
 			current_node = result_tree
 			for grouping_field in grouping_fields:
@@ -174,14 +174,13 @@ class SA_DAO(object):
 
 				# Set current node to next tree node (initializing if not yet set).
 				current_node = current_node['children'].setdefault(aggregate[grouping_field['label']], {})
-				current_node['name'] = grouping_field['id']
 
 			# We should now be at a leaf. Set leaf's data.
 			current_node['data'] = {}
 			for field in fields:
 				for func_name in field['aggregate_funcs']:
 					aggregate_label = self.get_aggregate_label(field['label'], func_name)
-					current_node['data'][aggregate_label] = aggregate[aggregate_label]
+					current_node['data'] = aggregate
 
 
 		# Set default values for unvisited leafs.
