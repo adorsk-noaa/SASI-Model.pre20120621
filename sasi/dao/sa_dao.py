@@ -154,6 +154,7 @@ class SA_DAO(object):
 		# Set default aggregate functions on fields.
 		for field in fields:
 			field.setdefault('aggregate_funcs', ['sum'])
+			field.setdefault('label', field['id'])
 	
 		# Set default labels and label fields on grouping fields if not set.
 		gf_counter = 0
