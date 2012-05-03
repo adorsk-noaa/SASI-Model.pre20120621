@@ -32,11 +32,12 @@ class SA_Habitat_DAOTest(BaseTest):
 				{'id': "area", 'label': 'area_label'}
 				]
 		grouping_fields = [
-				{'id': "habitat_type.substrate.id", 'label': 'substrate_id', 'label_field': {'id': 'habitat_type.substrate.name'}},
-				{'id': "habitat_type.energy", 'label': 'energy', 'all_values': True},
+				{'id': "habitat_type.substrate.id", 'label': 'substrate_id', 'label_field': {'id': 'habitat_type.substrate.name'}, 'all_values': True},
+				#{'id': "habitat_type.energy", 'label': 'energy', 'all_values': True},
 				#{'id': "habitat_type.features.id", 'label': 'feature_id', 'label_field': {'id': 'habitat_type.features.name'}, 'all_values': True},
 				]
 		filters = [
+				substrate_id_filter
 				#energy_filter
 				#hab_id_filter
 				]

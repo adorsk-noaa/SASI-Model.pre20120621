@@ -209,11 +209,14 @@ class SA_DAO(object):
 
 
 		# Set default values for unvisited leafs.
-		default_value = {}
+		default_value = []
 		for field in fields: 
 			for func_name in field['aggregate_funcs']:
 				aggregate_label = self.get_aggregate_label(field['label'], func_name)
-				default_value[aggregate_label] = 0
+				default_value.append({
+					'label': aggregate_label,
+					'value': 0
+					})
 
 		# Process tree recursively to set values on unvisited leafs and calculate branch values.
 		self._process_aggregates_tree(result_tree, default_value)
