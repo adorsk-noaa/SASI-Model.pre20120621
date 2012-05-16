@@ -179,7 +179,7 @@ class SA_DAO(object):
 		aggregates = [dict(zip(row.keys(), row)) for row in rows]
 
 		# Initialize result tree with aggregates.
-		result_tree = {'label': ''}
+		result_tree = {'label': '', 'id': 'root'}
 		for aggregate in aggregates:
 			current_node = result_tree
 			for grouping_field in grouping_fields:
@@ -188,7 +188,7 @@ class SA_DAO(object):
 				if not current_node.has_key('children'):
 					current_node['children'] = {}
 					for value in grouping_field_values.get(grouping_field['id'], []):
-						current_node['children'][value['id']] = {'label': value['label']}
+						current_node['children'][value['id']] = {'label': value['label'], 'id': value['id']}
 
 				# Set current node to next tree node (initializing if not yet set).
 				current_node = current_node['children'].setdefault(aggregate[grouping_field['label']], {})
@@ -196,8 +196,8 @@ class SA_DAO(object):
 				current_node['label'] = aggregate[grouping_field['label_field']['label']]
 
 			# We should now be at a leaf. Set leaf's data.
-			#current_node['id'] = aggregate[grouping_field['label']]
 			#current_node['label'] = aggregate[grouping_field['label_field']['label']]
+			#current_node['id'] = aggregate[grouping_field['label']]
 			current_node['data'] = []
 			for field in fields:
 				for func_name in field['aggregate_funcs']:
