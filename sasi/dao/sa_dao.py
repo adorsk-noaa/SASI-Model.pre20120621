@@ -4,6 +4,7 @@ from sqlalchemy.orm.properties import RelationshipProperty
 from sqlalchemy.sql import func
 from collections import OrderedDict
 import sasi.sa.compile as sa_compile
+import copy
 
 class SA_DAO(object):
 
@@ -219,7 +220,7 @@ class SA_DAO(object):
 					})
 
 		# Process tree recursively to set values on unvisited leafs and calculate branch values.
-		self._process_aggregates_tree(result_tree, default_value)
+		self._process_aggregates_tree(result_tree, default_value_func=lambda: copy.deepcopy(default_value))
 
 		# Merge in aggregates for higher grouping levels (if any).
 		if len(grouping_fields) > 0:
@@ -229,13 +230,13 @@ class SA_DAO(object):
 		return result_tree
 
 	# Helper function to recursively process aggregates result tree.
-	def _process_aggregates_tree(self, node, default_value=None):
+	def _process_aggregates_tree(self, node, default_value_func=None):
 		if node.has_key('children'):
 			for child in node['children'].values():
-				self._process_aggregates_tree(child, default_value)
+				self._process_aggregates_tree(child, default_value_func)
 		else:
 			# Set default value on node if it's blank.
-			if not node.has_key('data'): node['data'] = default_value
+			if not node.has_key('data') and default_value_func: node['data'] = default_value_func()
 	
 	# Helper function to recursively merge tree1 into tree2.
 	# Modifies tree2 in-place.
