@@ -5,6 +5,9 @@ from sqlalchemy.sql import func
 from collections import OrderedDict
 import sasi.sa.compile as sa_compile
 import copy
+import re
+
+from sqlalchemy import cast, String
 
 class SA_DAO(object):
 
@@ -295,9 +298,13 @@ class SA_DAO(object):
 		max_count_q_entities = list(q_entities) + [max_count_entity]
 		max_count = q.filter(bucket_field_entity == field_max).with_entities(*max_count_q_entities).one()[0]
 
-		# Create bucket entity.
-		bucket_entity = func.width_bucket(bucket_field_entity, field_min, field_max, num_buckets).label('bucket')
+		# Create bucket entities.
+		(bucket_entity, bucket_label_entity) = self.get_bucket_entities(bucket_field_entity, field_min, field_max, num_buckets)
+		bucket_entity = bucket_entity.label('bucket')
 		q_entities.add(bucket_entity)
+
+		bucket_label_entity = bucket_label_entity.label('bucket_label')
+		q_entities.add(bucket_label_entity)
 
 		# Add labeled count field to query entities.
 		count_entity = func.count(q_primary_alias.id).label('bucket_count')
@@ -309,18 +316,24 @@ class SA_DAO(object):
 		# Only select required entities.
 		q = q.with_entities(*q_entities)
 
-		# Calculate bucket width.
-		bucket_width = (field_max - field_min)/num_buckets
 
 		# Format results.
 		buckets = []
 		rows = q.all()
 		row_dicts = [dict(zip(row.keys(), row)) for row in rows]
 		for r in row_dicts:
+			bucket_label = r['bucket_label']
+			m = re.match('(.*) to (.*)', bucket_label)
+			bucket_min = ""
+			bucket_max = ""
+			if (m):
+				bucket_min = m.group(1)
+				bucket_max = m.group(2)
+
 			buckets.append({
 				'bucket': r['bucket'],
-				'min': field_min + (r['bucket'] - 1) * bucket_width,
-				'max': field_min + (r['bucket']) * bucket_width,
+				'min': bucket_min,
+				'max': bucket_max,
 				'count': r['bucket_count'],
 				})
 		buckets.sort(key=lambda b: b['min'])
@@ -333,6 +346,13 @@ class SA_DAO(object):
 		buckets.pop()
 
 		return buckets
+
+	# Get bucket & corresponding label entities.
+	def get_bucket_entities(self, field_entity, field_min, field_max, num_buckets):
+		bucket_width = (field_max - field_min)/num_buckets
+		bucket_entity = func.width_bucket(field_entity, field_min, field_max, num_buckets)
+		bucket_label_entity = (cast(field_min + bucket_entity * bucket_width, String) + ' to ' + cast(field_min + bucket_entity * bucket_width + bucket_width, String))
+		return (bucket_entity, bucket_label_entity)
  
 
 	def register_field_dependencies(self, q, registry, field_id):

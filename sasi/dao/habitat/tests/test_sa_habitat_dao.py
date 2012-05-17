@@ -32,18 +32,16 @@ class SA_Habitat_DAOTest(BaseTest):
 				{'id': "area", 'label': 'area_label'}
 				]
 		grouping_fields = [
-				{'id': "habitat_type.substrate.id", 'label': 'substrate_id', 'label_field': {'id': 'habitat_type.substrate.name'}, 'all_values': True},
+				#{'id': "habitat_type.substrate.id", 'label': 'substrate_id', 'label_field': {'id': 'habitat_type.substrate.name'}, 'all_values': True},
 				#{'id': "habitat_type.energy", 'label': 'energy', 'all_values': True},
-				#{'id': "habitat_type.features.id", 'label': 'feature_id', 'label_field': {'id': 'habitat_type.features.name'}, 'all_values': True},
+				{'id': "habitat_type.features.id", 'label': 'feature_id', 'label_field': {'id': 'habitat_type.features.name'}, 'all_values': True},
 				]
 		filters = [
-				substrate_id_filter
+				#substrate_id_filter
 				#energy_filter
 				#hab_id_filter
 				]
 		aggregates = habitat_dao.get_aggregates(fields=fields, grouping_fields=grouping_fields, filters=filters)
-		import json
-		print json.dumps(aggregates, indent=2)
 
 		histogram = habitat_dao.get_histogram(bucket_field={'id': 'z', 'label': 'depth', 'transform': "-1 * {field}"}, filters=filters)
 		#print histogram
