@@ -1,7 +1,7 @@
 from sqlalchemy.orm import aliased, class_mapper, join
 from sqlalchemy.orm.util import AliasedClass
 from sqlalchemy.orm.properties import RelationshipProperty
-from sqlalchemy.sql import func
+from sqlalchemy.sql import func, asc
 from collections import OrderedDict
 import sasi.sa.compile as sa_compile
 import copy
@@ -136,14 +136,23 @@ class SA_DAO(object):
 		# Add grouping fields to query entities, and to group by.
 		for field in grouping_fields:
 			field_entity = self.get_field_entity(q_registry, field)
-			q_entities.add(field_entity)
-			q = q.group_by(field_entity)
 
-			# If grouping field has a label field, add it.
-			if field.has_key('label_field'):
-				label_field_entity = self.get_field_entity(q_registry, field['label_field'])
-				q_entities.add(label_field_entity)
-				q = q.group_by(label_field_entity)
+			# Handle histogram fields.
+			if field.get('as_histogram', False):
+
+				q, bucket_label_entity = self.add_bucket_field_to_query(q, q_entities, field, field_entity)
+				q = q.group_by(bucket_label_entity)
+
+			# Handle other fields.
+			else:
+				q_entities.add(field_entity)
+				q = q.group_by(field_entity)
+
+				# If grouping field has a label field, add it.
+				if field.has_key('label_field'):
+					label_field_entity = self.get_field_entity(q_registry, field['label_field'])
+					q_entities.add(label_field_entity)
+					q = q.group_by(label_field_entity)
 
 		# Only select required entities.
 		q = q.with_entities(*q_entities)
@@ -155,6 +164,7 @@ class SA_DAO(object):
 		return "{}--{}".format(field_label, func_name)
 
 	def get_aggregates(self, fields=[], grouping_fields=[], **kwargs):
+
 		# Set default aggregate functions on fields.
 		for field in fields:
 			field.setdefault('aggregate_funcs', ['sum'])
@@ -165,18 +175,27 @@ class SA_DAO(object):
 		for grouping_field in grouping_fields:
 			gf_counter += 1
 			grouping_field.setdefault('label', "gf{}".format(gf_counter))
-			grouping_field.setdefault('label_field', {'id': grouping_field['id']})
-			grouping_field['label_field'].setdefault('label', "{}--label".format(grouping_field['label']))
+			# Handle non-histogram grouping fields.
+			if not grouping_field.get('as_histogram', False):
+				grouping_field.setdefault('label_field', {'id': grouping_field['id']})
+				grouping_field['label_field'].setdefault('label', "{}--label".format(grouping_field['label']))
 
 		# Generate values for grouping fields which are configured to
 		# include all values, with labels.
 		grouping_field_values = {}
 		for grouping_field in grouping_fields:
 			if grouping_field.get('all_values', False):
-				grouping_field_values[grouping_field['id']] = [{
-					'id': v[grouping_field['label']],
-					'label': v[grouping_field['label_field']['label']]
-					} for v in self.get_field_values([grouping_field, grouping_field['label_field']]) ]
+
+				for v in self.get_field_values([grouping_field]):
+					if not grouping_field.get('as_histogram', False):
+						label = v[grouping_field['label_field']['label']]
+					else:
+						label = v[grouping_field['label']]
+
+					grouping_field_values[grouping_field['id']] = [{
+						'id': v[grouping_field['label']],
+						'label': label
+						}]
 
 		# Get aggregate results as dictionaries.
 		rows = self.get_aggregates_query(fields=fields, grouping_fields=grouping_fields, **kwargs).all()
@@ -197,7 +216,11 @@ class SA_DAO(object):
 				# Set current node to next tree node (initializing if not yet set).
 				current_node = current_node['children'].setdefault(aggregate[grouping_field['label']], {})
 				current_node['id'] = aggregate[grouping_field['label']]
-				current_node['label'] = aggregate[grouping_field['label_field']['label']]
+				if not grouping_field.get('as_histogram', False):
+					label = grouping_field['label_field']['label']
+				else:
+					label = grouping_field['label']
+				current_node['label'] = aggregate[label]
 
 			# We should now be at a leaf. Set leaf's data.
 			#current_node['label'] = aggregate[grouping_field['label_field']['label']]
@@ -249,6 +272,14 @@ class SA_DAO(object):
 				self._merge_aggregates_trees(node1['children'][child_key], node2.setdefault('children',{}).setdefault(child_key,{}))
 		node2['data'] = node1['data']
 
+	def get_field_min_max(self, field, filters=[]):
+		simple_field = { 'id': field.get('id') }
+		simple_field['aggregate_funcs'] = ['min', 'max']
+		aggregates = self.get_aggregates(fields=[simple_field], filters=filters)
+		field_min = float(aggregates['data'][0]['value'])
+		field_max = float(aggregates['data'][1]['value'])
+		return field_min, field_max
+
 	# Get histogram.
 	# Note: this assumes that the primary_class has a single 'id' field for joining.
 	def get_histogram(self, bucket_field=None, field_min=None, field_max=None, num_buckets=10, grouping_fields=[], filters=None):
@@ -258,11 +289,7 @@ class SA_DAO(object):
 
 		# If min and max were not given, get them.
 		if not field_min or not field_max:
-			aggregate_field = bucket_field.copy()
-			aggregate_field['aggregate_funcs'] = ['min', 'max']
-			aggregates = self.get_aggregates(fields=[aggregate_field], filters=filters)
-			field_max = float(aggregates['data'][0]['value'])
-			field_min = float(aggregates['data'][1]['value'])
+			field_min, field_max = self.get_field_min_max(bucket_field, filters=filters)
 
 		# Get base query as subquery, and select only the primary class id.
 		bq_primary_alias = aliased(self.primary_class)
@@ -351,7 +378,7 @@ class SA_DAO(object):
 	def get_bucket_entities(self, field_entity, field_min, field_max, num_buckets):
 		bucket_width = (field_max - field_min)/num_buckets
 		bucket_entity = func.width_bucket(field_entity, field_min, field_max, num_buckets)
-		bucket_label_entity = (cast(field_min + bucket_entity * bucket_width, String) + ' to ' + cast(field_min + bucket_entity * bucket_width + bucket_width, String))
+		bucket_label_entity = (cast(field_min + (bucket_entity - 1) * bucket_width, String) + ' to ' + cast(field_min + bucket_entity * bucket_width + bucket_width, String))
 		return (bucket_entity, bucket_label_entity)
  
 
@@ -408,16 +435,58 @@ class SA_DAO(object):
 
 		# Register field dependencies and get field entities.
 		for field in fields:
+
+			# If field has label field, add label field to list of fields.
+			if field.get('label_field', False):
+				fields.append(field['label_field'])
+
 			q = self.register_field_dependencies(q, q_registry, field['id'])
 			field_entity = self.get_field_entity(q_registry, field)
-			q_entities.add(field_entity)
-			q = q.group_by(field_entity).with_entities(*q_entities)
+
+			# If field is a histogram field, get bucket entities for the field.
+			if field.get('as_histogram', False):
+				q, bucket_label_entity = self.add_bucket_field_to_query(q, q_entities, field, field_entity)
+				q = q.group_by(bucket_label_entity)
+
+			else:
+				q_entities.add(field_entity)
+				q = q.group_by(field_entity)
+				
+			q = q.with_entities(*q_entities)
+		
+		rows = q.all()
 
 		# Return field values
-		rows = q.all()
 		if as_dicts:
 			return [dict(zip(row.keys(), row)) for row in rows]
 		else: 
 			return rows
+	
 
+	# Add bucket entity to query.
+	# Constrains buckets to given field_max. This overrides default sql behavior to make last bucket be all values >= field_max.
+	def add_bucket_field_to_query(self, q, q_entities, field, field_entity):
+		# Get min, max if not provided.
+		if (not field.has_key('min') or not field.has_key('max')):
+			field_min, field_max = self.get_field_min_max(field)
+
+		# Override calculated min/max if values were provided.
+		if field.has_key('min'): field_min = field.get('min')
+		if field.has_key('max'): field_min = field.get('max')
+
+		num_buckets = field.get('num_buckets', 10)
+
+		# Get bucket width.
+		bucket_width = (field_max - field_min)/num_buckets
+
+		# Get bucket field entities.
+		# Bit of a trick here: we use field_max - bucket_width because normally last bucket gets all values >= field_max.
+		# Here we use one less bucket, and then filter.  This essentially makes the last bucket include values <= field_max.
+		bucket_entity = func.width_bucket(field_entity, field_min, field_max - bucket_width, num_buckets - 1)
+		q = q.filter(field_entity <= field_max)
+		bucket_label_entity = (cast(field_min + (bucket_entity - 1) * bucket_width, String) + ' to ' + cast(field_min + bucket_entity * bucket_width + bucket_width, String))
+		bucket_label_entity = bucket_label_entity.label(field['label'])
+
+		q_entities.add(bucket_label_entity)
+		return q, bucket_label_entity
 
