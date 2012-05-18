@@ -41,6 +41,7 @@ class SA_DAO(object):
 		q = self.session.query(primary_alias).distinct(primary_alias.id)
 
 		# Handle filters.
+		# @TODO: CHANGE FILTERS TO USE FIELD OBJECTS, RATHER THAN JUST IDS.  THIS WILL ALLOW FOR TRANSFORMS.
 		if filters:
 			for f in filters:
 
@@ -51,18 +52,16 @@ class SA_DAO(object):
 				q = self.register_field_dependencies(q, q_registry, f['field'])
 
 				# Get field's entity.
-				field = self.get_field_entity(q_registry, {'id': f['field']})
-
-				# Get operator function.
+				field_entity = self.get_field_entity(q_registry, {'id': f['field'], 'transform': f.get('transform', None)})
 
 				# Handle operators which for specific comparators exist.
 				if self.comparators.has_key(f['op']):
-					op = getattr(field, self.comparators.get(f['op']))
+					op = getattr(field_entity, self.comparators.get(f['op']))
 					q = q.filter(op(f['value']))
 
 				# Handle all other operators.
 				else:
-					q = q.filter(field.op(f['op'])(f['value']))
+					q = q.filter(field_entity.op(f['op'])(f['value']))
 
 		# Return query.
 		return q
