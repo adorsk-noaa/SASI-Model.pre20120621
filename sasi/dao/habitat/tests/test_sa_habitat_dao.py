@@ -35,19 +35,33 @@ class SA_Habitat_DAOTest(BaseTest):
 				#{'id': "habitat_type.substrate.id", 'label': 'substrate_id', 'label_field': {'id': 'habitat_type.substrate.name'}, 'all_values': True},
 				#{'id': "habitat_type.energy", 'label': 'energy', 'all_values': True},
 				#{'id': "habitat_type.features.id", 'label': 'feature_id', 'label_field': {'id': 'habitat_type.features.name'}, 'all_values': True},
-				{'id': "z", 'label': 'depth', 'as_histogram': True, 'all_values': True, 'min': -3000, 'max': 0},
+				{'id': "z", 'label': 'depth', 'as_histogram': True, 'all_values': True, 'min': 0, 'max': 3000, 'transform': '-1 * {field}'},
 				]
 		filters = [
-				#substrate_id_filter
+				substrate_id_filter
 				#energy_filter
 				#hab_id_filter
 				]
+		print "here"
 		aggregates = habitat_dao.get_aggregates(fields=fields, grouping_fields=grouping_fields, filters=filters)
-		import json
-		print json.dumps(aggregates, indent=2)
+		data = []
+		import re
+		for c in aggregates['children'].values():
+			label = c['label']
+			value = c['data'][0]['value']
+			m = re.match('(.*) to (.*)', label)
+			if m:
+				cmin = float(m.group(1))
+			data.append({
+				'label': label,
+				'value': value,
+				'min': cmin
+				})
+		import operator
+		data = sorted(data, key=operator.itemgetter('min'))
+		for d in data:
+			print "{}:\t{:.1e}".format(d['label'], d['value'])
 
-		histogram = habitat_dao.get_histogram(bucket_field={'id': 'z', 'label': 'depth', 'transform': "-1 * {field}"}, filters=filters)
-		#print histogram
 
 	def get_session(self):
 		return self.session

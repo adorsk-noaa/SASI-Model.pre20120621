@@ -185,19 +185,19 @@ class SA_DAO(object):
 		# include all values, with labels.
 		grouping_field_values = {}
 		for grouping_field in grouping_fields:
+			values = []
 			if grouping_field.get('all_values', False):
-
 				for v in self.get_field_values([grouping_field]):
-					if not grouping_field.get('as_histogram', False):
-						label = v[grouping_field['label_field']['label']]
-					else:
+					if grouping_field.get('as_histogram', False):
 						label = v[grouping_field['label']]
-
-					grouping_field_values[grouping_field['id']] = [{
+					else:
+						label = v[grouping_field['label_field']['label']]
+					values.append({
 						'id': v[grouping_field['label']],
 						'label': label,
 						'label_type': grouping_field['label_type']
-						}]
+						})
+			grouping_field_values[grouping_field['id']] = values 
 
 		# Get aggregate results as dictionaries.
 		rows = self.get_aggregates_query(fields=fields, grouping_fields=grouping_fields, **kwargs).all()
@@ -276,114 +276,12 @@ class SA_DAO(object):
 		node2['data'] = node1['data']
 
 	def get_field_min_max(self, field, filters=[]):
-		simple_field = { 'id': field.get('id') }
+		simple_field = { 'id': field.get('id') , 'transform': field.get('transform')}
 		simple_field['aggregate_funcs'] = ['min', 'max']
 		aggregates = self.get_aggregates(fields=[simple_field], filters=filters)
 		field_min = float(aggregates['data'][0]['value'])
 		field_max = float(aggregates['data'][1]['value'])
 		return field_min, field_max
-
-	# Get histogram.
-	# Note: this assumes that the primary_class has a single 'id' field for joining.
-	def get_histogram(self, bucket_field=None, field_min=None, field_max=None, num_buckets=10, grouping_fields=[], filters=None):
-
-		# Set label on bucket field if not set.
-		if not bucket_field.has_key('label'): bucket_field['label'] = bucket_field['id']
-
-		# If min and max were not given, get them.
-		if not field_min or not field_max:
-			field_min, field_max = self.get_field_min_max(bucket_field, filters=filters)
-
-		# Get base query as subquery, and select only the primary class id.
-		bq_primary_alias = aliased(self.primary_class)
-		bq = self.get_filtered_query(primary_alias=bq_primary_alias, filters=filters).with_entities(bq_primary_alias.id)
-		bq = bq.subquery()
-
-		# Initialize primary class alias and registry for main query.
-		q_primary_alias = aliased(self.primary_class)
-		q_registry = {self.primary_class.__name__: q_primary_alias}
-
-		# Initialize list of entities for the main query.
-		q_entities = set()
-
-		# Create the main query, and join the basequery on the primary class id.
-		q = self.session.query(q_primary_alias).join(bq, q_primary_alias.id == bq.c.id)
-
-		# Register fields and grouping fields.
-		for field in [bucket_field] + grouping_fields:
-			q = self.register_field_dependencies(q, q_registry, field['id'])
-
-		# Add grouping fields to query entities, and to group by.
-		for field in grouping_fields:
-			field_entity = self.get_field_entity(q_registry, field)
-			q_entities.add(field_entity)
-			q = q.group_by(field_entity)
-
-		# Create bucket field entity.
-		bucket_field_entity = self.get_field_entity(q_registry, bucket_field)
-
-		# Explicitly count values which == field_max.
-		num_max_values = 0
-		max_count_entity = func.count(q_primary_alias.id).label('max_count')
-		max_count_q_entities = list(q_entities) + [max_count_entity]
-		max_count = q.filter(bucket_field_entity == field_max).with_entities(*max_count_q_entities).one()[0]
-
-		# Create bucket entities.
-		(bucket_entity, bucket_label_entity) = self.get_bucket_entities(bucket_field_entity, field_min, field_max, num_buckets)
-		bucket_entity = bucket_entity.label('bucket')
-		q_entities.add(bucket_entity)
-
-		bucket_label_entity = bucket_label_entity.label('bucket_label')
-		q_entities.add(bucket_label_entity)
-
-		# Add labeled count field to query entities.
-		count_entity = func.count(q_primary_alias.id).label('bucket_count')
-		q_entities.add(count_entity)
-
-		# Add bucket entity to group by.
-		q = q.group_by(bucket_entity)
-
-		# Only select required entities.
-		q = q.with_entities(*q_entities)
-
-
-		# Format results.
-		buckets = []
-		rows = q.all()
-		row_dicts = [dict(zip(row.keys(), row)) for row in rows]
-		for r in row_dicts:
-			bucket_label = r['bucket_label']
-			m = re.match('(.*) to (.*)', bucket_label)
-			bucket_min = ""
-			bucket_max = ""
-			if (m):
-				bucket_min = m.group(1)
-				bucket_max = m.group(2)
-
-			buckets.append({
-				'bucket': r['bucket'],
-				'min': bucket_min,
-				'max': bucket_max,
-				'count': r['bucket_count'],
-				})
-		buckets.sort(key=lambda b: b['min'])
-
-		# Last bucket is values >= field_max.  We want the values that == field_max to go in the 2nd to last bucket.
-		if len(buckets) >= 2:
-			buckets[-2]['count'] += max_count
-
-		# Remove the last bucket.
-		buckets.pop()
-
-		return buckets
-
-	# Get bucket & corresponding label entities.
-	def get_bucket_entities(self, field_entity, field_min, field_max, num_buckets):
-		bucket_width = (field_max - field_min)/num_buckets
-		bucket_entity = func.width_bucket(field_entity, field_min, field_max, num_buckets)
-		bucket_label_entity = (cast(field_min + (bucket_entity - 1) * bucket_width, String) + ' to ' + cast(field_min + bucket_entity * bucket_width + bucket_width, String))
-		return (bucket_entity, bucket_label_entity)
- 
 
 	def register_field_dependencies(self, q, registry, field_id):
 
@@ -418,7 +316,7 @@ class SA_DAO(object):
 		parts = field['id'].split('.')
 		field_entity = getattr(parent,parts[-1])
 
-		if field.has_key('transform'):
+		if field.has_key('transform') and field['transform'] != None:
 			transform_code = field['transform'].format(field = 'field_entity')
 			exec compile("field_entity = {0}".format(transform_code), '<field_entity>', 'exec')
 
@@ -456,7 +354,7 @@ class SA_DAO(object):
 				q = q.group_by(field_entity)
 				
 			q = q.with_entities(*q_entities)
-		
+
 		rows = q.all()
 
 		# Return field values
