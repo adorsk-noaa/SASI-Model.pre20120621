@@ -42,7 +42,6 @@ class SA_Habitat_DAOTest(BaseTest):
 				#energy_filter
 				#hab_id_filter
 				]
-		print "here"
 		aggregates = habitat_dao.get_aggregates(fields=fields, grouping_fields=grouping_fields, filters=filters)
 		data = []
 		import re
