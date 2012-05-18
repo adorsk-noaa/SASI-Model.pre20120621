@@ -175,6 +175,7 @@ class SA_DAO(object):
 		for grouping_field in grouping_fields:
 			gf_counter += 1
 			grouping_field.setdefault('label', "gf{}".format(gf_counter))
+			grouping_field.setdefault('label_type', 'alpha')
 			# Handle non-histogram grouping fields.
 			if not grouping_field.get('as_histogram', False):
 				grouping_field.setdefault('label_field', {'id': grouping_field['id']})
@@ -194,7 +195,8 @@ class SA_DAO(object):
 
 					grouping_field_values[grouping_field['id']] = [{
 						'id': v[grouping_field['label']],
-						'label': label
+						'label': label,
+						'label_type': grouping_field['label_type']
 						}]
 
 		# Get aggregate results as dictionaries.
@@ -221,6 +223,7 @@ class SA_DAO(object):
 				else:
 					label = grouping_field['label']
 				current_node['label'] = aggregate[label]
+				current_node['label_type'] = grouping_field['label_type']
 
 			# We should now be at a leaf. Set leaf's data.
 			#current_node['label'] = aggregate[grouping_field['label_field']['label']]
@@ -467,12 +470,15 @@ class SA_DAO(object):
 	# Constrains buckets to given field_max. This overrides default sql behavior to make last bucket be all values >= field_max.
 	def add_bucket_field_to_query(self, q, q_entities, field, field_entity):
 		# Get min, max if not provided.
+		field_min = 0
+		field_max = 0
+
 		if (not field.has_key('min') or not field.has_key('max')):
 			field_min, field_max = self.get_field_min_max(field)
 
 		# Override calculated min/max if values were provided.
 		if field.has_key('min'): field_min = field.get('min')
-		if field.has_key('max'): field_min = field.get('max')
+		if field.has_key('max'): field_max = field.get('max')
 
 		num_buckets = field.get('num_buckets', 10)
 
@@ -484,7 +490,7 @@ class SA_DAO(object):
 		# Here we use one less bucket, and then filter.  This essentially makes the last bucket include values <= field_max.
 		bucket_entity = func.width_bucket(field_entity, field_min, field_max - bucket_width, num_buckets - 1)
 		q = q.filter(field_entity <= field_max)
-		bucket_label_entity = (cast(field_min + (bucket_entity - 1) * bucket_width, String) + ' to ' + cast(field_min + bucket_entity * bucket_width + bucket_width, String))
+		bucket_label_entity = (cast(field_min + (bucket_entity - 1) * bucket_width, String) + ' to ' + cast(field_min + bucket_entity * bucket_width, String))
 		bucket_label_entity = bucket_label_entity.label(field['label'])
 
 		q_entities.add(bucket_label_entity)

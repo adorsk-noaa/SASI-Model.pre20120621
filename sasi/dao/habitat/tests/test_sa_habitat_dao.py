@@ -35,7 +35,7 @@ class SA_Habitat_DAOTest(BaseTest):
 				#{'id': "habitat_type.substrate.id", 'label': 'substrate_id', 'label_field': {'id': 'habitat_type.substrate.name'}, 'all_values': True},
 				#{'id': "habitat_type.energy", 'label': 'energy', 'all_values': True},
 				#{'id': "habitat_type.features.id", 'label': 'feature_id', 'label_field': {'id': 'habitat_type.features.name'}, 'all_values': True},
-				{'id': "z", 'label': 'depth', 'as_histogram': True, 'all_values': True},
+				{'id': "z", 'label': 'depth', 'as_histogram': True, 'all_values': True, 'min': -3000, 'max': 0},
 				]
 		filters = [
 				#substrate_id_filter
