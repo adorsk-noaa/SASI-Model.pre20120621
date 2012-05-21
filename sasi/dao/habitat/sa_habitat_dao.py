@@ -31,20 +31,8 @@ class SA_Habitat_DAO(Habitat_DAO, SA_DAO):
 	# Get a mapserver data query string.
 	def get_mapserver_data_string(self, filters=None, srid=4326):
 
-		# Get base query as subquery, and select only the primary class id.
-		bq_primary_alias = aliased(self.primary_class)
-		bq = self.get_filtered_query(primary_alias=bq_primary_alias, filters=filters).with_entities(bq_primary_alias.id)
-		bq = bq.subquery()
-
-		# Initialize primary class alias and registry for main query.
-		q_primary_alias = aliased(self.primary_class)
-		q_registry = {self.primary_class.__name__: q_primary_alias}
-
-		# Initialize list of entities for the main query.
-		q_entities = set()
-
-		# Create the main query, and join the basequery on the primary class id.
-		q = self.session.query(q_primary_alias).join(bq, q_primary_alias.id == bq.c.id)
+		# Get base mapserver query.
+		q, q_primary_alias, q_registry, q_entities = self.get_base_mapserver_query(filters=filters)
 
 		# Register the necssary entity dependencies.
 		for field in ['habitat_type.energy', 'habitat_type.substrate.id']:

@@ -393,3 +393,24 @@ class SA_DAO(object):
 		q_entities.add(bucket_label_entity)
 		return q, bucket_label_entity
 
+
+	def get_base_mapserver_query(self, filters):
+
+		# Get base query as subquery, and select only the primary class id.
+		bq_primary_alias = aliased(self.primary_class)
+		bq = self.get_filtered_query(primary_alias=bq_primary_alias, filters=filters).with_entities(bq_primary_alias.id)
+		bq = bq.subquery()
+
+		# Initialize primary class alias and registry for main query.
+		q_primary_alias = aliased(self.primary_class)
+		q_registry = {self.primary_class.__name__: q_primary_alias}
+
+		# Create the main query, and join the basequery on the primary class id.
+		q = self.session.query(q_primary_alias).join(bq, q_primary_alias.id == bq.c.id)
+
+		# Initialize list of entities for the main query.
+		q_entities = set()
+
+		return q, q_primary_alias, q_registry, q_entities
+
+

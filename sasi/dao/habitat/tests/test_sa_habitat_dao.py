@@ -43,24 +43,6 @@ class SA_Habitat_DAOTest(BaseTest):
 				#hab_id_filter
 				]
 		aggregates = habitat_dao.get_aggregates(fields=fields, grouping_fields=grouping_fields, filters=filters)
-		data = []
-		import re
-		for c in aggregates['children'].values():
-			label = c['label']
-			value = c['data'][0]['value']
-			m = re.match('(.*) to (.*)', label)
-			if m:
-				cmin = float(m.group(1))
-			data.append({
-				'label': label,
-				'value': value,
-				'min': cmin
-				})
-		import operator
-		data = sorted(data, key=operator.itemgetter('min'))
-		for d in data:
-			print "{}:\t{:.1e}".format(d['label'], d['value'])
-
 
 	def get_session(self):
 		return self.session
