@@ -319,9 +319,9 @@ class SA_DAO(object):
 			transform_code = field['transform'].format(field = 'field_entity')
 			exec compile("field_entity = {0}".format(transform_code), '<field_entity>', 'exec')
 
-		if field.has_key('label'):
-			return field_entity.label(field['label'])
-		else: return field_entity
+		# Set default label on field, if not provided..
+		field.setdefault('label', field['id'])
+		return field_entity.label(field['label'])
 	
 
 	# Select values for a given set of fields.
