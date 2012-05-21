@@ -52,8 +52,6 @@ def get_map_image_from_wms(wms_parameters=None, result_field=None, result_dao=No
 	# Load the parameters into the map.
 	ms_map.loadOWSParameters(wms_request)
 
-	ms_map.save('foo.map')
-
 	# Draw the map.
 	ms_image = ms_map.draw()
 
@@ -66,7 +64,7 @@ def get_color_classes(attr='', color_map={}):
 	# Set defaults.
 	num_classes = color_map.get('num_classes', 10)
 	value_min = color_map.get('min', 0)
-	value_max = color_map.get('max', 300403776)
+	value_max = color_map.get('max', 100)
 	value_range = value_max - value_min
 	cmap = color_map.get('cmap', get_default_colormap())
 
