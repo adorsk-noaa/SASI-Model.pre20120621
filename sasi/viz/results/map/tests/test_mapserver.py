@@ -21,7 +21,7 @@ class Results_Mapserver_Test(BaseTest):
 				'BBOX': '-80,31,-65,45',
 				'FORMAT':'image/gif',
 				'WIDTH':'640',
-				'HEIGHT':'640'
+				'HEIGHT':'640',
 				}
 		
 		result_field = {
