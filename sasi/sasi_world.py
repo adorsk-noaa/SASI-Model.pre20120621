@@ -36,7 +36,8 @@ if __name__ == '__main__':
 
 	effort_dao = SA_Effort_DAO(session=db_session)
 
-	t0 = 1989	
+	#t0 = 1989	
+	t0 = 2008
 	tf = 2010
 	dt = 1
 	times = range(t0,tf+1,dt)
@@ -52,13 +53,14 @@ if __name__ == '__main__':
 
 	features_model = Features_Model(feature_dao=SA_Feature_DAO(session=db_session))
 
-	#gears = []
-	#for i in [3]:
-		#gear_code = "GC%s" % i
-		#gears.append(db_session.query(Gear).filter(Gear.id == gear_code).one())
+	gears = []
+	for i in [3]:
+		gear_code = "GC%s" % i
+		gears.append(db_session.query(Gear).filter(Gear.id == gear_code).one())
 
 
-	#effort_model = NominalEffortPerGearModel(grid_model=grid_model, gears=gears, times=times)
+	effort_model = NominalEffortPerGearModel(grid_model=grid_model, gears=gears, times=times)
+	"""
 	effort_model = DAO_Effort_Model(effort_dao = effort_dao, default_filters=[
 		{
 			'field': 'tag',
@@ -71,6 +73,7 @@ if __name__ == '__main__':
 			'value': 'GC30'
 			},
 		])
+	"""
 
 	taus = {
 			'0': 1,
@@ -107,11 +110,13 @@ if __name__ == '__main__':
 	#sasi_model_util.results_to_csv_buffer(results=model.results, buffer=sys.stdout)
 
 	# Generate result objects from results.
+	#"""
 	results = sasi_model_util.results_to_result_objs(
 			results = model.results,
 			tag = 'gc30_all'
 			)
+	#"""
 
 	# Save the results.
 	if conf.conf['verbose']: print >> sys.stderr, "%s results total." % len(results)
-	#result_dao.save_results(results)
+	result_dao.save_results(results)
