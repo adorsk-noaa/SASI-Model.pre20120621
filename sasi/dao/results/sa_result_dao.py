@@ -84,20 +84,49 @@ class SA_Result_DAO(SA_DAO):
 
 
 	# Get a mapserver data query string.
-	def get_mapserver_data_string(self, filters=None, srid=4326):
+	def get_mapserver_data_string(self, result_field=None, filters=[], srid=4326):
 
-		# Get base query as subquery.
-		bq = aliased(Result, self.get_filtered_query(filters=filters).subquery())
+		# Create filter for selecting value field.
+		result_field_filter = {
+				'field': 'field',
+				'op': '==',
+				'value': result_field['field']
+				}
+
+		# Get base mapserver query.
+		q, q_primary_alias, q_registry, q_entities = self.get_base_mapserver_query(filters= filters + [result_field_filter])
+
+		# Create field definition for the 'value' column.
+		value_field = {
+				'id': 'value',
+				'aggregate_funcs': result_field.get('aggregate_funcs', ['sum'])
+				}
+
+		# Register the value field.
+		q = self.register_field_dependencies(q, q_registry, value_field['id'])
+		value_field_entity = self.get_field_entity(q_registry, value_field)
+
+		# Make labeled entity for aggregate function.
+		func_name = value_field['aggregate_funcs'][0]
+		aggregate_func = getattr(func, func_name)
+		aggregate_entity = aggregate_func(value_field_entity).label("value_field")
+		q_entities.add(aggregate_entity)
+
+		# Register the necssary entity dependencies.
+		for field in ['cell.geom']:
+			q = self.register_field_dependencies(q, q_registry, field)
+
+		# Get specific entity aliases.
+		cell_parent_str = self.get_field_parent_str('cell.id')	
+		cell_alias = q_registry[cell_parent_str]
 
 		# Define labeled query components.
-		# NOTE: select geometry as 'RAW' in order to override default 'AsBinary'.
-		value_sum = func.sum(bq.value).label('value_sum')
-		geom = Cell.geom.RAW.label('geom')
-		geom_id = Cell.id.label('geom_id')
+		# NOTE: for compatibility w/ PostGIS+Mapserver, select geometry as 'RAW' and explicitly specify SRID 4326.
+		geom = func.ST_SetSRID(cell_alias.geom.RAW, 4326).label('geom')
+		geom_id = cell_alias.id.label('geom_id')
 
-		# Get value_sum, cell id, cell geometry, grouped by cell.
-		q = self.session.query(value_sum, geom, geom_id).join(Cell)
-		q = q.group_by(geom_id)
+		# Select only the labeleld components defined above, grouping on cell.
+		q = q.with_entities(geom, geom_id, aggregate_entity).group_by(cell_alias.id)
 
 		# Get raw sql for query.
 		q_raw_sql = sa_compile.query_to_raw_sql(q)

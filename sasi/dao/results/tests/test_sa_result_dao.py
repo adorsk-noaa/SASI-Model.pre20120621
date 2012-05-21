@@ -35,14 +35,20 @@ class SA_Result_Set_Test(BaseTest):
 		dao.save_results(results)
 		fetched_results = dao.get_results(filters=[
 			{
-				'attr': 'Result.tag',
+				'field': 'tag',
 				'op': '==',
 				'value': 'a'
 				}
 			])
-		values_by_t_c_f = dao.get_values_by_t_c_f()
-		dao.get_mapserver_data_string()
-		#fstats = dao.get_field_stats(group_by=[{'attr': 'Cell.type_id'}, {'attr': 'time'}, {'attr': 'field', 'name': 'field'}])
+
+		result_field = {
+				'field': 'a',
+				'aggregate_funcs': ['sum']
+				}
+
+		mapserver_data_string = dao.get_mapserver_data_string(result_field=result_field)
+		print mapserver_data_string
+
 		self.failUnless(True)
 
 if __name__ == '__main__':
