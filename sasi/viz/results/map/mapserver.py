@@ -26,8 +26,19 @@ def get_map_image_from_wms(wms_parameters=None, result_field=None, result_dao=No
 
 	layer.type = mapscript.MS_LAYER_POLYGON
 
+	# Get color range settings.
+	num_classes = result_field.get('num_classes', 10)
+
+	if not color_map: color_map = get_default_colormap()
+
 	# Get color classes.
-	color_classes = get_color_classes(attr='value_field', color_map=color_map)
+	color_classes = get_color_classes(
+			attr='value_field', 
+			vmin = result_field.get('min', 0),
+			vmax = result_field.get('max', 1),
+			num_classes= result_field.get('num_classes', 10), 
+			color_map=color_map
+			)
 
 	# Create classes for value ranges.
 	"""
@@ -59,17 +70,12 @@ def get_map_image_from_wms(wms_parameters=None, result_field=None, result_dao=No
 	return ms_image.getBytes()
 
 
-def get_color_classes(attr='', color_map={}):
+def get_color_classes(attr='', vmin=0, vmax=1, num_classes=10, color_map={}):
 
-	# Set defaults.
-	num_classes = color_map.get('num_classes', 10)
-	value_min = color_map.get('min', 0)
-	value_max = color_map.get('max', 100)
-	value_range = value_max - value_min
-	cmap = color_map.get('cmap', get_default_colormap())
+	vrange = vmax - vmin
 
 	# Initialize list of classes w/ the first class.
-	color_classes = [get_color_class(attr=attr, cmax=value_min, hsv=cmap['ys'][0])]
+	color_classes = [get_color_class(attr=attr, cmax=vmin, hsv=color_map['ys'][0])]
 
 	# Create the middle classes.
 	for n in range(1, num_classes):
@@ -79,23 +85,23 @@ def get_color_classes(attr='', color_map={}):
 		scaled_xmax = float(n+1)/num_classes
 
 		# Set the value bounds for the class.
-		cmin = value_min + scaled_xmin * value_range
-		cmax = value_min + scaled_xmax * value_range
+		cmin = vmin + scaled_xmin * vrange
+		cmax = vmin + scaled_xmax * vrange
 		
 		# Get the index of the closest colormap entry <= the scaled position.
-		cm_i = bisect.bisect_left(cmap['xs'], scaled_xmin)
+		cm_i = bisect.bisect_left(color_map['xs'], scaled_xmin)
 
 		# If at the edge of the colormap, then use the last color.
-		if cm_i == len(cmap['xs']) - 1: ccolor = cmap['ys'][cm_i]
+		if cm_i == len(color_map['xs']) - 1: ccolor = color_map['ys'][cm_i]
 
 		# Otherwise interpolate the color.
-		else: ccolor = interpolate_ntuple(cmap['xs'][cm_i], cmap['xs'][cm_i + 1], cmap['ys'][cm_i], cmap['ys'][cm_i + 1], scaled_xmin, 3)
+		else: ccolor = interpolate_ntuple(color_map['xs'][cm_i], color_map['xs'][cm_i + 1], color_map['ys'][cm_i], color_map['ys'][cm_i + 1], scaled_xmin, 3)
 		
 		# Create the color class.
 		color_classes.append(get_color_class(attr=attr, cmin=cmin, cmax=cmax, hsv=ccolor))
 	
 	# Create the last color class.
-	color_classes.append(get_color_class(attr=attr, cmin=value_max, hsv=cmap['ys'][-1]))
+	color_classes.append(get_color_class(attr=attr, cmin=vmax, hsv=color_map['ys'][-1]))
 
 	return color_classes
 
