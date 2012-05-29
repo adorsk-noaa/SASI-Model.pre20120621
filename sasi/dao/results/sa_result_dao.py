@@ -97,13 +97,15 @@ class SA_Result_DAO(SA_DAO):
 		q, q_primary_alias, q_registry, q_entities = self.get_base_mapserver_query(filters= filters + [result_field_filter])
 
 		# Create field definition for the 'value' column.
+		# Note that we use density, rather than total value.
 		value_field = {
 				'id': 'value',
+				'template': '{field:value}/{field:cell.area}',
 				'aggregate_funcs': result_field.get('aggregate_funcs', ['sum'])
 				}
 
 		# Register the value field.
-		q = self.register_field_dependencies(q, q_registry, value_field['id'])
+		q = self.register_field_dependencies(q, q_registry, value_field.get('template', '{{field:{}}}'.format(value_field['id'])))
 		value_field_entity = self.get_field_entity(q_registry, value_field)
 
 		# Make labeled entity for aggregate function.
@@ -113,7 +115,7 @@ class SA_Result_DAO(SA_DAO):
 		q_entities.add(aggregate_entity)
 
 		# Register the necssary entity dependencies.
-		for field in ['cell.geom']:
+		for field in ['{field:cell.geom}']:
 			q = self.register_field_dependencies(q, q_registry, field)
 
 		# Get specific entity aliases.

@@ -28,7 +28,9 @@ class Results_Mapserver_Test(BaseTest):
 				'field': 'Y',
 				'min': 47563742,
 				#'min': 0,
-				'max': 70235000
+				#'max': 70235000
+				'min': .0,
+				'max': 1
 				}
 
 		base_filters = [

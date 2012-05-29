@@ -49,7 +49,8 @@ class SA_DAO(object):
 				if not f.has_key('op'): f['op'] = 'in'
 
 				# Register field dependencies.
-				q = self.register_field_dependencies(q, q_registry, f['field'])
+				#q = self.register_field_dependencies(q, q_registry, f['field'])
+				q = self.register_field_dependencies(q, q_registry, f.get('template', '{{field:{}}}'.format(f['field'])))
 
 				# Get field's entity.
 				field_entity = self.get_field_entity(q_registry, {'id': f['field'], 'transform': f.get('transform', None)})
@@ -112,7 +113,8 @@ class SA_DAO(object):
 
 		# Register fields and grouping fields.
 		for field in fields + grouping_fields:
-			q = self.register_field_dependencies(q, q_registry, field['id'])
+			#q = self.register_field_dependencies(q, q_registry, field['id'])
+			q = self.register_field_dependencies(q, q_registry, field.get('template', '{{field:{}}}'.format(field['id'])))
 
 		# Add labeled stat fields to query entities.
 		for field in fields:
@@ -282,24 +284,27 @@ class SA_DAO(object):
 		field_max = float(aggregates['data'][1]['value'])
 		return field_min, field_max
 
-	def register_field_dependencies(self, q, registry, field_id):
+	def register_field_dependencies(self, q, registry, field_template):
 
-		# Process field dependencies, from left to right.
-		parts = field_id.split('.')
-		for i in range(len(parts) - 1):
-			parent_str = self.get_field_parent_str('.'.join(parts[:i+1]))
-			dependency_str = '.'.join([parent_str, parts[i]])
+		for m in re.finditer('{field:(.*?)}', field_template):
+			field_id = m.group(1)
 
-			# If already registered, continue.
-			if registry.has_key(dependency_str): continue
+			# Process field dependencies, from left to right.
+			parts = field_id.split('.')
+			for i in range(len(parts) - 1):
+				parent_str = self.get_field_parent_str('.'.join(parts[:i+1]))
+				dependency_str = '.'.join([parent_str, parts[i]])
 
-			else:
-				parent =  registry.get(parent_str)
-				prop = class_mapper(parent._AliasedClass__target).get_property(parts[i])
-				if isinstance(prop, RelationshipProperty):
-					child = aliased(prop.mapper.class_)
-					registry[dependency_str] = child
-					q = q.join(child, getattr(parent,parts[i]))
+				# If already registered, continue.
+				if registry.has_key(dependency_str): continue
+
+				else:
+					parent =  registry.get(parent_str)
+					prop = class_mapper(parent._AliasedClass__target).get_property(parts[i])
+					if isinstance(prop, RelationshipProperty):
+						child = aliased(prop.mapper.class_)
+						registry[dependency_str] = child
+						q = q.join(child, getattr(parent,parts[i]))
 
 		return q
 
@@ -354,7 +359,7 @@ class SA_DAO(object):
 			if field.get('label_field', False):
 				fields.append(field['label_field'])
 
-			q = self.register_field_dependencies(q, q_registry, field['id'])
+			q = self.register_field_dependencies(q, q_registry, field.get('template', '{{field:{}}}'.format(field['id'])))
 			field_entity = self.get_field_entity(q_registry, field)
 
 			# If field is a histogram field, get bucket entities for the field.
