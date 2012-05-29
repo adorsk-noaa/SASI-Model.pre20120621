@@ -14,6 +14,7 @@ class SA_Habitat_DAOTest(BaseTest):
 		energy_filter = {'field': 'habitat_type.energy', 'op': '==', 'value': 'Low'}
 		feature_id_filter2 = {'field': 'habitat_type.features.id', 'op': 'in', 'value': ['B02','B03']}
 
+
 		filters = [
 				hab_id_filter,
 				#feature_id_filter,
@@ -29,7 +30,7 @@ class SA_Habitat_DAOTest(BaseTest):
 		#print data_str
 
 		fields = [
-				{'id': "area", 'label': 'area_label'}
+				{'id': "area", 'label': 'area_label'},
 				]
 		grouping_fields = [
 				#{'id': "habitat_type.substrate.id", 'label': 'substrate_id', 'label_field': {'id': 'habitat_type.substrate.name'}, 'all_values': True},

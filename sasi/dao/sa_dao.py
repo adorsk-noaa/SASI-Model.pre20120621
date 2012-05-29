@@ -311,17 +311,31 @@ class SA_DAO(object):
 			return '.'.join([self.primary_class.__name__] + parts[:-1])
 
 	def get_field_entity(self, registry, field):
-		parent = registry.get(self.get_field_parent_str(field['id']))
-		parts = field['id'].split('.')
-		field_entity = getattr(parent,parts[-1])
 
-		if field.has_key('transform') and field['transform'] != None:
-			transform_code = field['transform'].format(field = 'field_entity')
-			exec compile("field_entity = {0}".format(transform_code), '<field_entity>', 'exec')
+		entities = {}
+
+		# Legacy hack, for temporary backwards compatibility.
+		field.setdefault('template', "{{field:{}}}".format(field['id']))
 
 		# Set default label on field, if not provided..
-		field.setdefault('label', field['id'])
-		return field_entity.label(field['label'])
+		field.setdefault('label', field['template'])
+
+		# Replace fields w/ entities.
+		def replace_with_entity(m):
+			field_id = m.group(1)
+			parent = registry.get(self.get_field_parent_str(field_id))
+			parts = field_id.split('.')
+			field_entity = getattr(parent,parts[-1])
+			entities[field_id] = field_entity
+			return "entities['{}']".format(field_id)
+
+		entity_code = re.sub('{field:(.*?)}', replace_with_entity, field['template'])
+
+		# Evaluate and label.
+		field_entity = eval(entity_code)
+		field_entity = field_entity.label(field['label'])
+
+		return field_entity
 	
 
 	# Select values for a given set of fields.
