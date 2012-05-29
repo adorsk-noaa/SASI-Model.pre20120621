@@ -9,7 +9,6 @@ import bisect
 
 
 def get_map_image_from_wms(wms_parameters=None, result_field=None, result_dao=None, filters=[], color_map={}):
-
 	# Initialize mapscript map object from the habitat mapfile template.
 	mapfile = "%s/results.map" % os.path.abspath(os.path.dirname(__file__))
 	ms_map = mapscript.mapObj(mapfile)
@@ -41,15 +40,6 @@ def get_map_image_from_wms(wms_parameters=None, result_field=None, result_dao=No
 			)
 
 	# Create classes for value ranges.
-	"""
-	clz = mapscript.classObj()
-	clz.name = 'data'
-	style = mapscript.styleObj()
-	rgb_color = (255,0,0)
-	style.color= mapscript.colorObj(*rgb_color)
-	clz.insertStyle(style)
-	layer.insertClass(clz)
-	"""
 	for cc in color_classes:
 		layer.insertClass(cc)
 
@@ -96,7 +86,7 @@ def get_color_classes(attr='', vmin=0, vmax=1, num_classes=10, color_map={}):
 
 		# Otherwise interpolate the color.
 		else: ccolor = interpolate_ntuple(color_map['xs'][cm_i], color_map['xs'][cm_i + 1], color_map['ys'][cm_i], color_map['ys'][cm_i + 1], scaled_xmin, 3)
-		
+
 		# Create the color class.
 		color_classes.append(get_color_class(attr=attr, cmin=cmin, cmax=cmax, hsv=ccolor))
 	

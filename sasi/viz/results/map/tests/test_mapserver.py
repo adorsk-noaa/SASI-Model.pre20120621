@@ -25,11 +25,18 @@ class Results_Mapserver_Test(BaseTest):
 				}
 		
 		result_field = {
-				'field': 'A'
+				'field': 'Y',
+				'min': 47563742,
+				#'min': 0,
+				'max': 70235000
 				}
 
+		base_filters = [
+				{'field': 'time', 'op': '==', 'value': '2009'},
+				{'field': 'tag', 'op': '==', 'value': 'gc30_all'}
+				]
 		filters = []
-		img = results_ms.get_map_image_from_wms(wms_parameters=wms_parameters.items(), result_field=result_field, result_dao=result_dao, filters=filters)
+		img = results_ms.get_map_image_from_wms(wms_parameters=wms_parameters.items(), result_field=result_field, result_dao=result_dao, filters=base_filters + filters)
 		print img
 
 		self.failUnless(True)
